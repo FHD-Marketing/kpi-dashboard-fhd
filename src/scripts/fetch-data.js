@@ -20,8 +20,9 @@ const youtubeAnalytics = google.youtubeAnalytics({
 
 async function fetchYouTubeAnalytics() {
   try {
+    const timespanDays = 365;
     const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - timespanDays * 86400000).toISOString().split('T')[0];
 
     const response = await youtubeAnalytics.reports.query({
       ids: 'channel==MINE',
@@ -32,13 +33,12 @@ async function fetchYouTubeAnalytics() {
     });
 
     if (response.data.rows && response.data.rows.length > 0) {
-      const row = response.data.rows[0];
-      return {
+      return response.data.rows.map(row => ({
         date: row[0],
         views: row[1],
         likes: row[2],
         subscribers_gained: row[3],
-      };
+      }));
     }
     return null;
   } catch (error) {
@@ -47,16 +47,16 @@ async function fetchYouTubeAnalytics() {
   }
 }
 
-async function saveToSupabase(data) {
+async function saveToSupabase(rows) {
   const { error } = await supabase
     .from('youtube_stats')
-    .insert([data]);
+    .upsert(rows, { onConflict: 'date' });
 
   if (error) {
     console.error('Failed to save to Supabase:', error.message);
     return;
   }
-  console.log('Data saved to Supabase successfully.');
+  console.log(`Saved ${rows.length} row(s) to Supabase.`);
 }
 
 async function run() {
@@ -64,7 +64,7 @@ async function run() {
   const analyticsData = await fetchYouTubeAnalytics();
 
   if (analyticsData) {
-    console.log('Data found:', analyticsData);
+    console.log(`Found ${analyticsData.length} day(s) of data.`);
     await saveToSupabase(analyticsData);
   } else {
     console.log('No data found for this period.');
