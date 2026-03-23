@@ -1,15 +1,508 @@
 ---
 import '../styles/global.css';
 ---
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="generator" content={Astro.generator} />
+  <title>FHD Performance Dashboard 2026</title>
+  <meta name="description" content="KPI-Dashboard der Fachhochschule Dresden – Alle Kommunikationskanäle auf einen Blick." />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" is:inline></script>
+</head>
+<body>
+<div class="dashboard">
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>FHD KPI Dashboard</title>
-	</head>
-	<body>
-		<h1>Test</h1>
-	</body>
+  <!-- ═══ HEADER ═══ -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="header-label">Performance Dashboard 2026</div>
+      <h1>Fachhochschule Dresden</h1>
+      <div class="header-subtitle">Google Ads · Meta Ads · Jahresübersicht</div>
+    </div>
+    <div class="header-logo">adsbe.</div>
+  </header>
+
+  <!-- ═══ MONTH SELECTOR ═══ -->
+  <nav class="month-selector">
+    <button class="month-btn" data-month="jan"><span class="month-label">Jan</span><span class="month-spend">€6.142</span></button>
+    <button class="month-btn active" data-month="feb"><span class="month-label">Feb</span><span class="month-spend">€6.830</span></button>
+    <button class="month-btn disabled"><span class="month-label">Mär</span></button>
+    <button class="month-btn disabled"><span class="month-label">Apr</span></button>
+    <button class="month-btn disabled"><span class="month-label">Mai</span></button>
+    <button class="month-btn disabled"><span class="month-label">Jun</span></button>
+    <button class="month-btn disabled"><span class="month-label">Jul</span></button>
+    <button class="month-btn disabled"><span class="month-label">Aug</span></button>
+    <button class="month-btn disabled"><span class="month-label">Sep</span></button>
+    <button class="month-btn disabled"><span class="month-label">Okt</span></button>
+    <button class="month-btn disabled"><span class="month-label">Nov</span></button>
+    <button class="month-btn disabled"><span class="month-label">Dez</span></button>
+  </nav>
+
+  <!-- ═══ TAB NAVIGATION ═══ -->
+  <nav class="tab-navigation">
+    <button class="tab-btn active" data-tab="uebersicht"><span class="tab-icon">📊</span> Übersicht</button>
+    <button class="tab-btn" data-tab="google"><span class="tab-icon">🔵</span> Google Ads</button>
+    <button class="tab-btn" data-tab="meta"><span class="tab-icon">🟦</span> Meta Ads</button>
+    <button class="tab-btn" data-tab="instagram"><span class="tab-icon">📸</span> Instagram</button>
+    <button class="tab-btn" data-tab="youtube"><span class="tab-icon">▶️</span> YouTube</button>
+    <button class="tab-btn" data-tab="tiktok"><span class="tab-icon">🎵</span> TikTok</button>
+    <button class="tab-btn" data-tab="linkedin"><span class="tab-icon">💼</span> LinkedIn</button>
+    <button class="tab-btn" data-tab="mailchimp"><span class="tab-icon">📧</span> Mailchimp</button>
+    <button class="tab-btn" data-tab="studycheck"><span class="tab-icon">⭐</span> StudyCheck</button>
+    <button class="tab-btn" data-tab="ytd"><span class="tab-icon">📈</span> YTD-Trends</button>
+    <button class="tab-btn" data-tab="empfehlungen"><span class="tab-icon">🖌️</span> Empfehlungen</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TAB: ÜBERSICHT
+       ═══════════════════════════════════════════════════════ -->
+  <section id="tab-uebersicht" class="tab-content active">
+    <h2 class="section-title"><span class="title-icon">📊</span> Übersicht — Februar 2026</h2>
+    <p class="section-subtitle">Alle Kanäle auf einen Blick</p>
+
+    <div class="kpi-grid cols-3">
+      <div class="kpi-card" data-kpi="overview-adSpend">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">🔥</span> AD SPEND</span>
+          <span class="kpi-trend up">▲ 11,2%</span>
+        </div>
+        <div class="kpi-value">€6.830,14</div>
+        <div class="kpi-detail">Plan: €6.000 · 114% ausgeschöpft</div>
+      </div>
+      <div class="kpi-card" data-kpi="overview-klicks">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">👆</span> KLICKS</span>
+          <span class="kpi-trend negative">▼ 22,1%</span>
+        </div>
+        <div class="kpi-value">4.919</div>
+        <div class="kpi-detail">Google 3.283 · Meta 1.636</div>
+      </div>
+      <div class="kpi-card" data-kpi="overview-conversions">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">🎯</span> CONVERSIONS / LEADS</span>
+          <span class="kpi-trend negative">▼ 19,5%</span>
+        </div>
+        <div class="kpi-value">70</div>
+        <div class="kpi-detail">Google 40 Conv. · Meta 30 Leads</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid cols-4">
+      <div class="kpi-card" data-kpi="overview-impressionen">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label">IMPRESSIONEN</span>
+          <span class="kpi-trend positive">▲ 16,1%</span>
+        </div>
+        <div class="kpi-value">416.001</div>
+        <div class="kpi-detail">Google 69.680 · Meta 346.321</div>
+      </div>
+      <div class="kpi-card" data-kpi="overview-reichweite">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">👁️</span> REICHWEITE</span>
+          <span class="kpi-trend positive">▲ 11,6%</span>
+        </div>
+        <div class="kpi-value">83.215</div>
+        <div class="kpi-detail">Nur Meta</div>
+      </div>
+      <div class="kpi-card" data-kpi="overview-cpc">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">💰</span> Ø CPC</span>
+          <span class="kpi-trend up">▲ 42,8%</span>
+        </div>
+        <div class="kpi-value">€1,39</div>
+        <div class="kpi-detail">Google €1,03 · Meta €2,11</div>
+      </div>
+      <div class="kpi-card" data-kpi="overview-ctr">
+        <div class="kpi-card-header">
+          <span class="kpi-card-label"><span class="kpi-icon">📊</span> CTR</span>
+        </div>
+        <div class="kpi-value">4.71%</div>
+        <div class="kpi-detail">Google 4.71% · Meta 0.47%</div>
+      </div>
+    </div>
+
+    <!-- Daily Spend + Budget Split -->
+    <div class="charts-grid wide-left">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <span class="chart-card-title">Tagesverlauf Spend Google Ads — Februar</span>
+          <div class="chart-toggle"><button class="active">Google</button><button>Meta</button></div>
+        </div>
+        <div class="chart-wrapper" style="height:220px"><canvas id="daily-spend-chart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header"><span class="chart-card-title">Budget-Split</span></div>
+        <div class="chart-wrapper" style="height:180px"><canvas id="budget-split-chart"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#4285f4"></span> Google Ads — €3.375,71 (49%)</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#0668e1"></span> Meta Ads — €3.454,43 (51%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Plan vs Ist -->
+    <h3 class="section-title mb-md"><span class="title-icon">🟥</span> Budgetplan vs. Ist — Februar 2026</h3>
+    <div class="budget-grid">
+      <div class="budget-card" data-budget="gesamt">
+        <div class="budget-card-header"><span class="budget-card-title">Gesamt</span><span class="budget-badge over">▲ ÜBER PLAN</span></div>
+        <div class="budget-values"><div class="budget-plan">Plan<span>€6.000</span></div><div class="budget-actual">Ist<span>€6.830</span></div></div>
+        <div class="budget-bar"><div class="budget-bar-fill over" style="width:100%"></div></div>
+        <div class="budget-footer"><span>114% ausgeschöpft</span><span class="budget-diff over">+€830</span></div>
+      </div>
+      <div class="budget-card" data-budget="google">
+        <div class="budget-card-header"><span class="budget-card-title">Google Ads</span><span class="budget-badge on-track">✅ IM PLAN</span></div>
+        <div class="budget-values"><div class="budget-plan">Plan<span>€5.000</span></div><div class="budget-actual">Ist<span>€3.376</span></div></div>
+        <div class="budget-bar"><div class="budget-bar-fill on-track" style="width:68%"></div></div>
+        <div class="budget-footer"><span>68% ausgeschöpft</span><span class="budget-diff on-track">-€1.624</span></div>
+      </div>
+      <div class="budget-card" data-budget="meta">
+        <div class="budget-card-header"><span class="budget-card-title">Meta Ads</span><span class="budget-badge over">▲ ÜBER PLAN</span></div>
+        <div class="budget-values"><div class="budget-plan">Plan<span>€1.000</span></div><div class="budget-actual">Ist<span>€3.454</span></div></div>
+        <div class="budget-bar"><div class="budget-bar-fill over" style="width:100%"></div></div>
+        <div class="budget-footer"><span>345% ausgeschöpft</span><span class="budget-diff over">+€2.454</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TAB: GOOGLE ADS
+       ═══════════════════════════════════════════════════════ -->
+  <section id="tab-google" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">🔵</span> Google Ads Kampagnen — Februar 2026</h2>
+    <p class="section-subtitle">Klicke auf eine Kampagne, um Details zu sehen</p>
+
+    <div class="kpi-grid cols-4 channel-google">
+      <div class="kpi-card" data-kpi="google-spend">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🔥</span> GOOGLE SPEND</span><span class="kpi-trend up">▲ 9,6%</span></div>
+        <div class="kpi-value">€3.375,71</div>
+      </div>
+      <div class="kpi-card" data-kpi="google-klicks">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👆</span> KLICKS</span><span class="kpi-trend negative">▼ 26,8%</span></div>
+        <div class="kpi-value">3.283</div>
+      </div>
+      <div class="kpi-card" data-kpi="google-conversions">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎯</span> CONVERSIONS</span><span class="kpi-trend negative">▼ 14,9%</span></div>
+        <div class="kpi-value">40</div>
+      </div>
+      <div class="kpi-card" data-kpi="google-impressionen">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👁️</span> IMPRESSIONEN</span><span class="kpi-trend positive">▲ 10,0%</span></div>
+        <div class="kpi-value">69.680</div>
+      </div>
+    </div>
+
+    <!-- Spend by Campaign Bar Chart -->
+    <div class="chart-card mb-xl">
+      <div class="chart-card-header"><span class="chart-card-title">Spend nach Kampagne</span></div>
+      <div class="horiz-bar-chart">
+        <div class="horiz-bar-row"><span class="horiz-bar-label">PGM Bachelor</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:100%"></div></div><span class="horiz-bar-value">€975,18</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">SPM Bachelor</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:63%"></div></div><span class="horiz-bar-value">€614,34</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">Grafikdesign Bachelor</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:50%"></div></div><span class="horiz-bar-value">€487,50</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">Allgemein</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:43%"></div></div><span class="horiz-bar-value">€421,97</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">DigitalMediaDesign</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:36%"></div></div><span class="horiz-bar-value">€351,24</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">BA Bachelor</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:29%"></div></div><span class="horiz-bar-value">€280,50</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">RPC Master</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:15%"></div></div><span class="horiz-bar-value">€142,88</span></div>
+        <div class="horiz-bar-row"><span class="horiz-bar-label">CD Master</span><div class="horiz-bar-track"><div class="horiz-bar-fill" style="width:10%"></div></div><span class="horiz-bar-value">€102,10</span></div>
+      </div>
+    </div>
+
+    <!-- Campaign Cards -->
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name"><span class="campaign-badge winner">Winner</span> PGM Bachelor</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€975,18</span><span class="g-trend negative">+19,3%</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">4</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€15,68</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">751</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€0,76</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">5.18%</span></div></div></div></div>
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name">SPM Bachelor</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€614,34</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">2</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€7,21</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">0</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€1,35</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">5.04%</span></div></div></div></div>
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name"><span class="campaign-badge neutral">Breit</span> Allgemein</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€421,97</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">5</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€281,31</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">5</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€1,48</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">4.42%</span></div></div></div></div>
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name"><span class="campaign-badge winner">Neuer Star</span> Grafikdesign Bachelor</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€487,50</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">6</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€74,17</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">709</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€1,17</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">5.96%</span></div></div></div></div>
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name">DigitalMediaDesign</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€351,24</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">7</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€74,77</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">467</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€0,97</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">4.85%</span></div></div></div></div>
+    <div class="google-campaign-card"><div class="google-campaign-header"><span class="google-campaign-name"><span class="campaign-badge loser">Kritisch</span> BA Bachelor</span><span class="google-campaign-status active">LAUFEND ▼</span></div>
+      <div class="google-campaign-body"><div class="google-metrics-grid"><div class="google-metric"><span class="g-label">Spend</span><span class="g-value">€280,50</span></div><div class="google-metric"><span class="g-label">Leads</span><span class="g-value">1</span></div><div class="google-metric"><span class="g-label">CPL</span><span class="g-value">€489,00</span></div><div class="google-metric"><span class="g-label">Klicks</span><span class="g-value">298</span></div><div class="google-metric"><span class="g-label">CPC</span><span class="g-value">€1,18</span></div><div class="google-metric"><span class="g-label">CTR</span><span class="g-value">3.78%</span></div></div></div></div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TAB: META ADS
+       ═══════════════════════════════════════════════════════ -->
+  <section id="tab-meta" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">🟦</span> Meta Kampagnen — Februar 2026</h2>
+    <p class="section-subtitle">Klicke auf eine Kampagne, um die Anzeigengruppen zu sehen</p>
+
+    <div class="kpi-grid cols-4 channel-meta">
+      <div class="kpi-card" data-kpi="meta-spend">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🔥</span> META SPEND</span><span class="kpi-trend up">▲ 58,6%</span></div>
+        <div class="kpi-value">€3.454,43</div>
+      </div>
+      <div class="kpi-card" data-kpi="meta-linkKlicks">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👆</span> LINK-KLICKS</span><span class="kpi-trend negative">▼ 10,8%</span></div>
+        <div class="kpi-value">1.636</div>
+      </div>
+      <div class="kpi-card" data-kpi="meta-leads">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎯</span> LEADS</span><span class="kpi-trend negative">▼ 16,7%</span></div>
+        <div class="kpi-value">30</div>
+      </div>
+      <div class="kpi-card" data-kpi="meta-reichweite">
+        <div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👁️</span> REICHWEITE</span><span class="kpi-trend positive">▲ 11,6%</span></div>
+        <div class="kpi-value">83.215</div>
+      </div>
+    </div>
+
+    <!-- REMARKETING -->
+    <div class="campaign-section">
+      <div class="campaign-header">
+        <div class="campaign-header-left">
+          <span class="campaign-name">REMARKETING</span>
+          <span class="campaign-badge winner">🏆 WINNER</span>
+          <span class="campaign-groups">2 Anzeigengruppen</span>
+        </div>
+        <span class="campaign-status">AKTIV</span>
+      </div>
+      <div class="campaign-progress"><div class="campaign-progress-fill" style="width:65%"></div></div>
+      <div class="campaign-metrics">
+        <div class="metric-item"><span class="metric-label">Spend</span><span class="metric-value">€828,20</span></div>
+        <div class="metric-item"><span class="metric-label">Leads</span><span class="metric-value">8</span></div>
+        <div class="metric-item"><span class="metric-label">CPL</span><span class="metric-value">€103,53</span></div>
+        <div class="metric-item"><span class="metric-label">Link-Klicks</span><span class="metric-value">378</span></div>
+        <div class="metric-item"><span class="metric-label">CPC</span><span class="metric-value">€2,19</span></div>
+        <div class="metric-item"><span class="metric-label">CTR</span><span class="metric-value">0.41%</span></div>
+      </div>
+      <div class="campaign-metrics">
+        <div class="metric-item"><span class="metric-label">Reichweite</span><span class="metric-value">13.412</span></div>
+        <div class="metric-item"><span class="metric-label">Impressionen</span><span class="metric-value">92.924</span></div>
+        <div class="metric-item"><span class="metric-label"></span><span class="metric-value"></span></div>
+        <div class="metric-item"><span class="metric-label">Frequenz</span><span class="metric-value">6.93</span></div>
+        <div class="metric-item"></div><div class="metric-item"></div>
+      </div>
+      <button class="campaign-toggle-btn">▶ Klicken für Anzeigengruppen-Details</button>
+      <div class="campaign-details"></div>
+    </div>
+
+    <!-- PROSPECTING -->
+    <div class="campaign-section">
+      <div class="campaign-header">
+        <div class="campaign-header-left">
+          <span class="campaign-name">PROSPECTING</span>
+          <span class="campaign-badge loser">⚠ LOSER</span>
+          <span class="campaign-groups">7 Anzeigengruppen</span>
+        </div>
+        <span class="campaign-status">AKTIV</span>
+      </div>
+      <div class="campaign-progress"><div class="campaign-progress-fill" style="width:35%"></div></div>
+      <div class="campaign-metrics">
+        <div class="metric-item"><span class="metric-label">Spend</span><span class="metric-value">€2.626,23</span></div>
+        <div class="metric-item"><span class="metric-label">Leads</span><span class="metric-value">22</span></div>
+        <div class="metric-item"><span class="metric-label">CPL</span><span class="metric-value">€119,37</span></div>
+        <div class="metric-item"><span class="metric-label">Link-Klicks</span><span class="metric-value">1.258</span></div>
+        <div class="metric-item"><span class="metric-label">CPC</span><span class="metric-value">€2,09</span></div>
+        <div class="metric-item"><span class="metric-label">CTR</span><span class="metric-value">0.50%</span></div>
+      </div>
+      <div class="campaign-metrics">
+        <div class="metric-item"><span class="metric-label">Reichweite</span><span class="metric-value">69.803</span></div>
+        <div class="metric-item"><span class="metric-label">Impressionen</span><span class="metric-value">253.397</span></div>
+        <div class="metric-item"><span class="metric-label"></span><span class="metric-value"></span></div>
+        <div class="metric-item"><span class="metric-label">Frequenz</span><span class="metric-value">3.63</span></div>
+        <div class="metric-item"></div><div class="metric-item"></div>
+      </div>
+      <button class="campaign-toggle-btn">▶ Klicken für Anzeigengruppen-Details</button>
+      <div class="campaign-details"></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: INSTAGRAM ═══ -->
+  <section id="tab-instagram" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">📸</span> Instagram — Februar 2026</h2>
+    <p class="section-subtitle">Organische Performance</p>
+    <div class="kpi-grid cols-4 channel-instagram">
+      <div class="kpi-card" data-kpi="instagram-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend positive">▲ 5,8%</span></div><div class="kpi-value">3.012</div></div>
+      <div class="kpi-card" data-kpi="instagram-engagementRate"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT RATE</span><span class="kpi-trend positive">▲ 14,3%</span></div><div class="kpi-value">4.8%</div></div>
+      <div class="kpi-card" data-kpi="instagram-reichweite"><div class="kpi-card-header"><span class="kpi-card-label">REICHWEITE</span><span class="kpi-trend positive">▲ 20,2%</span></div><div class="kpi-value">22.150</div></div>
+      <div class="kpi-card" data-kpi="instagram-impressionen"><div class="kpi-card-header"><span class="kpi-card-label">IMPRESSIONEN</span><span class="kpi-trend positive">▲ 23,0%</span></div><div class="kpi-value">51.800</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Follower-Wachstum</span></div><div class="chart-wrapper" style="height:220px"><canvas id="instagram-follower-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Top Posts (Reichweite)</span></div><div class="chart-wrapper" style="height:220px"><canvas id="instagram-top-posts-chart"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: YOUTUBE ═══ -->
+  <section id="tab-youtube" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">▶️</span> YouTube — Februar 2026</h2>
+    <p class="section-subtitle">Kanal-Performance</p>
+    <div class="kpi-grid cols-4 channel-youtube">
+      <div class="kpi-card" data-kpi="youtube-views"><div class="kpi-card-header"><span class="kpi-card-label">VIEWS</span><span class="kpi-trend positive">▲ 22,3%</span></div><div class="kpi-value">15.230</div></div>
+      <div class="kpi-card" data-kpi="youtube-subscribers"><div class="kpi-card-header"><span class="kpi-card-label">SUBSCRIBERS</span><span class="kpi-trend positive">▲ 6,3%</span></div><div class="kpi-value">1.312</div></div>
+      <div class="kpi-card" data-kpi="youtube-watchTime"><div class="kpi-card-header"><span class="kpi-card-label">WATCH TIME</span><span class="kpi-trend positive">▲ 21,2%</span></div><div class="kpi-value">1.024 Std.</div></div>
+      <div class="kpi-card" data-kpi="youtube-ctr"><div class="kpi-card-header"><span class="kpi-card-label">CTR</span><span class="kpi-trend positive">▲ 6,9%</span></div><div class="kpi-value">6.2%</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Views über Zeit</span></div><div class="chart-wrapper" style="height:220px"><canvas id="youtube-views-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Top Videos</span></div><div class="chart-wrapper" style="height:220px"><canvas id="youtube-top-videos-chart"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: TIKTOK ═══ -->
+  <section id="tab-tiktok" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">🎵</span> TikTok — Februar 2026</h2>
+    <p class="section-subtitle">Kanal-Performance</p>
+    <div class="kpi-grid cols-4 channel-tiktok">
+      <div class="kpi-card" data-kpi="tiktok-views"><div class="kpi-card-header"><span class="kpi-card-label">VIEWS</span><span class="kpi-trend positive">▲ 38,1%</span></div><div class="kpi-value">62.400</div></div>
+      <div class="kpi-card" data-kpi="tiktok-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend positive">▲ 17,5%</span></div><div class="kpi-value">1.048</div></div>
+      <div class="kpi-card" data-kpi="tiktok-engagementRate"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT RATE</span><span class="kpi-trend positive">▲ 8,3%</span></div><div class="kpi-value">9.1%</div></div>
+      <div class="kpi-card" data-kpi="tiktok-likes"><div class="kpi-card-header"><span class="kpi-card-label">LIKES</span><span class="kpi-trend positive">▲ 35,6%</span></div><div class="kpi-value">5.210</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Video-Performance (Views)</span></div><div class="chart-wrapper" style="height:220px"><canvas id="tiktok-performance-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Follower-Wachstum</span></div><div class="chart-wrapper" style="height:220px"><canvas id="tiktok-growth-chart"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: LINKEDIN ═══ -->
+  <section id="tab-linkedin" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">💼</span> LinkedIn — Februar 2026</h2>
+    <p class="section-subtitle">Unternehmensseite Performance</p>
+    <div class="kpi-grid cols-4 channel-linkedin">
+      <div class="kpi-card" data-kpi="linkedin-impressionen"><div class="kpi-card-header"><span class="kpi-card-label">IMPRESSIONEN</span><span class="kpi-trend positive">▲ 26,1%</span></div><div class="kpi-value">11.250</div></div>
+      <div class="kpi-card" data-kpi="linkedin-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend positive">▲ 3,6%</span></div><div class="kpi-value">3.580</div></div>
+      <div class="kpi-card" data-kpi="linkedin-engagement"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT</span><span class="kpi-trend positive">▲ 12,9%</span></div><div class="kpi-value">3.5%</div></div>
+      <div class="kpi-card" data-kpi="linkedin-klicks"><div class="kpi-card-header"><span class="kpi-card-label">KLICKS</span><span class="kpi-trend positive">▲ 28,2%</span></div><div class="kpi-value">528</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Top Posts (Impressionen)</span></div><div class="chart-wrapper" style="height:220px"><canvas id="linkedin-impressions-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Follower-Wachstum</span></div><div class="chart-wrapper" style="height:220px"><canvas id="linkedin-follower-chart"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: MAILCHIMP ═══ -->
+  <section id="tab-mailchimp" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">📧</span> Mailchimp — Februar 2026</h2>
+    <p class="section-subtitle">E-Mail Marketing Performance</p>
+    <div class="kpi-grid cols-4 channel-mailchimp">
+      <div class="kpi-card" data-kpi="mailchimp-openRate"><div class="kpi-card-header"><span class="kpi-card-label">OPEN RATE</span><span class="kpi-trend positive">▲ 9,4%</span></div><div class="kpi-value">26.8%</div></div>
+      <div class="kpi-card" data-kpi="mailchimp-clickRate"><div class="kpi-card-header"><span class="kpi-card-label">CLICK RATE</span><span class="kpi-trend positive">▲ 10,5%</span></div><div class="kpi-value">4.2%</div></div>
+      <div class="kpi-card" data-kpi="mailchimp-subscribers"><div class="kpi-card-header"><span class="kpi-card-label">SUBSCRIBERS</span><span class="kpi-trend positive">▲ 3,4%</span></div><div class="kpi-value">5.412</div></div>
+      <div class="kpi-card" data-kpi="mailchimp-campaigns"><div class="kpi-card-header"><span class="kpi-card-label">KAMPAGNEN</span></div><div class="kpi-value">3</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Open Rate & Click Rate Trend</span></div><div class="chart-wrapper" style="height:220px"><canvas id="mailchimp-trend-chart"></canvas></div></div>
+      <div class="chart-card">
+        <div class="chart-card-header"><span class="chart-card-title">Kampagnen</span></div>
+        <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Kampagne</th><th>Gesendet</th><th>Open Rate</th><th>Click Rate</th><th>Datum</th></tr></thead><tbody>
+          <tr><td>Februar Newsletter</td><td>5.300</td><td>28.4%</td><td>4.5%</td><td>12.02.2026</td></tr>
+          <tr><td>Bewerbungsaufruf</td><td>5.100</td><td>31.5%</td><td>6.2%</td><td>03.02.2026</td></tr>
+          <tr><td>Veranstaltungshinweis</td><td>4.900</td><td>19.8%</td><td>1.8%</td><td>20.02.2026</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: STUDYCHECK ═══ -->
+  <section id="tab-studycheck" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">⭐</span> StudyCheck — Februar 2026</h2>
+    <p class="section-subtitle">Bewertungsportal Performance</p>
+    <div class="kpi-grid cols-4 channel-studycheck">
+      <div class="kpi-card" data-kpi="studycheck-bewertungen"><div class="kpi-card-header"><span class="kpi-card-label">BEWERTUNGEN</span><span class="kpi-trend positive">▲ 9,9%</span></div><div class="kpi-value">156</div></div>
+      <div class="kpi-card" data-kpi="studycheck-avgScore"><div class="kpi-card-header"><span class="kpi-card-label">Ø SCORE</span><span class="kpi-trend positive">▲ 0,1</span></div><div class="kpi-value">4.3</div></div>
+      <div class="kpi-card" data-kpi="studycheck-profilaufrufe"><div class="kpi-card-header"><span class="kpi-card-label">PROFILAUFRUFE</span><span class="kpi-trend positive">▲ 28,0%</span></div><div class="kpi-value">10.820</div></div>
+      <div class="kpi-card" data-kpi="studycheck-weiterempfehlung"><div class="kpi-card-header"><span class="kpi-card-label">WEITEREMPFEHLUNG</span><span class="kpi-trend positive">▲ 2pp</span></div><div class="kpi-value">91%</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Score-Verlauf</span></div><div class="chart-wrapper" style="height:220px"><canvas id="studycheck-score-chart"></canvas></div></div>
+      <div class="chart-card">
+        <div class="chart-card-header"><span class="chart-card-title">Studiengänge</span></div>
+        <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Studiengang</th><th>Score</th><th>Reviews</th><th>Aufrufe</th></tr></thead><tbody>
+          <tr><td>PGM Bachelor</td><td>4.6</td><td>32</td><td>2.250</td></tr>
+          <tr><td>Grafikdesign Bachelor</td><td>4.4</td><td>25</td><td>1.980</td></tr>
+          <tr><td>SPM Bachelor</td><td>4.2</td><td>20</td><td>1.450</td></tr>
+          <tr><td>DigitalMediaDesign</td><td>4.5</td><td>18</td><td>1.180</td></tr>
+          <tr><td>BA Bachelor</td><td>4.0</td><td>14</td><td>1.020</td></tr>
+          <tr><td>CD Master</td><td>4.7</td><td>10</td><td>780</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: YTD-TRENDS ═══ -->
+  <section id="tab-ytd" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">📈</span> Year-to-Date Trends</h2>
+    <p class="section-subtitle">Monatlicher Vergleich</p>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Monatliche Ausgaben — Plan vs. Ist</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-ausgaben-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Conversions / Leads</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-conversions-chart"></canvas></div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">CPC-Entwicklung</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-cpc-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Impressionen pro Monat</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-impressionen-chart"></canvas></div></div>
+    </div>
+    <!-- Monatsvergleich Tabelle -->
+    <div class="chart-card">
+      <div class="chart-card-header"><span class="chart-card-title">Monatsvergleich — KPIs</span></div>
+      <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Monat</th><th>Plan</th><th>Ist</th><th>Δ Budget</th><th>Klicks</th><th>Conv./Leads</th><th>Ø CPC</th></tr></thead><tbody>
+        <tr><td class="fw-700">Jan 2026</td><td>€7.000</td><td>€6.141,97</td><td class="val-negative">-€858 (88%)</td><td>6.317</td><td>87</td><td>€0,97</td></tr>
+        <tr><td class="fw-700">Feb 2026</td><td>€6.000</td><td>€6.830,14<br><small class="text-red">▲ 11,2%</small></td><td class="val-negative">+€830 (114%)</td><td>4.919<br><small class="text-red">▼ 22,1%</small></td><td>70<br><small class="text-red">▼ 19,5%</small></td><td>€1,39<br><small class="text-red">▲ 42,8%</small></td></tr>
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: EMPFEHLUNGEN ═══ -->
+  <section id="tab-empfehlungen" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">🖌️</span> Handlungsempfehlungen — Februar 2026</h2>
+    <p class="section-subtitle">Priorisierte Maßnahmen basierend auf Februar-Daten</p>
+
+    <div class="recommendation-list">
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">🚨 Meta CPL-Explosion stoppen</div><div class="rec-description">Prospecting-CPL von €60→€119 (+97%), Remarketing von €54→€104 (+92%). Sofort neue Creatives — Ad Fatigue offensichtlich.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">🔥 Grafikdesign Bachelor — neuer Google-Star</div><div class="rec-description">Von 0 Conv. (Jan) auf 5 Conv. bei €74 CPA (Feb). Starker Aufwärtstrend — Budget und Keywords ausbauen.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">💡 Meta: Blog-Anzeigengruppe als Hidden Winner</div><div class="rec-description">Nur €25,73 für 1 Lead — bester CPL aller Meta-Anzeigengruppen im Feb. Reaktivierung mit höherem Budget testen.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">⏸️ Meta: MasterCreativeDirection pausieren</div><div class="rec-description">CPL €225,84 bei nur 2 Leads — schlechtester CPL aller Anzeigengruppen. Budget zu Grafikdesign und DigitalMediaDesign verschieben.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">⚡ PGM & SPM Bachelor weiter Top-Performer</div><div class="rec-description">PGM: 4 Conv. bei €15,68 CPA (bester). SPM: 2 Conv. bei €17,21 CPA. Budget aggressiv skalieren.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card high"><div class="rec-content"><div class="rec-title">📊 BA Bachelor & TEM Bachelor weiter kritisch</div><div class="rec-description">BA: €489 für 1 Conv., TEM: €434 für 1 Conv. Bid-Strategien ändern oder Budget umverteilen.</div></div><span class="rec-priority high">Hoch</span></div>
+      <div class="recommendation-card medium"><div class="rec-content"><div class="rec-title">🟦 Google PMax stabil — Volumen zurückgewinnen</div><div class="rec-description">Allgemein & Studiengänge liefern ~€90 CPA, aber Conv. sank (31→20). Zielgruppen-Signale überprüfen.</div></div><span class="rec-priority medium">Mittel</span></div>
+      <div class="recommendation-card medium"><div class="rec-content"><div class="rec-title">🖌️ Meta: DigitalMediaDesign skalieren</div><div class="rec-description">7 Leads bei €74,77 CPL — zweitbester CPL bei hohem Volumen. Budget erhöhen und Creative-Varianten testen.</div></div><span class="rec-priority medium">Mittel</span></div>
+    </div>
+
+    <!-- Zusammenfassung -->
+    <div class="summary-box">
+      <h3>🟥 Zusammenfassung Februar 2026</h3>
+      <div class="summary-row"><span class="summary-label">Gesamtbudget:</span><span class="summary-value">€6.830,14 von €6.000 Plan (114%)</span></div>
+      <div class="summary-row"><span class="summary-label">Budget-Split:</span><span class="summary-value">Google €3.375,71 / €5.000 Plan (68%) · Meta €3.454,43 / €1.000 Plan (345%)</span></div>
+      <div class="summary-row"><span class="summary-label">Ergebnisse:</span><span class="summary-value">70 Conversions/Leads (40 Google + 30 Meta)</span></div>
+      <div class="summary-row"><span class="summary-label">Ø Cost per Result:</span><span class="summary-value">€97,57</span></div>
+      <div class="summary-row"><span class="summary-label">vs. Vormonat:</span><span class="summary-value">Spend ↑ 11,2% · Conv. ↓ 19,5%</span></div>
+      <div class="summary-row"><span class="summary-label">Google Winner:</span><span class="summary-value">PGM Bachelor (CPA €15,68)</span></div>
+      <div class="summary-row"><span class="summary-label">Meta Winner:</span><span class="summary-value">REMARKETING (CPL €103,53)</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="dashboard-footer">
+    <span>FHD Performance Dashboard 2026</span>
+    <span>Erstellt: 17.03.2026 · Google Ads + Meta Ads Manager</span>
+  </footer>
+</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script type="module">
+  import { initTabNavigation } from '../scripts/tab-navigation.js';
+  import { initMonthSelector, updateDashboardData } from '../scripts/month-selector.js';
+  import { initCharts } from '../scripts/charts.js';
+  import { initCampaignToggle } from '../scripts/campaign-toggle.js';
+  import { initKpiAnimations } from '../scripts/kpi-animations.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initTabNavigation();
+    initMonthSelector();
+    initCampaignToggle();
+    initKpiAnimations();
+
+    // Charts etwas verzögert initialisieren (CDN muss geladen sein)
+    setTimeout(() => {
+      initCharts();
+    }, 300);
+
+    // Bei Monatswechsel Daten aktualisieren
+    document.addEventListener('monthChanged', (e) => {
+      updateDashboardData(e.detail.month);
+    });
+  });
+</script>
+</body>
 </html>
