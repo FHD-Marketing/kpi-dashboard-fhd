@@ -48,12 +48,24 @@ async function fetchYouTubeAnalytics() {
 }
 
 async function saveToSupabase(rows) {
-  const { error } = await supabase
-    .from('youtube_stats')
-    .upsert(rows, { onConflict: 'date' });
+  const dates = rows.map(r => r.date);
 
-  if (error) {
-    console.error('Failed to save to Supabase:', error.message);
+  const { error: deleteError } = await supabase
+    .from('youtube_stats')
+    .delete()
+    .in('date', dates);
+
+  if (deleteError) {
+    console.error('Failed to delete existing rows:', deleteError.message);
+    return;
+  }
+
+  const { error: insertError } = await supabase
+    .from('youtube_stats')
+    .insert(rows);
+
+  if (insertError) {
+    console.error('Failed to save to Supabase:', insertError.message);
     return;
   }
   console.log(`Saved ${rows.length} row(s) to Supabase.`);
