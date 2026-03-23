@@ -20,7 +20,6 @@ import '../styles/global.css';
       <h1>Fachhochschule Dresden</h1>
       <div class="header-subtitle">Google Ads · Meta Ads · Jahresübersicht</div>
     </div>
-    <div class="header-logo">:)</div>
   </header>
 
   <!-- ═══ MONTH SELECTOR ═══ -->
@@ -480,7 +479,7 @@ import '../styles/global.css';
 </div>
 
 <!-- ═══ SCRIPTS ═══ -->
-<script type="module">
+<script>
   import { initTabNavigation } from '../scripts/tab-navigation.js';
   import { initMonthSelector, updateDashboardData } from '../scripts/month-selector.js';
   import { initCharts } from '../scripts/charts.js';
@@ -500,7 +499,7 @@ import '../styles/global.css';
 
     // Bei Monatswechsel Daten aktualisieren
     document.addEventListener('monthChanged', (e) => {
-      updateDashboardData(e.detail.month);
+      updateDashboardData((e as CustomEvent).detail.month);
     });
   });
 </script>

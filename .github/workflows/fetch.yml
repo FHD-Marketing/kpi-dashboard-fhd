@@ -1,4 +1,4 @@
-name: YouTube Analytics Cronjob
+name: Fetch Data
 
 on:
   schedule:
@@ -27,4 +27,4 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: npx tsx src/scripts/fetch_data.ts
+        run: node src/scripts/fetch-data.js

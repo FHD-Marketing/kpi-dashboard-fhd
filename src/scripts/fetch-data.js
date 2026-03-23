@@ -3,8 +3,8 @@ import { google } from 'googleapis';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 const oauth2Client = new google.auth.OAuth2(
@@ -18,14 +18,7 @@ const youtubeAnalytics = google.youtubeAnalytics({
   auth: oauth2Client,
 });
 
-interface AnalyticsData {
-  date: string;
-  views: number;
-  likes: number;
-  subscribers_gained: number;
-}
-
-async function fetchYouTubeAnalytics(): Promise<AnalyticsData | null> {
+async function fetchYouTubeAnalytics() {
   try {
     const endDate = new Date().toISOString().split('T')[0];
     const startDate = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -41,20 +34,20 @@ async function fetchYouTubeAnalytics(): Promise<AnalyticsData | null> {
     if (response.data.rows && response.data.rows.length > 0) {
       const row = response.data.rows[0];
       return {
-        date: row[0] as string,
-        views: row[1] as number,
-        likes: row[2] as number,
-        subscribers_gained: row[3] as number,
+        date: row[0],
+        views: row[1],
+        likes: row[2],
+        subscribers_gained: row[3],
       };
     }
     return null;
   } catch (error) {
-    console.error('Failed to fetch YouTube data:', (error as Error).message);
+    console.error('Failed to fetch YouTube data:', error.message);
     throw error;
   }
 }
 
-async function saveToSupabase(data: AnalyticsData): Promise<void> {
+async function saveToSupabase(data) {
   const { error } = await supabase
     .from('youtube_stats')
     .insert([data]);
@@ -66,7 +59,7 @@ async function saveToSupabase(data: AnalyticsData): Promise<void> {
   console.log('Data saved to Supabase successfully.');
 }
 
-async function run(): Promise<void> {
+async function run() {
   console.log('Starting analytics fetch...');
   const analyticsData = await fetchYouTubeAnalytics();
 
@@ -79,3 +72,4 @@ async function run(): Promise<void> {
 }
 
 run();
+
