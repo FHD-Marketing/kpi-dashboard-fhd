@@ -1,3 +1,9 @@
+/* ============================================================
+   FHD KPI DASHBOARD – GLOBAL STYLES
+   Alle CSS-Änderungen zentral in dieser Datei.
+   ============================================================ */
+
+/* ── Fonts ─────────────────────────────────────────────────── */
 @font-face {
     font-family: 'Inter';
     font-style: normal;
@@ -5,7 +11,6 @@
     font-display: swap;
     src: url('/fonts/inter-v19-latin-regular.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Inter';
     font-style: italic;
@@ -13,7 +18,6 @@
     font-display: swap;
     src: url('/fonts/inter-v19-latin-italic.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Inter';
     font-style: normal;
@@ -21,11 +25,1084 @@
     font-display: swap;
     src: url('/fonts/inter-v19-latin-600.woff2') format('woff2');
 }
-
 @font-face {
     font-family: 'Inter';
     font-style: normal;
     font-weight: 700;
     font-display: swap;
     src: url('/fonts/inter-v19-latin-700.woff2') format('woff2');
+}
+
+/* ── Design Tokens (CSS Custom Properties) ─────────────────── */
+:root {
+    /* Background */
+    --bg-primary:      #0a0e1a;
+    --bg-secondary:    #0f1629;
+    --bg-card:         #111827;
+    --bg-card-alt:     #0d1321;
+    --bg-card-hover:   #1a2332;
+    --bg-nav:          #111827;
+    --bg-nav-active:   #3b82f6;
+    --bg-input:        #1e293b;
+
+    /* Text */
+    --text-primary:    #f1f5f9;
+    --text-secondary:  #94a3b8;
+    --text-muted:      #64748b;
+    --text-label:      #cbd5e1;
+
+    /* Accent colors */
+    --accent-blue:     #3b82f6;
+    --accent-blue-dim: #2563eb;
+    --accent-cyan:     #06b6d4;
+    --accent-green:    #22c55e;
+    --accent-red:      #ef4444;
+    --accent-orange:   #f97316;
+    --accent-yellow:   #eab308;
+    --accent-purple:   #a855f7;
+    --accent-pink:     #ec4899;
+
+    /* Channel brand colors */
+    --color-google:    #4285f4;
+    --color-meta:      #0668e1;
+    --color-instagram: #e1306c;
+    --color-youtube:   #ff0000;
+    --color-tiktok:    #00f2ea;
+    --color-linkedin:  #0a66c2;
+    --color-mailchimp: #ffe01b;
+    --color-studycheck:#00b67a;
+
+    /* Borders */
+    --border-color:    #1e293b;
+    --border-subtle:   #1a2332;
+
+    /* Sizing */
+    --radius-sm:       6px;
+    --radius-md:       10px;
+    --radius-lg:       14px;
+    --radius-xl:       20px;
+
+    /* Spacing */
+    --space-xs:        4px;
+    --space-sm:        8px;
+    --space-md:        16px;
+    --space-lg:        24px;
+    --space-xl:        32px;
+    --space-2xl:       48px;
+
+    /* Shadows */
+    --shadow-card:     0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+    --shadow-elevated: 0 4px 24px rgba(0,0,0,.4);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 400ms ease;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 14px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ── Dashboard Shell ───────────────────────────────────────── */
+.dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-lg) var(--space-xl);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-md);
+}
+
+.header-left .header-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    margin-bottom: var(--space-xs);
+}
+
+.header-left h1 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.header-left .header-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.header-logo {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+/* ── Month Selector ────────────────────────────────────────── */
+.month-selector {
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-sm) 0;
+    margin-bottom: var(--space-md);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.month-selector::-webkit-scrollbar {
+    display: none;
+}
+
+.month-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    min-width: 50px;
+}
+.month-btn:hover {
+    color: var(--text-secondary);
+    background: var(--bg-card);
+}
+.month-btn.active {
+    background: var(--accent-blue);
+    color: #fff;
+    font-weight: 600;
+}
+.month-btn .month-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.month-btn .month-spend {
+    font-size: 0.65rem;
+    margin-top: 2px;
+    opacity: 0.8;
+}
+.month-btn.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* ── Tab Navigation ────────────────────────────────────────── */
+.tab-navigation {
+    display: flex;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    background: var(--bg-nav);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-xl);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tab-navigation::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-xl);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+.tab-btn.active {
+    background: var(--accent-blue);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59,130,246,.35);
+}
+.tab-btn .tab-icon {
+    font-size: 0.9rem;
+}
+
+/* ── Tab Content ───────────────────────────────────────────── */
+.tab-content {
+    display: none;
+    animation: fadeIn var(--transition-base) ease;
+}
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section Title ─────────────────────────────────────────── */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: var(--space-xs);
+}
+.section-title .title-icon {
+    font-size: 1.2rem;
+}
+.section-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
+}
+
+/* ── KPI Cards Grid ────────────────────────────────────────── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+.kpi-grid.cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+.kpi-grid.cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* ── KPI Card ──────────────────────────────────────────────── */
+.kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-card);
+}
+
+.kpi-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.kpi-card-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+}
+.kpi-card-label .kpi-icon {
+    font-size: 0.85rem;
+}
+
+.kpi-trend {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.kpi-trend.up {
+    color: var(--accent-red);
+    background: rgba(239,68,68,.1);
+}
+.kpi-trend.down {
+    color: var(--accent-green);
+    background: rgba(34,197,94,.1);
+}
+/* For metrics where "up" is good */
+.kpi-trend.positive {
+    color: var(--accent-green);
+    background: rgba(34,197,94,.1);
+}
+.kpi-trend.negative {
+    color: var(--accent-red);
+    background: rgba(239,68,68,.1);
+}
+
+.kpi-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+    line-height: 1.2;
+}
+
+.kpi-detail {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ── Chart Container ───────────────────────────────────────── */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+.charts-grid.cols-1 {
+    grid-template-columns: 1fr;
+}
+.charts-grid.wide-left {
+    grid-template-columns: 2fr 1fr;
+}
+
+.chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    transition: border-color var(--transition-fast);
+}
+.chart-card:hover {
+    border-color: var(--border-color);
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+.chart-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.chart-toggle {
+    display: flex;
+    gap: var(--space-xs);
+}
+.chart-toggle button {
+    padding: 4px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+}
+.chart-toggle button.active {
+    background: var(--accent-blue);
+    color: #fff;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+}
+.chart-wrapper canvas {
+    width: 100% !important;
+}
+
+.chart-legend {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: center;
+    margin-top: var(--space-md);
+    flex-wrap: wrap;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* ── Budget Cards ──────────────────────────────────────────── */
+.budget-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.budget-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.budget-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+.budget-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.budget-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.budget-badge.over {
+    background: rgba(239,68,68,.15);
+    color: var(--accent-red);
+}
+.budget-badge.on-track {
+    background: rgba(34,197,94,.15);
+    color: var(--accent-green);
+}
+
+.budget-values {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+}
+.budget-plan,
+.budget-actual {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.budget-plan span,
+.budget-actual span {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 2px;
+}
+
+.budget-bar {
+    height: 6px;
+    background: var(--bg-input);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--space-sm);
+}
+.budget-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition-slow);
+}
+.budget-bar-fill.over {
+    background: var(--accent-red);
+}
+.budget-bar-fill.on-track {
+    background: var(--accent-green);
+}
+
+.budget-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.budget-footer .budget-diff {
+    font-weight: 600;
+}
+.budget-footer .budget-diff.over {
+    color: var(--accent-red);
+}
+.budget-footer .budget-diff.on-track {
+    color: var(--accent-green);
+}
+
+/* ── Campaign Sections (Meta Ads / Google Ads) ─────────────── */
+.campaign-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+}
+
+.campaign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.campaign-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.campaign-name {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.campaign-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+.campaign-badge.winner {
+    background: rgba(34,197,94,.15);
+    color: var(--accent-green);
+}
+.campaign-badge.loser {
+    background: rgba(239,68,68,.15);
+    color: var(--accent-red);
+}
+.campaign-badge.neutral {
+    background: rgba(148,163,184,.15);
+    color: var(--text-secondary);
+}
+
+.campaign-groups {
+    font-size: 0.75rem;
+    color: var(--accent-blue);
+}
+
+.campaign-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.campaign-progress {
+    height: 3px;
+    background: var(--bg-input);
+    border-radius: 2px;
+    margin-bottom: var(--space-lg);
+    overflow: hidden;
+}
+.campaign-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent-green);
+}
+
+/* Campaign Metrics Grid */
+.campaign-metrics {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--border-subtle);
+}
+.campaign-metrics + .campaign-metrics {
+    border-top: 1px solid var(--border-subtle);
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+}
+.metric-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-xs);
+}
+.metric-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Campaign expand/collapse */
+.campaign-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: none;
+    border: none;
+    color: var(--accent-blue);
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: var(--space-sm) 0;
+    transition: color var(--transition-fast);
+}
+.campaign-toggle-btn:hover {
+    color: var(--accent-cyan);
+}
+
+.campaign-details {
+    display: none;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-subtle);
+}
+.campaign-details.open {
+    display: block;
+    animation: fadeIn var(--transition-base) ease;
+}
+
+/* ── Data Table ────────────────────────────────────────────── */
+.data-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: var(--space-xl);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.data-table thead th {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+.data-table tbody td {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+.data-table tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+.data-table .val-positive {
+    color: var(--accent-green);
+}
+.data-table .val-negative {
+    color: var(--accent-red);
+}
+
+/* ── Empfehlungen (Recommendations) ────────────────────────── */
+.recommendation-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.recommendation-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg) var(--space-xl);
+    border-radius: var(--radius-md);
+    border-left: 4px solid transparent;
+    transition: all var(--transition-fast);
+    cursor: default;
+}
+.recommendation-card:hover {
+    transform: translateX(4px);
+}
+
+/* Severity coloring */
+.recommendation-card.high {
+    background: rgba(239,68,68,.06);
+    border-left-color: var(--accent-red);
+}
+.recommendation-card.medium {
+    background: rgba(234,179,8,.06);
+    border-left-color: var(--accent-yellow);
+}
+.recommendation-card.low {
+    background: rgba(34,197,94,.06);
+    border-left-color: var(--accent-green);
+}
+
+.rec-content .rec-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+}
+.rec-content .rec-description {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.rec-priority {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+.rec-priority.high {
+    background: rgba(239,68,68,.15);
+    color: var(--accent-red);
+}
+.rec-priority.medium {
+    background: rgba(234,179,8,.15);
+    color: var(--accent-yellow);
+}
+
+/* ── Summary Box ───────────────────────────────────────────── */
+.summary-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+}
+.summary-box h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-lg);
+}
+.summary-box .summary-row {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+.summary-box .summary-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+.summary-box .summary-value {
+    color: var(--text-secondary);
+}
+
+/* ── Google Ads Campaign Table ─────────────────────────────── */
+.google-campaign-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    overflow: hidden;
+}
+
+.google-campaign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.google-campaign-header:hover {
+    background: var(--bg-card-hover);
+}
+
+.google-campaign-name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.google-campaign-status {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.google-campaign-status.active {
+    color: var(--accent-green);
+}
+.google-campaign-status.paused {
+    color: var(--text-muted);
+}
+
+.google-campaign-body {
+    display: none;
+    padding: 0 var(--space-lg) var(--space-lg);
+}
+.google-campaign-body.open {
+    display: block;
+    animation: fadeIn var(--transition-base) ease;
+}
+
+.google-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.google-metric {
+    display: flex;
+    flex-direction: column;
+}
+.google-metric .g-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+}
+.google-metric .g-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+.google-metric .g-trend {
+    font-size: 0.65rem;
+    margin-top: 2px;
+}
+.google-metric .g-trend.positive {
+    color: var(--accent-green);
+}
+.google-metric .g-trend.negative {
+    color: var(--accent-red);
+}
+
+/* ── Horizontal Bar Chart (Google Ads Spend) ───────────────── */
+.horiz-bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md) 0;
+}
+
+.horiz-bar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+.horiz-bar-label {
+    min-width: 140px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.horiz-bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.horiz-bar-fill {
+    height: 100%;
+    background: var(--accent-blue);
+    border-radius: 4px;
+    transition: width 0.8s ease;
+    min-width: 2px;
+}
+.horiz-bar-value {
+    min-width: 70px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ── Sub-Tab (Filters within a Tab) ────────────────────────── */
+.sub-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+}
+
+.sub-tab-btn {
+    padding: var(--space-xs) var(--space-md);
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.sub-tab-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+.sub-tab-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.dashboard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xl) 0;
+    margin-top: auto;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* ── Utility Classes ───────────────────────────────────────── */
+.text-green  { color: var(--accent-green); }
+.text-red    { color: var(--accent-red); }
+.text-blue   { color: var(--accent-blue); }
+.text-yellow { color: var(--accent-yellow); }
+.text-muted  { color: var(--text-muted); }
+.fw-600      { font-weight: 600; }
+.fw-700      { font-weight: 700; }
+.mt-md       { margin-top: var(--space-md); }
+.mb-md       { margin-bottom: var(--space-md); }
+.mb-lg       { margin-bottom: var(--space-lg); }
+.mb-xl       { margin-bottom: var(--space-xl); }
+
+/* ── Channel color accents ─────────────────────────────────── */
+.channel-google    .kpi-card { border-top: 2px solid var(--color-google); }
+.channel-meta      .kpi-card { border-top: 2px solid var(--color-meta); }
+.channel-instagram .kpi-card { border-top: 2px solid var(--color-instagram); }
+.channel-youtube   .kpi-card { border-top: 2px solid var(--color-youtube); }
+.channel-tiktok    .kpi-card { border-top: 2px solid var(--color-tiktok); }
+.channel-linkedin  .kpi-card { border-top: 2px solid var(--color-linkedin); }
+.channel-mailchimp .kpi-card { border-top: 2px solid var(--color-mailchimp); }
+.channel-studycheck .kpi-card { border-top: 2px solid var(--color-studycheck); }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+    .kpi-grid.cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .budget-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .charts-grid.wide-left {
+        grid-template-columns: 1fr;
+    }
+    .campaign-metrics {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .google-metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 13px;
+    }
+    .dashboard {
+        padding: var(--space-md);
+    }
+    .dashboard-header {
+        flex-direction: column;
+        gap: var(--space-md);
+        padding: var(--space-md);
+    }
+    .kpi-grid,
+    .kpi-grid.cols-4,
+    .kpi-grid.cols-3 {
+        grid-template-columns: 1fr;
+    }
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    .budget-grid {
+        grid-template-columns: 1fr;
+    }
+    .campaign-metrics,
+    .google-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .recommendation-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+    .horiz-bar-label {
+        min-width: 80px;
+        font-size: 0.65rem;
+    }
 }
