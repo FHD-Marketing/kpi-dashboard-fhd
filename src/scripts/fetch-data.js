@@ -18,7 +18,6 @@ async function connectDB(retries = 3, delay = 5000) {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: { rejectUnauthorized: false },
     connectTimeout: 30000,
   };
 
@@ -32,12 +31,12 @@ async function connectDB(retries = 3, delay = 5000) {
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`🔌 DB connection attempt ${attempt}/${retries} to ${config.host}:${config.port}...`);
+      console.log(`DB connection attempt ${attempt}/${retries} to ${config.host}:${config.port}...`);
       const connection = await mysql.createConnection(config);
-      console.log('✅ DB connection established.');
+      console.log('DB connection established.');
       return connection;
     } catch (err) {
-      console.error(`❌ Attempt ${attempt}/${retries} failed: ${err.message}`);
+      console.error(`Attempt ${attempt}/${retries} failed: ${err.message}`);
       if (attempt === retries) {
         throw new Error(
           `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
@@ -45,7 +44,7 @@ async function connectDB(retries = 3, delay = 5000) {
           `Original error: ${err.message}`
         );
       }
-      console.log(`⏳ Retrying in ${delay / 1000}s...`);
+      console.log(`Retrying in ${delay / 1000}s...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -118,7 +117,7 @@ async function saveToMySQL(channelData, topVideosData) {
       `;
       const channelValues = channelData.map(d => [d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes]);
       await db.query(channelQuery, [channelValues]);
-      console.log(`✅ ${channelData.length} days saved to channel_stats.`);
+      console.log(`${channelData.length} days saved to channel_stats.`);
     }
 
     if (topVideosData.length > 0) {
@@ -130,7 +129,7 @@ async function saveToMySQL(channelData, topVideosData) {
       `;
       const videoValues = topVideosData.map(v => [v.id, v.title, v.views, v.date]);
       await db.query(videoQuery, [videoValues]);
-      console.log(`✅ ${topVideosData.length} top videos saved.`);
+      console.log(`${topVideosData.length} top videos saved.`);
     }
   } finally {
     await db.end();
