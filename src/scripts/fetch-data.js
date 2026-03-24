@@ -23,9 +23,7 @@ async function connectDB(retries = 3, delay = 5000) {
 
   if (!config.host || !config.user || !config.password || !config.database) {
     throw new Error(
-      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME. ' +
-      `Got: host=${config.host ? '✓' : '✗'}, user=${config.user ? '✓' : '✗'}, ` +
-      `password=${config.password ? '✓' : '✗'}, database=${config.database ? '✓' : '✗'}`
+      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.'
     );
   }
 
@@ -40,7 +38,6 @@ async function connectDB(retries = 3, delay = 5000) {
       if (attempt === retries) {
         throw new Error(
           `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
-          `Make sure the database is running and accessible from this network (e.g. GitHub Actions IP). ` +
           `Original error: ${err.message}`
         );
       }
@@ -48,6 +45,53 @@ async function connectDB(retries = 3, delay = 5000) {
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
+}
+
+function monthTable(prefix, monthKey) {
+  return `${prefix}_${monthKey.replace('-', '_')}`;
+}
+
+async function ensureTablesExist(db, monthKey) {
+  const statsTable = monthTable('stats', monthKey);
+  const videosTable = monthTable('top_videos', monthKey);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
+      date DATE PRIMARY KEY,
+      views INT DEFAULT 0,
+      likes INT DEFAULT 0,
+      subscribers_gained INT DEFAULT 0,
+      watch_time_minutes INT DEFAULT 0,
+      total_views BIGINT DEFAULT 0,
+      total_subscribers INT DEFAULT 0,
+      total_video_count INT DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${videosTable}\` (
+      video_id VARCHAR(20) PRIMARY KEY,
+      title VARCHAR(255),
+      views INT DEFAULT 0,
+      rank_position TINYINT DEFAULT 0
+    )
+  `);
+
+  console.log(`Tables ${statsTable} and ${videosTable} verified/created.`);
+}
+
+async function fetchChannelTotals() {
+  const response = await youtubeData.channels.list({
+    part: 'statistics',
+    mine: true,
+  });
+
+  const stats = response.data.items[0].statistics;
+  return {
+    totalViews: parseInt(stats.viewCount, 10),
+    totalSubscribers: parseInt(stats.subscriberCount, 10),
+    totalVideoCount: parseInt(stats.videoCount, 10),
+  };
 }
 
 async function fetchChannelStats(startDate, endDate) {
@@ -66,7 +110,7 @@ async function fetchChannelStats(startDate, endDate) {
     views: row[1],
     likes: row[2],
     subscribers_gained: row[3],
-    watch_time_minutes: row[4]
+    watch_time_minutes: row[4],
   }));
 }
 
@@ -78,7 +122,7 @@ async function fetchTopVideos(startDate, endDate) {
     metrics: 'views',
     dimensions: 'video',
     sort: '-views',
-    maxResults: 5 // Top 5
+    maxResults: 5,
   });
 
   if (!analyticsResponse.data.rows) return [];
@@ -88,7 +132,7 @@ async function fetchTopVideos(startDate, endDate) {
 
   const dataResponse = await youtubeData.videos.list({
     id: videoIds.join(','),
-    part: 'snippet'
+    part: 'snippet',
   });
 
   const titles = {};
@@ -96,40 +140,52 @@ async function fetchTopVideos(startDate, endDate) {
     titles[item.id] = item.snippet.title;
   });
 
-  return videoStats.map(row => ({
+  return videoStats.map((row, index) => ({
     id: row[0],
     title: titles[row[0]] || 'Unknown Video',
     views: row[1],
-    date: endDate
+    rank: index + 1,
   }));
 }
 
-async function saveToMySQL(channelData, topVideosData) {
+async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideos) {
   const db = await connectDB();
+  const statsTable = monthTable('stats', monthKey);
+  const videosTable = monthTable('top_videos', monthKey);
 
   try {
+    await ensureTablesExist(db, monthKey);
+
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO channel_stats (date, views, likes, subscribers_gained, watch_time_minutes)
+        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, total_views, total_subscribers, total_video_count)
         VALUES ?
         ON DUPLICATE KEY UPDATE
-        views=VALUES(views), likes=VALUES(likes), subscribers_gained=VALUES(subscribers_gained), watch_time_minutes=VALUES(watch_time_minutes)
+        views=VALUES(views), likes=VALUES(likes),
+        subscribers_gained=VALUES(subscribers_gained),
+        watch_time_minutes=VALUES(watch_time_minutes),
+        total_views=VALUES(total_views),
+        total_subscribers=VALUES(total_subscribers),
+        total_video_count=VALUES(total_video_count)
       `;
-      const channelValues = channelData.map(d => [d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes]);
+      const channelValues = channelData.map(d => [
+        d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes,
+        channelTotals.totalViews, channelTotals.totalSubscribers, channelTotals.totalVideoCount,
+      ]);
       await db.query(channelQuery, [channelValues]);
-      console.log(`${channelData.length} days saved to channel_stats.`);
+      console.log(`${channelData.length} days saved to ${statsTable}.`);
     }
 
-    if (topVideosData.length > 0) {
+    if (monthlyTopVideos.length > 0) {
       const videoQuery = `
-        INSERT INTO top_videos (id, title, views, last_updated)
+        INSERT INTO \`${videosTable}\` (video_id, title, views, rank_position)
         VALUES ?
         ON DUPLICATE KEY UPDATE
-        title=VALUES(title), views=VALUES(views), last_updated=VALUES(last_updated)
+        title=VALUES(title), views=VALUES(views), rank_position=VALUES(rank_position)
       `;
-      const videoValues = topVideosData.map(v => [v.id, v.title, v.views, v.date]);
+      const videoValues = monthlyTopVideos.map(v => [v.id, v.title, v.views, v.rank]);
       await db.query(videoQuery, [videoValues]);
-      console.log(`${topVideosData.length} top videos saved.`);
+      console.log(`${monthlyTopVideos.length} top videos saved to ${videosTable}.`);
     }
   } finally {
     await db.end();
@@ -139,14 +195,29 @@ async function saveToMySQL(channelData, topVideosData) {
 async function run() {
   try {
     console.log('Starting analytics fetch...');
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
-    const channelData = await fetchChannelStats(startDate, endDate);
-    const topVideosData = await fetchTopVideos(startDate, endDate);
+    const now = new Date();
+    const year = now.getFullYear();
+    const monthNum = now.getMonth();
+    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
 
-    await saveToMySQL(channelData, topVideosData);
+    const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
+    const today = now.toISOString().split('T')[0];
 
+    console.log(`Fetching data for month ${monthKey} (${startOfMonth} to ${today})...`);
+
+    const channelTotals = await fetchChannelTotals();
+    console.log(`Channel totals: ${channelTotals.totalViews} views, ${channelTotals.totalSubscribers} subs, ${channelTotals.totalVideoCount} videos`);
+
+    const channelData = await fetchChannelStats(startOfMonth, today);
+    console.log(`Fetched ${channelData.length} daily records for ${monthKey}.`);
+
+    const monthlyTopVideos = await fetchTopVideos(startOfMonth, today);
+    console.log(`Fetched ${monthlyTopVideos.length} top videos for ${monthKey}.`);
+
+    await saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideos);
+
+    console.log('Done.');
   } catch (error) {
     console.error('Error during execution:', error.message);
     if (error.code) console.error('   Error code:', error.code);
