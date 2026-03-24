@@ -11,16 +11,44 @@ oauth2Client.setCredentials({ refresh_token: process.env.YT_REFRESH_TOKEN });
 const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: oauth2Client });
 const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
 
-async function connectDB() {
-  return await mysql.createConnection({
+async function connectDB(retries = 3, delay = 5000) {
+  const config = {
     host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '3306'),
+    port: 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     ssl: { rejectUnauthorized: false },
     connectTimeout: 30000,
-  });
+  };
+
+  if (!config.host || !config.user || !config.password || !config.database) {
+    throw new Error(
+      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME. ' +
+      `Got: host=${config.host ? '✓' : '✗'}, user=${config.user ? '✓' : '✗'}, ` +
+      `password=${config.password ? '✓' : '✗'}, database=${config.database ? '✓' : '✗'}`
+    );
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`🔌 DB connection attempt ${attempt}/${retries} to ${config.host}:${config.port}...`);
+      const connection = await mysql.createConnection(config);
+      console.log('✅ DB connection established.');
+      return connection;
+    } catch (err) {
+      console.error(`❌ Attempt ${attempt}/${retries} failed: ${err.message}`);
+      if (attempt === retries) {
+        throw new Error(
+          `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
+          `Make sure the database is running and accessible from this network (e.g. GitHub Actions IP). ` +
+          `Original error: ${err.message}`
+        );
+      }
+      console.log(`⏳ Retrying in ${delay / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
 }
 
 async function fetchChannelStats(startDate, endDate) {
@@ -83,9 +111,9 @@ async function saveToMySQL(channelData, topVideosData) {
   try {
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO channel_stats (date, views, likes, subscribers_gained, watch_time_minutes) 
-        VALUES ? 
-        ON DUPLICATE KEY UPDATE 
+        INSERT INTO channel_stats (date, views, likes, subscribers_gained, watch_time_minutes)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE
         views=VALUES(views), likes=VALUES(likes), subscribers_gained=VALUES(subscribers_gained), watch_time_minutes=VALUES(watch_time_minutes)
       `;
       const channelValues = channelData.map(d => [d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes]);
@@ -95,9 +123,9 @@ async function saveToMySQL(channelData, topVideosData) {
 
     if (topVideosData.length > 0) {
       const videoQuery = `
-        INSERT INTO top_videos (id, title, views, last_updated) 
-        VALUES ? 
-        ON DUPLICATE KEY UPDATE 
+        INSERT INTO top_videos (id, title, views, last_updated)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE
         title=VALUES(title), views=VALUES(views), last_updated=VALUES(last_updated)
       `;
       const videoValues = topVideosData.map(v => [v.id, v.title, v.views, v.date]);
