@@ -14,9 +14,12 @@ const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
 async function connectDB() {
   return await mysql.createConnection({
     host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '3306'),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    ssl: { rejectUnauthorized: false },
+    connectTimeout: 30000,
   });
 }
 
@@ -118,7 +121,12 @@ async function run() {
     await saveToMySQL(channelData, topVideosData);
 
   } catch (error) {
-    console.error('❌ Error during execution:', error.message);
+    console.error('Error during execution:', error.message);
+    if (error.code) console.error('   Error code:', error.code);
+    if (error.errno) console.error('   Errno:', error.errno);
+    if (error.sqlState) console.error('   SQL State:', error.sqlState);
+    console.error('   Stack:', error.stack);
+    process.exit(1);
   }
 }
 
