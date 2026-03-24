@@ -54,6 +54,7 @@ function monthTable(prefix, monthKey) {
 async function ensureTablesExist(db, monthKey) {
   const statsTable = monthTable('stats', monthKey);
   const videosTable = monthTable('top_videos', monthKey);
+  const totalsTable = monthTable('totals', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
@@ -61,7 +62,13 @@ async function ensureTablesExist(db, monthKey) {
       views INT DEFAULT 0,
       likes INT DEFAULT 0,
       subscribers_gained INT DEFAULT 0,
-      watch_time_minutes INT DEFAULT 0,
+      watch_time_minutes INT DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${totalsTable}\` (
+      date DATE PRIMARY KEY,
       total_views BIGINT DEFAULT 0,
       total_likes BIGINT DEFAULT 0,
       total_subscribers INT DEFAULT 0,
@@ -79,7 +86,7 @@ async function ensureTablesExist(db, monthKey) {
     )
   `);
 
-  console.log(`Tables ${statsTable} and ${videosTable} verified/created.`);
+  console.log(`Tables ${statsTable}, ${totalsTable} and ${videosTable} verified/created.`);
 }
 
 async function fetchChannelTotals() {
@@ -168,31 +175,41 @@ async function fetchTopVideos(startDate, endDate) {
 async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideos) {
   const db = await connectDB();
   const statsTable = monthTable('stats', monthKey);
+  const totalsTable = monthTable('totals', monthKey);
   const videosTable = monthTable('top_videos', monthKey);
+  const today = new Date().toISOString().split('T')[0];
 
   try {
     await ensureTablesExist(db, monthKey);
 
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, total_views, total_likes, total_subscribers, total_video_count)
+        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes)
         VALUES ?
         ON DUPLICATE KEY UPDATE
         views=VALUES(views), likes=VALUES(likes),
         subscribers_gained=VALUES(subscribers_gained),
-        watch_time_minutes=VALUES(watch_time_minutes),
-        total_views=VALUES(total_views),
-        total_likes=VALUES(total_likes),
-        total_subscribers=VALUES(total_subscribers),
-        total_video_count=VALUES(total_video_count)
+        watch_time_minutes=VALUES(watch_time_minutes)
       `;
       const channelValues = channelData.map(d => [
         d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes,
-        channelTotals.totalViews, channelTotals.totalLikes, channelTotals.totalSubscribers, channelTotals.totalVideoCount,
       ]);
       await db.query(channelQuery, [channelValues]);
       console.log(`${channelData.length} days saved to ${statsTable}.`);
     }
+
+    const totalsQuery = `
+      INSERT INTO \`${totalsTable}\` (date, total_views, total_likes, total_subscribers, total_video_count)
+      VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+      total_views=VALUES(total_views), total_likes=VALUES(total_likes),
+      total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
+    `;
+    await db.query(totalsQuery, [
+      today, channelTotals.totalViews, channelTotals.totalLikes,
+      channelTotals.totalSubscribers, channelTotals.totalVideoCount,
+    ]);
+    console.log(`Totals saved to ${totalsTable} for ${today}.`);
 
     if (monthlyTopVideos.length > 0) {
       const videoQuery = `
