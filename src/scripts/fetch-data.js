@@ -63,6 +63,7 @@ async function ensureTablesExist(db, monthKey) {
       subscribers_gained INT DEFAULT 0,
       watch_time_minutes INT DEFAULT 0,
       total_views BIGINT DEFAULT 0,
+      total_likes BIGINT DEFAULT 0,
       total_subscribers INT DEFAULT 0,
       total_video_count INT DEFAULT 0
     )
@@ -73,6 +74,7 @@ async function ensureTablesExist(db, monthKey) {
       video_id VARCHAR(20) PRIMARY KEY,
       title VARCHAR(255),
       views INT DEFAULT 0,
+      likes INT DEFAULT 0,
       rank_position TINYINT DEFAULT 0
     )
   `);
@@ -87,8 +89,19 @@ async function fetchChannelTotals() {
   });
 
   const stats = response.data.items[0].statistics;
+
+  const analyticsResponse = await youtubeAnalytics.reports.query({
+    ids: 'channel==MINE',
+    startDate: '2020-01-01',
+    endDate: new Date().toISOString().split('T')[0],
+    metrics: 'likes',
+  });
+
+  const totalLikes = analyticsResponse.data.rows?.[0]?.[0] || 0;
+
   return {
     totalViews: parseInt(stats.viewCount, 10),
+    totalLikes,
     totalSubscribers: parseInt(stats.subscriberCount, 10),
     totalVideoCount: parseInt(stats.videoCount, 10),
   };
@@ -132,18 +145,22 @@ async function fetchTopVideos(startDate, endDate) {
 
   const dataResponse = await youtubeData.videos.list({
     id: videoIds.join(','),
-    part: 'snippet',
+    part: 'snippet,statistics',
   });
 
-  const titles = {};
+  const videoInfo = {};
   dataResponse.data.items.forEach(item => {
-    titles[item.id] = item.snippet.title;
+    videoInfo[item.id] = {
+      title: item.snippet.title,
+      likes: parseInt(item.statistics.likeCount, 10) || 0,
+    };
   });
 
   return videoStats.map((row, index) => ({
     id: row[0],
-    title: titles[row[0]] || 'Unknown Video',
+    title: videoInfo[row[0]]?.title || 'Unknown Video',
     views: row[1],
+    likes: videoInfo[row[0]]?.likes || 0,
     rank: index + 1,
   }));
 }
@@ -158,19 +175,20 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
 
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, total_views, total_subscribers, total_video_count)
+        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, total_views, total_likes, total_subscribers, total_video_count)
         VALUES ?
         ON DUPLICATE KEY UPDATE
         views=VALUES(views), likes=VALUES(likes),
         subscribers_gained=VALUES(subscribers_gained),
         watch_time_minutes=VALUES(watch_time_minutes),
         total_views=VALUES(total_views),
+        total_likes=VALUES(total_likes),
         total_subscribers=VALUES(total_subscribers),
         total_video_count=VALUES(total_video_count)
       `;
       const channelValues = channelData.map(d => [
         d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes,
-        channelTotals.totalViews, channelTotals.totalSubscribers, channelTotals.totalVideoCount,
+        channelTotals.totalViews, channelTotals.totalLikes, channelTotals.totalSubscribers, channelTotals.totalVideoCount,
       ]);
       await db.query(channelQuery, [channelValues]);
       console.log(`${channelData.length} days saved to ${statsTable}.`);
@@ -178,12 +196,12 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
 
     if (monthlyTopVideos.length > 0) {
       const videoQuery = `
-        INSERT INTO \`${videosTable}\` (video_id, title, views, rank_position)
+        INSERT INTO \`${videosTable}\` (video_id, title, views, likes, rank_position)
         VALUES ?
         ON DUPLICATE KEY UPDATE
-        title=VALUES(title), views=VALUES(views), rank_position=VALUES(rank_position)
+        title=VALUES(title), views=VALUES(views), likes=VALUES(likes), rank_position=VALUES(rank_position)
       `;
-      const videoValues = monthlyTopVideos.map(v => [v.id, v.title, v.views, v.rank]);
+      const videoValues = monthlyTopVideos.map(v => [v.id, v.title, v.views, v.likes, v.rank]);
       await db.query(videoQuery, [videoValues]);
       console.log(`${monthlyTopVideos.length} top videos saved to ${videosTable}.`);
     }
