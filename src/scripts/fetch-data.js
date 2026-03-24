@@ -9,7 +9,7 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({ refresh_token: process.env.YT_REFRESH_TOKEN });
 
 const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: oauth2Client });
-const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client }); // Für die Titel
+const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
 
 async function connectDB() {
   return await mysql.createConnection({
@@ -68,7 +68,7 @@ async function fetchTopVideos(startDate, endDate) {
 
   return videoStats.map(row => ({
     id: row[0],
-    title: titles[row[0]] || 'Unbekanntes Video',
+    title: titles[row[0]] || 'Unknown Video',
     views: row[1],
     date: endDate
   }));
@@ -87,7 +87,7 @@ async function saveToMySQL(channelData, topVideosData) {
       `;
       const channelValues = channelData.map(d => [d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes]);
       await db.query(channelQuery, [channelValues]);
-      console.log(`✅ ${channelData.length} Tage in channel_stats gespeichert.`);
+      console.log(`✅ ${channelData.length} days saved to channel_stats.`);
     }
 
     if (topVideosData.length > 0) {
@@ -99,7 +99,7 @@ async function saveToMySQL(channelData, topVideosData) {
       `;
       const videoValues = topVideosData.map(v => [v.id, v.title, v.views, v.date]);
       await db.query(videoQuery, [videoValues]);
-      console.log(`✅ ${topVideosData.length} Top-Videos gespeichert.`);
+      console.log(`✅ ${topVideosData.length} top videos saved.`);
     }
   } finally {
     await db.end();
@@ -108,7 +108,7 @@ async function saveToMySQL(channelData, topVideosData) {
 
 async function run() {
   try {
-    console.log('Starte Analytics-Abruf...');
+    console.log('Starting analytics fetch...');
     const endDate = new Date().toISOString().split('T')[0];
     const startDate = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
@@ -118,7 +118,7 @@ async function run() {
     await saveToMySQL(channelData, topVideosData);
 
   } catch (error) {
-    console.error('❌ Fehler beim Ausführen:', error.message);
+    console.error('❌ Error during execution:', error.message);
   }
 }
 
