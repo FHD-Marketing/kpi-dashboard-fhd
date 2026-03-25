@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "fetch:yt": "node src/scripts/fetch-data-youtube.js",
-    "fetch:insta": "node src/scripts/fetch-data-insta.js"
+    "fetch:insta": "node src/scripts/fetch-data-insta.js",
+    "fetch:meta": "node src/scripts/fetch-data-meta.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",
