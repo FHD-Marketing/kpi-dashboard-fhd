@@ -12,7 +12,8 @@
     "astro": "astro",
     "fetch:yt": "node src/scripts/fetch-data-youtube.js",
     "fetch:insta": "node src/scripts/fetch-data-insta.js",
-    "fetch:meta": "node src/scripts/fetch-data-meta.js"
+    "fetch:meta": "node src/scripts/fetch-data-meta.js",
+    "fetch:mailchimp": "node src/scripts/fetch-data-mailchimp.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",

@@ -9,10 +9,10 @@ jobs:
   fetch-and-save:
     runs-on: ubuntu-latest
     steps:
-      - name: Checking out code...
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setting up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -32,25 +32,36 @@ jobs:
         run: node src/scripts/fetch-data-youtube.js
         continue-on-error: false
 
-      - name: Fetch Instagram data
-        env:
-          IG_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetch-data-insta.js
-        continue-on-error: false
+#      - name: Fetch Instagram data
+#        env:
+#          IG_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+#          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetch-data-insta.js
+#        continue-on-error: false
+#
+#      - name: Fetch Meta Ads data
+#        env:
+#          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+#          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetch-data-meta.js
+#        continue-on-error: false
 
-      - name: Fetch Meta Ads data
+      - name: Fetch Mailchimp data
         env:
-          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetch-data-meta.js
+        run: node src/scripts/fetch-data-mailchimp.js
         continue-on-error: false
 
 
