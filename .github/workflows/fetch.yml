@@ -24,13 +24,12 @@ jobs:
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          YT_CHANNEL_ID: ${{ secrets.YT_CHANNEL_ID }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetch-data-youtube.js
+        run: node src/scripts/fetching/fetch-data-youtube.js
         continue-on-error: false
 
 #      - name: Fetch Instagram data
@@ -41,7 +40,7 @@ jobs:
 #          DB_USER: ${{ secrets.DB_USER }}
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetch-data-insta.js
+#        run: node src/scripts/fetching/fetch-data-insta.js
 #        continue-on-error: false
 #
 #      - name: Fetch Meta Ads data
@@ -52,7 +51,7 @@ jobs:
 #          DB_USER: ${{ secrets.DB_USER }}
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetch-data-meta.js
+#        run: node src/scripts/fetching/fetch-data-meta.js
 #        continue-on-error: false
 #
 #      - name: Fetch Google Ads data
@@ -66,7 +65,7 @@ jobs:
 #          DB_USER: ${{ secrets.DB_USER }}
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetch-data-google-ads.js
+#        run: node src/scripts/fetching/fetch-data-google-ads.js
 #        continue-on-error: false
 
       - name: Fetch Mailchimp data
@@ -76,5 +75,5 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetch-data-mailchimp.js
+        run: node src/scripts/fetching/fetch-data-mailchimp.js
         continue-on-error: false

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { google } from 'googleapis';
 import mysql from 'mysql2/promise';
 
-const requiredEnvVars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN'];
+const requiredEnvVars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'YT_REFRESH_TOKEN'];
 const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 if (missingVars.length > 0) {
   throw new Error(
@@ -15,7 +15,7 @@ const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
 );
-oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+oauth2Client.setCredentials({ refresh_token: process.env.YT_REFRESH_TOKEN });
 
 const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: oauth2Client });
 const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -108,27 +108,20 @@ async function ensureTablesExist(db, monthKey) {
 }
 
 async function fetchChannelTotals() {
-  const channelId = process.env.YT_CHANNEL_ID;
-  const listParams = channelId
-    ? { part: 'statistics', id: channelId }
-    : { part: 'statistics', mine: true };
+  console.log('Fetching channel statistics with mine=true...');
 
-  console.log(channelId
-    ? `Fetching channel statistics for channel ID ${channelId}...`
-    : 'Fetching channel statistics with mine=true...');
-
-  const response = await youtubeData.channels.list(listParams);
+  const response = await youtubeData.channels.list({
+    part: 'statistics',
+    mine: true,
+  });
 
   const items = response.data.items;
   if (!items || items.length === 0) {
     console.error('YouTube Data API returned no channel items.');
     console.error('Response data:', JSON.stringify(response.data, null, 2));
     throw new Error(
-      channelId
-        ? `No YouTube channel found for ID "${channelId}". Verify the channel ID is correct.`
-        : 'No YouTube channel found with mine=true. This usually means the Google account ' +
-          'uses a Brand Account. Set the YT_CHANNEL_ID secret to the channel ID ' +
-          '(found in YouTube Studio → Settings → Advanced Settings → Channel ID).'
+      'No YouTube channel found with mine=true. Ensure the YT_REFRESH_TOKEN belongs to ' +
+      'the Google account that owns the YouTube channel.'
     );
   }
 
