@@ -62,9 +62,14 @@ async function ensureTablesExist(db, monthKey) {
       views INT DEFAULT 0,
       likes INT DEFAULT 0,
       subscribers_gained INT DEFAULT 0,
-      watch_time_minutes INT DEFAULT 0
+      watch_time_minutes INT DEFAULT 0,
+      ctr DECIMAL(5,2) DEFAULT 0.00
     )
   `);
+
+  await db.query(`
+    ALTER TABLE \`${statsTable}\` ADD COLUMN IF NOT EXISTS ctr DECIMAL(5,2) DEFAULT 0.00
+  `).catch(() => {});
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${totalsTable}\` (
@@ -119,7 +124,7 @@ async function fetchChannelStats(startDate, endDate) {
     ids: 'channel==MINE',
     startDate,
     endDate,
-    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched',
+    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched,impressionClickThroughRate',
     dimensions: 'day',
   });
 
@@ -131,6 +136,7 @@ async function fetchChannelStats(startDate, endDate) {
     likes: row[2],
     subscribers_gained: row[3],
     watch_time_minutes: row[4],
+    ctr: Math.round(row[5] * 10000) / 100,
   }));
 }
 
@@ -184,15 +190,16 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
 
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes)
+        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, ctr)
         VALUES ?
         ON DUPLICATE KEY UPDATE
         views=VALUES(views), likes=VALUES(likes),
         subscribers_gained=VALUES(subscribers_gained),
-        watch_time_minutes=VALUES(watch_time_minutes)
+        watch_time_minutes=VALUES(watch_time_minutes),
+        ctr=VALUES(ctr)
       `;
       const channelValues = channelData.map(d => [
-        d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes,
+        d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes, d.ctr,
       ]);
       await db.query(channelQuery, [channelValues]);
       console.log(`${channelData.length} days saved to ${statsTable}.`);
