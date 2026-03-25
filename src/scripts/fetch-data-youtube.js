@@ -2,6 +2,15 @@ import 'dotenv/config';
 import { google } from 'googleapis';
 import mysql from 'mysql2/promise';
 
+const requiredEnvVars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN'];
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+  throw new Error(
+    `Missing required environment variables: ${missingVars.join(', ')}. ` +
+    'Please ensure the corresponding GitHub repository secrets are set.'
+  );
+}
+
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
