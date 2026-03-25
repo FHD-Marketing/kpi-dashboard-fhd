@@ -195,10 +195,14 @@ async function fetchAverageCtr(startDate, endDate) {
 
 async function findReportType() {
   const CANDIDATES = [
-    'channel_basic_a2',
-    'channel_basic_a1',
+    'channel_reach_combined_a1',
+    'channel_reach_basic_a1',
+    'channel_combined_a3',
     'channel_combined_a2',
     'channel_combined_a1',
+    'channel_basic_a3',
+    'channel_basic_a2',
+    'channel_basic_a1',
   ];
 
   try {
