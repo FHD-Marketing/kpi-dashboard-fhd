@@ -10,6 +10,7 @@ oauth2Client.setCredentials({ refresh_token: process.env.YT_REFRESH_TOKEN });
 
 const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: oauth2Client });
 const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
+const youtubeReporting = google.youtubereporting({ version: 'v1', auth: oauth2Client });
 
 async function connectDB(retries = 3, delay = 5000) {
   const config = {
@@ -143,31 +144,129 @@ async function fetchChannelStats(startDate, endDate) {
     ctr: 0,
   }));
 
-  try {
-    const impResponse = await youtubeAnalytics.reports.query({
-      ids: 'channel==MINE',
-      startDate,
-      endDate,
-      metrics: 'impressions',
-      dimensions: 'day',
+  const impressionsData = await fetchImpressionsFromReporting(startDate, endDate);
+  if (impressionsData && Object.keys(impressionsData).length > 0) {
+    dailyData.forEach(d => {
+      if (impressionsData[d.date]) {
+        d.impressions = impressionsData[d.date].impressions;
+        d.ctr = impressionsData[d.date].ctr;
+      }
     });
-    if (impResponse.data.rows) {
-      const impMap = {};
-      impResponse.data.rows.forEach(row => {
-        impMap[row[0]] = row[1];
-      });
-      dailyData.forEach(d => {
-        if (impMap[d.date] && impMap[d.date] > 0) {
-          d.impressions = impMap[d.date];
-          d.ctr = Math.round((d.views / impMap[d.date]) * 10000) / 100;
-        }
-      });
-    }
-  } catch (err) {
-    console.log('Daily impressions query not supported, skipping CTR: ' + err.message);
+    console.log(`Impressions/CTR merged for ${Object.keys(impressionsData).length} days from Reporting API.`);
   }
 
   return dailyData;
+}
+
+async function fetchImpressionsFromReporting(startDate, endDate) {
+  const REPORT_TYPE = 'channel_basic_a2';
+
+  try {
+    const jobsResponse = await youtubeReporting.jobs.list();
+    const jobs = jobsResponse.data.jobs || [];
+    let job = jobs.find(j => j.reportTypeId === REPORT_TYPE);
+
+    if (!job) {
+      console.log(`No Reporting API job found for ${REPORT_TYPE}, creating one...`);
+      const createResponse = await youtubeReporting.jobs.create({
+        requestBody: {
+          reportTypeId: REPORT_TYPE,
+          name: 'KPI Dashboard - Channel Basic Stats',
+        },
+      });
+      job = createResponse.data;
+      console.log(`Job created: ${job.id}. Reports will be available in 1-2 days.`);
+      return null;
+    }
+
+    const reportsResponse = await youtubeReporting.jobs.reports.list({
+      jobId: job.id,
+    });
+    const reports = reportsResponse.data.reports || [];
+
+    if (reports.length === 0) {
+      console.log('No reports available yet. Reports are generated with 1-2 days delay.');
+      return null;
+    }
+
+    const startMs = new Date(startDate).getTime();
+    const endMs = new Date(endDate).getTime();
+
+    const relevantReports = reports
+      .filter(r => {
+        const reportStart = new Date(r.startTime).getTime();
+        const reportEnd = new Date(r.endTime).getTime();
+        return reportStart >= startMs - 86400000 && reportEnd <= endMs + 86400000 * 2;
+      })
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    if (relevantReports.length === 0) {
+      const sortedReports = reports.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+      if (sortedReports.length > 0) {
+        console.log(`No reports in date range. Latest report: ${sortedReports[0].startTime}`);
+      }
+      return null;
+    }
+
+    const impressionsMap = {};
+
+    for (const report of relevantReports) {
+      const csvData = await downloadReport(report.downloadUrl);
+      if (!csvData) continue;
+
+      const lines = csvData.split('\n');
+      if (lines.length < 2) continue;
+
+      const headers = lines[0].split(',');
+      const dateIdx = headers.indexOf('date');
+      const impIdx = headers.indexOf('impressions');
+      const ctrIdx = headers.indexOf('impressions_click_through_rate');
+
+      if (dateIdx === -1 || impIdx === -1) {
+        console.log('Report CSV missing required columns. Headers: ' + headers.join(', '));
+        continue;
+      }
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',');
+        if (cols.length <= Math.max(dateIdx, impIdx)) continue;
+
+        const date = cols[dateIdx];
+        if (!date || date < startDate || date > endDate) continue;
+
+        if (!impressionsMap[date]) {
+          const imp = parseInt(cols[impIdx], 10) || 0;
+          const ctr = ctrIdx !== -1
+            ? Math.round(parseFloat(cols[ctrIdx]) * 10000) / 100
+            : (imp > 0 ? Math.round((parseInt(cols[headers.indexOf('views')], 10) || 0) / imp * 10000) / 100 : 0);
+
+          impressionsMap[date] = { impressions: imp, ctr };
+        }
+      }
+    }
+
+    return impressionsMap;
+  } catch (err) {
+    console.log('Reporting API query failed: ' + err.message);
+    return null;
+  }
+}
+
+async function downloadReport(url) {
+  try {
+    const token = await oauth2Client.getAccessToken();
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token.token}` },
+    });
+    if (!response.ok) {
+      console.log('Report download failed: ' + response.status);
+      return null;
+    }
+    return await response.text();
+  } catch (err) {
+    console.log('Report download error: ' + err.message);
+    return null;
+  }
 }
 
 async function fetchTopVideos(startDate, endDate) {
