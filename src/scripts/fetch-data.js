@@ -23,7 +23,7 @@ async function connectDB(retries = 3, delay = 5000) {
 
   if (!config.host || !config.user || !config.password || !config.database) {
     throw new Error(
-      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.'
+        'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.'
     );
   }
 
@@ -37,8 +37,8 @@ async function connectDB(retries = 3, delay = 5000) {
       console.error(`Attempt ${attempt}/${retries} failed: ${err.message}`);
       if (attempt === retries) {
         throw new Error(
-          `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
-          `Original error: ${err.message}`
+            `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
+            `Original error: ${err.message}`
         );
       }
       console.log(`Retrying in ${delay / 1000}s...`);
@@ -55,40 +55,44 @@ async function ensureTablesExist(db, monthKey) {
   const statsTable = monthTable('stats', monthKey);
   const videosTable = monthTable('top_videos', monthKey);
   const totalsTable = monthTable('totals', monthKey);
-
+  
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
-      date DATE PRIMARY KEY,
-      views INT DEFAULT 0,
-      likes INT DEFAULT 0,
-      subscribers_gained INT DEFAULT 0,
-      watch_time_minutes INT DEFAULT 0,
-      ctr DECIMAL(5,2) DEFAULT 0.00
-    )
+                                                   date DATE PRIMARY KEY,
+                                                   views INT DEFAULT 0,
+                                                   likes INT DEFAULT 0,
+                                                   subscribers_gained INT DEFAULT 0,
+                                                   watch_time_minutes INT DEFAULT 0,
+                                                   impressions INT DEFAULT 0,
+                                                   ctr DECIMAL(5,2) DEFAULT 0.00
+      )
   `);
 
+  // Fallback, falls die Tabelle schon existiert, aber die neuen Spalten noch fehlen
   await db.query(`
-    ALTER TABLE \`${statsTable}\` ADD COLUMN IF NOT EXISTS ctr DECIMAL(5,2) DEFAULT 0.00
+    ALTER TABLE \`${statsTable}\`
+      ADD COLUMN IF NOT EXISTS impressions INT DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS ctr DECIMAL(5,2) DEFAULT 0.00
   `).catch(() => {});
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${totalsTable}\` (
-      date DATE PRIMARY KEY,
-      total_views BIGINT DEFAULT 0,
-      total_likes BIGINT DEFAULT 0,
-      total_subscribers INT DEFAULT 0,
-      total_video_count INT DEFAULT 0
+                                                    date DATE PRIMARY KEY,
+                                                    total_views BIGINT DEFAULT 0,
+                                                    total_likes BIGINT DEFAULT 0,
+                                                    total_subscribers INT DEFAULT 0,
+                                                    total_video_count INT DEFAULT 0
     )
   `);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${videosTable}\` (
-      video_id VARCHAR(20) PRIMARY KEY,
+                                                    video_id VARCHAR(20) PRIMARY KEY,
       title VARCHAR(255),
       views INT DEFAULT 0,
       likes INT DEFAULT 0,
       rank_position TINYINT DEFAULT 0
-    )
+      )
   `);
 
   console.log(`Tables ${statsTable}, ${totalsTable} and ${videosTable} verified/created.`);
@@ -124,7 +128,7 @@ async function fetchChannelStats(startDate, endDate) {
     ids: 'channel==MINE',
     startDate,
     endDate,
-    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched,impressionClickThroughRate',
+    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched,videoThumbnailImpressions,videoThumbnailImpressionsClickRate',
     dimensions: 'day',
   });
 
@@ -136,7 +140,8 @@ async function fetchChannelStats(startDate, endDate) {
     likes: row[2],
     subscribers_gained: row[3],
     watch_time_minutes: row[4],
-    ctr: Math.round(row[5] * 10000) / 100,
+    impressions: row[5],
+    ctr: Math.round(row[6] * 10000) / 100,
   }));
 }
 
@@ -190,16 +195,17 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
 
     if (channelData.length > 0) {
       const channelQuery = `
-        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, ctr)
+        INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, impressions, ctr)
         VALUES ?
-        ON DUPLICATE KEY UPDATE
-        views=VALUES(views), likes=VALUES(likes),
-        subscribers_gained=VALUES(subscribers_gained),
-        watch_time_minutes=VALUES(watch_time_minutes),
-        ctr=VALUES(ctr)
+          ON DUPLICATE KEY UPDATE
+                             views=VALUES(views), likes=VALUES(likes),
+                             subscribers_gained=VALUES(subscribers_gained),
+                             watch_time_minutes=VALUES(watch_time_minutes),
+                             impressions=VALUES(impressions),
+                             ctr=VALUES(ctr)
       `;
       const channelValues = channelData.map(d => [
-        d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes, d.ctr,
+        d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes, d.impressions, d.ctr,
       ]);
       await db.query(channelQuery, [channelValues]);
       console.log(`${channelData.length} days saved to ${statsTable}.`);
@@ -208,9 +214,9 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
     const totalsQuery = `
       INSERT INTO \`${totalsTable}\` (date, total_views, total_likes, total_subscribers, total_video_count)
       VALUES (?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-      total_views=VALUES(total_views), total_likes=VALUES(total_likes),
-      total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
+        ON DUPLICATE KEY UPDATE
+                           total_views=VALUES(total_views), total_likes=VALUES(total_likes),
+                           total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
     `;
     await db.query(totalsQuery, [
       today, channelTotals.totalViews, channelTotals.totalLikes,
@@ -222,8 +228,8 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
       const videoQuery = `
         INSERT INTO \`${videosTable}\` (video_id, title, views, likes, rank_position)
         VALUES ?
-        ON DUPLICATE KEY UPDATE
-        title=VALUES(title), views=VALUES(views), likes=VALUES(likes), rank_position=VALUES(rank_position)
+          ON DUPLICATE KEY UPDATE
+                             title=VALUES(title), views=VALUES(views), likes=VALUES(likes), rank_position=VALUES(rank_position)
       `;
       const videoValues = monthlyTopVideos.map(v => [v.id, v.title, v.views, v.likes, v.rank]);
       await db.query(videoQuery, [videoValues]);
