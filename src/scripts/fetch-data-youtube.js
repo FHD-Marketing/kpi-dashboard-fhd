@@ -113,7 +113,18 @@ async function fetchChannelTotals() {
     mine: true,
   });
 
-  const stats = response.data.items[0].statistics;
+  const items = response.data.items;
+  if (!items || items.length === 0) {
+    console.error('YouTube Data API returned no channel items.');
+    console.error('Response data:', JSON.stringify(response.data, null, 2));
+    throw new Error(
+      'No YouTube channel found for the authenticated account. ' +
+      'Ensure the Google account owns or manages a YouTube channel and that the ' +
+      'YouTube Data API v3 is enabled in the Google Cloud project.'
+    );
+  }
+
+  const stats = items[0].statistics;
 
   const analyticsResponse = await youtubeAnalytics.reports.query({
     ids: 'channel==MINE',
@@ -388,7 +399,7 @@ async function fetchTopVideos(startDate, endDate) {
   });
 
   const videoInfo = {};
-  dataResponse.data.items.forEach(item => {
+  (dataResponse.data.items || []).forEach(item => {
     videoInfo[item.id] = {
       title: item.snippet.title,
       likes: parseInt(item.statistics.likeCount, 10) || 0,
