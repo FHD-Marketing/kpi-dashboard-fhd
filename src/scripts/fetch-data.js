@@ -55,7 +55,7 @@ async function ensureTablesExist(db, monthKey) {
   const statsTable = monthTable('stats', monthKey);
   const videosTable = monthTable('top_videos', monthKey);
   const totalsTable = monthTable('totals', monthKey);
-  
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
                                                    date DATE PRIMARY KEY,
@@ -68,7 +68,6 @@ async function ensureTablesExist(db, monthKey) {
       )
   `);
 
-  // Fallback, falls die Tabelle schon existiert, aber die neuen Spalten noch fehlen
   await db.query(`
     ALTER TABLE \`${statsTable}\`
       ADD COLUMN IF NOT EXISTS impressions INT DEFAULT 0,
@@ -128,21 +127,47 @@ async function fetchChannelStats(startDate, endDate) {
     ids: 'channel==MINE',
     startDate,
     endDate,
-    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched,videoThumbnailImpressions,videoThumbnailImpressionsClickRate',
+    metrics: 'views,likes,subscribersGained,estimatedMinutesWatched',
     dimensions: 'day',
   });
 
   if (!response.data.rows) return [];
 
-  return response.data.rows.map(row => ({
+  const dailyData = response.data.rows.map(row => ({
     date: row[0],
     views: row[1],
     likes: row[2],
     subscribers_gained: row[3],
     watch_time_minutes: row[4],
-    impressions: row[5],
-    ctr: Math.round(row[6] * 10000) / 100,
+    impressions: 0,
+    ctr: 0,
   }));
+
+  try {
+    const impResponse = await youtubeAnalytics.reports.query({
+      ids: 'channel==MINE',
+      startDate,
+      endDate,
+      metrics: 'impressions',
+      dimensions: 'day',
+    });
+    if (impResponse.data.rows) {
+      const impMap = {};
+      impResponse.data.rows.forEach(row => {
+        impMap[row[0]] = row[1];
+      });
+      dailyData.forEach(d => {
+        if (impMap[d.date] && impMap[d.date] > 0) {
+          d.impressions = impMap[d.date];
+          d.ctr = Math.round((d.views / impMap[d.date]) * 10000) / 100;
+        }
+      });
+    }
+  } catch (err) {
+    console.log('Daily impressions query not supported, skipping CTR: ' + err.message);
+  }
+
+  return dailyData;
 }
 
 async function fetchTopVideos(startDate, endDate) {
