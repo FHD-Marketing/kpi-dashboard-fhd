@@ -108,19 +108,27 @@ async function ensureTablesExist(db, monthKey) {
 }
 
 async function fetchChannelTotals() {
-  const response = await youtubeData.channels.list({
-    part: 'statistics',
-    mine: true,
-  });
+  const channelId = process.env.YT_CHANNEL_ID;
+  const listParams = channelId
+    ? { part: 'statistics', id: channelId }
+    : { part: 'statistics', mine: true };
+
+  console.log(channelId
+    ? `Fetching channel statistics for channel ID ${channelId}...`
+    : 'Fetching channel statistics with mine=true...');
+
+  const response = await youtubeData.channels.list(listParams);
 
   const items = response.data.items;
   if (!items || items.length === 0) {
     console.error('YouTube Data API returned no channel items.');
     console.error('Response data:', JSON.stringify(response.data, null, 2));
     throw new Error(
-      'No YouTube channel found for the authenticated account. ' +
-      'Ensure the Google account owns or manages a YouTube channel and that the ' +
-      'YouTube Data API v3 is enabled in the Google Cloud project.'
+      channelId
+        ? `No YouTube channel found for ID "${channelId}". Verify the channel ID is correct.`
+        : 'No YouTube channel found with mine=true. This usually means the Google account ' +
+          'uses a Brand Account. Set the YT_CHANNEL_ID secret to the channel ID ' +
+          '(found in YouTube Studio → Settings → Advanced Settings → Channel ID).'
     );
   }
 
