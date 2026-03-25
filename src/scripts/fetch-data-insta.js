@@ -1,14 +1,15 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const IG_ACCESS_TOKEN = process.env.IG_ACCESS_TOKEN;
-const IG_USER_ID      = process.env.IG_USER_ID;
-const GRAPH_API_BASE  = 'https://graph.facebook.com/v21.0';
+const ACCESS_TOKEN   = process.env.IG_ACCESS_TOKEN;
+const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
 
-if (!IG_ACCESS_TOKEN || !IG_USER_ID) {
-  console.error('Missing IG_ACCESS_TOKEN or IG_USER_ID env variables.');
+if (!ACCESS_TOKEN) {
+  console.error('Missing IG_ACCESS_TOKEN env variable.');
   process.exit(1);
 }
+
+let IG_BUSINESS_ID = null;
 
 async function connectDB(retries = 3, delay = 5000) {
   const config = {
@@ -51,9 +52,9 @@ function monthTable(prefix, monthKey) {
 }
 
 async function ensureInstaTablesExist(db, monthKey) {
-  const statsTable    = monthTable('insta_stats', monthKey);
-  const totalsTable   = monthTable('insta_totals', monthKey);
-  const postsTable    = monthTable('insta_top_posts', monthKey);
+  const statsTable  = monthTable('insta_stats', monthKey);
+  const totalsTable = monthTable('insta_totals', monthKey);
+  const postsTable  = monthTable('insta_top_posts', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
@@ -91,7 +92,7 @@ async function ensureInstaTablesExist(db, monthKey) {
 
 async function graphGet(path, params = {}) {
   const url = new URL(`${GRAPH_API_BASE}${path}`);
-  url.searchParams.set('access_token', IG_ACCESS_TOKEN);
+  url.searchParams.set('access_token', ACCESS_TOKEN);
   for (const [key, val] of Object.entries(params)) {
     url.searchParams.set(key, String(val));
   }
@@ -108,10 +109,53 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function resolveInstagramBusinessId() {
+  if (process.env.IG_USER_ID) {
+    try {
+      await graphGet(`/${process.env.IG_USER_ID}`, { fields: 'id,username' });
+      console.log(`IG_USER_ID ${process.env.IG_USER_ID} is valid, using directly.`);
+      return process.env.IG_USER_ID;
+    } catch {
+      console.log(`IG_USER_ID ${process.env.IG_USER_ID} not directly accessible, trying as Facebook Page ID...`);
+      try {
+        const pageData = await graphGet(`/${process.env.IG_USER_ID}`, {
+          fields: 'instagram_business_account',
+        });
+        if (pageData.instagram_business_account?.id) {
+          console.log(`Resolved IG Business Account: ${pageData.instagram_business_account.id}`);
+          return pageData.instagram_business_account.id;
+        }
+      } catch (err) {
+        console.log(`Page lookup also failed: ${err.message}`);
+      }
+    }
+  }
+
+  console.log('Searching for IG Business Account via me/accounts...');
+  const pages = await graphGet('/me/accounts', { fields: 'id,name,instagram_business_account', limit: 100 });
+
+  if (!pages.data || pages.data.length === 0) {
+    throw new Error('No Facebook Pages found for this token. Cannot resolve Instagram Business Account.');
+  }
+
+  for (const page of pages.data) {
+    if (page.instagram_business_account?.id) {
+      console.log(`Found IG Business Account ${page.instagram_business_account.id} via Page "${page.name}" (${page.id}).`);
+      return page.instagram_business_account.id;
+    }
+  }
+
+  throw new Error(
+    `Found ${pages.data.length} Facebook Page(s) but none has a linked Instagram Business Account. ` +
+    `Pages: ${pages.data.map(p => `${p.name} (${p.id})`).join(', ')}`
+  );
+}
+
 async function fetchAccountInfo() {
-  const data = await graphGet(`/${IG_USER_ID}`, {
-    fields: 'followers_count,media_count',
+  const data = await graphGet(`/${IG_BUSINESS_ID}`, {
+    fields: 'followers_count,media_count,username',
   });
+  console.log(`Instagram account: @${data.username || '?'}`);
   return {
     totalFollowers: data.followers_count,
     totalPosts:     data.media_count,
@@ -124,10 +168,8 @@ async function fetchDailyInsights(startDate, endDate) {
   untilDate.setUTCDate(untilDate.getUTCDate() + 1);
   const until = Math.floor(untilDate.getTime() / 1000);
 
-  const metrics = 'impressions,reach,follower_count';
-
-  const data = await graphGet(`/${IG_USER_ID}/insights`, {
-    metric: metrics,
+  const data = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+    metric: 'impressions,reach,follower_count',
     period: 'day',
     since,
     until,
@@ -163,7 +205,7 @@ async function fetchDailyInsights(startDate, endDate) {
 
 async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
   let allMedia = [];
-  let url = `/${IG_USER_ID}/media`;
+  let url = `/${IG_BUSINESS_ID}/media`;
   let params = {
     fields: 'id,caption,timestamp,like_count,comments_count,media_type',
     limit: 50,
@@ -322,28 +364,12 @@ async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagemen
   }
 }
 
-async function refreshTokenIfNeeded() {
-  try {
-    const res = await fetch(
-      `${GRAPH_API_BASE}/refresh_access_token?` +
-      `grant_type=ig_refresh_token&access_token=${IG_ACCESS_TOKEN}`
-    );
-    if (res.ok) {
-      const data = await res.json();
-      console.log(`Token refreshed. New expiry in ${data.expires_in}s (~${Math.round(data.expires_in / 86400)} days).`);
-    } else {
-      console.log('Token refresh not possible (may be a short-lived or non-refreshable token).');
-    }
-  } catch (err) {
-    console.log('Token refresh attempt failed: ' + err.message);
-  }
-}
-
 async function run() {
   try {
     console.log('Starting Instagram analytics fetch...');
 
-    await refreshTokenIfNeeded();
+    IG_BUSINESS_ID = await resolveInstagramBusinessId();
+    console.log(`Using Instagram Business Account ID: ${IG_BUSINESS_ID}`);
 
     const now = new Date();
     const year = now.getFullYear();
