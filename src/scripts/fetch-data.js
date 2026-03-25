@@ -153,29 +153,103 @@ async function fetchChannelStats(startDate, endDate) {
       }
     });
     console.log(`Impressions/CTR merged for ${Object.keys(impressionsData).length} days from Reporting API.`);
+  } else {
+    const avgCtr = await fetchAverageCtr(startDate, endDate);
+    if (avgCtr !== null) {
+      dailyData.forEach(d => { d.ctr = avgCtr; });
+      console.log('Applied average CTR ' + avgCtr + '% to all days (Reporting API unavailable).');
+    }
   }
 
   return dailyData;
 }
 
-async function fetchImpressionsFromReporting(startDate, endDate) {
-  const REPORT_TYPE = 'channel_basic_a2';
+async function fetchAverageCtr(startDate, endDate) {
+  const metrics = [
+    'cardImpressions,cardClicks',
+    'annotationImpressions,annotationClicks',
+  ];
+
+  for (const m of metrics) {
+    try {
+      const response = await youtubeAnalytics.reports.query({
+        ids: 'channel==MINE',
+        startDate,
+        endDate,
+        metrics: m,
+      });
+      if (response.data.rows && response.data.rows[0]) {
+        const impressions = response.data.rows[0][0];
+        const clicks = response.data.rows[0][1];
+        if (impressions > 0) {
+          return Math.round((clicks / impressions) * 10000) / 100;
+        }
+      }
+    } catch (err) {
+      console.log('CTR fallback with ' + m + ' failed: ' + err.message);
+    }
+  }
+
+  return null;
+}
+
+async function findReportType() {
+  const CANDIDATES = [
+    'channel_basic_a2',
+    'channel_basic_a1',
+    'channel_combined_a2',
+    'channel_combined_a1',
+  ];
 
   try {
+    const typesResponse = await youtubeReporting.reportTypes.list();
+    const types = typesResponse.data.reportTypes || [];
+    console.log('Available report types: ' + types.map(t => t.id).join(', '));
+
+    for (const candidate of CANDIDATES) {
+      if (types.find(t => t.id === candidate)) return candidate;
+    }
+
+    const channelType = types.find(t => t.id.startsWith('channel_'));
+    if (channelType) return channelType.id;
+
+    return null;
+  } catch (err) {
+    console.log('Could not list report types: ' + err.message);
+    return CANDIDATES[0];
+  }
+}
+
+async function fetchImpressionsFromReporting(startDate, endDate) {
+  try {
+    const reportType = await findReportType();
+    if (!reportType) {
+      console.log('No suitable report type found in Reporting API.');
+      return null;
+    }
+    console.log('Using report type: ' + reportType);
+
     const jobsResponse = await youtubeReporting.jobs.list();
     const jobs = jobsResponse.data.jobs || [];
-    let job = jobs.find(j => j.reportTypeId === REPORT_TYPE);
+    console.log('Existing jobs: ' + jobs.map(j => j.reportTypeId + ' (' + j.id + ')').join(', '));
+    let job = jobs.find(j => j.reportTypeId === reportType);
 
     if (!job) {
-      console.log(`No Reporting API job found for ${REPORT_TYPE}, creating one...`);
-      const createResponse = await youtubeReporting.jobs.create({
-        requestBody: {
-          reportTypeId: REPORT_TYPE,
-          name: 'KPI Dashboard - Channel Basic Stats',
-        },
-      });
-      job = createResponse.data;
-      console.log(`Job created: ${job.id}. Reports will be available in 1-2 days.`);
+      console.log('Creating Reporting API job for ' + reportType + '...');
+      try {
+        const createResponse = await youtubeReporting.jobs.create({
+          requestBody: {
+            reportTypeId: reportType,
+            name: 'KPI Dashboard',
+          },
+        });
+        job = createResponse.data;
+        console.log('Job created: ' + job.id + '. Reports will be available in 1-2 days.');
+      } catch (createErr) {
+        console.log('Job creation failed: ' + createErr.message);
+        if (createErr.response?.data) console.log('Response: ' + JSON.stringify(createErr.response.data));
+        if (createErr.errors) console.log('Details: ' + JSON.stringify(createErr.errors));
+      }
       return null;
     }
 
@@ -183,28 +257,24 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
       jobId: job.id,
     });
     const reports = reportsResponse.data.reports || [];
+    console.log('Reports available: ' + reports.length);
 
     if (reports.length === 0) {
       console.log('No reports available yet. Reports are generated with 1-2 days delay.');
       return null;
     }
 
-    const startMs = new Date(startDate).getTime();
-    const endMs = new Date(endDate).getTime();
+    const sortedReports = reports.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    console.log('Latest report: ' + sortedReports[0].startTime + ' to ' + sortedReports[0].endTime);
 
-    const relevantReports = reports
-      .filter(r => {
-        const reportStart = new Date(r.startTime).getTime();
-        const reportEnd = new Date(r.endTime).getTime();
-        return reportStart >= startMs - 86400000 && reportEnd <= endMs + 86400000 * 2;
-      })
-      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    const relevantReports = sortedReports.filter(r => {
+      const rStart = r.startTime.split('T')[0];
+      const rEnd = r.endTime.split('T')[0];
+      return rStart >= startDate || rEnd >= startDate;
+    });
 
     if (relevantReports.length === 0) {
-      const sortedReports = reports.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-      if (sortedReports.length > 0) {
-        console.log(`No reports in date range. Latest report: ${sortedReports[0].startTime}`);
-      }
+      console.log('No reports overlap with date range ' + startDate + ' to ' + endDate);
       return null;
     }
 
@@ -217,34 +287,48 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
       const lines = csvData.split('\n');
       if (lines.length < 2) continue;
 
-      const headers = lines[0].split(',');
-      const dateIdx = headers.indexOf('date');
-      const impIdx = headers.indexOf('impressions');
-      const ctrIdx = headers.indexOf('impressions_click_through_rate');
+      const headers = lines[0].split(',').map(h => h.trim());
+      console.log('Report CSV columns: ' + headers.join(', '));
 
-      if (dateIdx === -1 || impIdx === -1) {
-        console.log('Report CSV missing required columns. Headers: ' + headers.join(', '));
+      const dateIdx = headers.indexOf('date');
+      let impIdx = headers.indexOf('impressions');
+      if (impIdx === -1) impIdx = headers.indexOf('thumbnail_impressions');
+      let ctrIdx = headers.indexOf('impressions_click_through_rate');
+      if (ctrIdx === -1) ctrIdx = headers.indexOf('click_through_rate');
+      const viewsIdx = headers.indexOf('views');
+
+      if (dateIdx === -1) {
+        console.log('Report CSV has no date column.');
+        continue;
+      }
+
+      if (impIdx === -1) {
+        console.log('Report CSV has no impressions column. Skipping CTR.');
         continue;
       }
 
       for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',');
-        if (cols.length <= Math.max(dateIdx, impIdx)) continue;
+        const cols = lines[i].split(',').map(c => c.trim());
+        if (cols.length <= dateIdx) continue;
 
         const date = cols[dateIdx];
         if (!date || date < startDate || date > endDate) continue;
+        if (impressionsMap[date]) continue;
 
-        if (!impressionsMap[date]) {
-          const imp = parseInt(cols[impIdx], 10) || 0;
-          const ctr = ctrIdx !== -1
-            ? Math.round(parseFloat(cols[ctrIdx]) * 10000) / 100
-            : (imp > 0 ? Math.round((parseInt(cols[headers.indexOf('views')], 10) || 0) / imp * 10000) / 100 : 0);
-
-          impressionsMap[date] = { impressions: imp, ctr };
+        const imp = parseInt(cols[impIdx], 10) || 0;
+        let ctr = 0;
+        if (ctrIdx !== -1) {
+          ctr = Math.round(parseFloat(cols[ctrIdx]) * 10000) / 100;
+        } else if (imp > 0 && viewsIdx !== -1) {
+          const views = parseInt(cols[viewsIdx], 10) || 0;
+          ctr = Math.round((views / imp) * 10000) / 100;
         }
+
+        impressionsMap[date] = { impressions: imp, ctr };
       }
     }
 
+    console.log('Impressions data parsed for ' + Object.keys(impressionsMap).length + ' days.');
     return impressionsMap;
   } catch (err) {
     console.log('Reporting API query failed: ' + err.message);
