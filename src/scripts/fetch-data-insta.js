@@ -110,44 +110,67 @@ function sleep(ms) {
 }
 
 async function resolveInstagramBusinessId() {
+  console.log('Resolving Instagram Business Account ID...');
+
+  try {
+    const me = await graphGet('/me', { fields: 'id,name' });
+    console.log(`Token belongs to: ${me.name} (${me.id})`);
+  } catch (err) {
+    console.log(`me lookup: ${err.message}`);
+  }
+
   if (process.env.IG_USER_ID) {
+    const igId = process.env.IG_USER_ID;
+
     try {
-      await graphGet(`/${process.env.IG_USER_ID}`, { fields: 'id,username' });
-      console.log(`IG_USER_ID ${process.env.IG_USER_ID} is valid, using directly.`);
-      return process.env.IG_USER_ID;
-    } catch {
-      console.log(`IG_USER_ID ${process.env.IG_USER_ID} not directly accessible, trying as Facebook Page ID...`);
-      try {
-        const pageData = await graphGet(`/${process.env.IG_USER_ID}`, {
-          fields: 'instagram_business_account',
-        });
-        if (pageData.instagram_business_account?.id) {
-          console.log(`Resolved IG Business Account: ${pageData.instagram_business_account.id}`);
-          return pageData.instagram_business_account.id;
-        }
-      } catch (err) {
-        console.log(`Page lookup also failed: ${err.message}`);
+      const igData = await graphGet(`/${igId}`, { fields: 'id,username,followers_count' });
+      if (igData.username || igData.followers_count !== undefined) {
+        console.log(`IG_USER_ID ${igId} is a valid IG Business Account (@${igData.username || '?'}).`);
+        return igId;
       }
+    } catch {
+      console.log(`Direct IG access for ${igId} failed, trying as Facebook Page...`);
+    }
+
+    try {
+      const pageData = await graphGet(`/${igId}`, { fields: 'instagram_business_account' });
+      if (pageData.instagram_business_account?.id) {
+        console.log(`Resolved via Page ${igId} -> IG Business Account: ${pageData.instagram_business_account.id}`);
+        return pageData.instagram_business_account.id;
+      }
+      console.log(`Page ${igId} has no linked Instagram Business Account.`);
+    } catch (err) {
+      console.log(`Page lookup for ${igId} failed: ${err.message}`);
     }
   }
 
-  console.log('Searching for IG Business Account via me/accounts...');
-  const pages = await graphGet('/me/accounts', { fields: 'id,name,instagram_business_account', limit: 100 });
-
-  if (!pages.data || pages.data.length === 0) {
-    throw new Error('No Facebook Pages found for this token. Cannot resolve Instagram Business Account.');
-  }
-
-  for (const page of pages.data) {
-    if (page.instagram_business_account?.id) {
-      console.log(`Found IG Business Account ${page.instagram_business_account.id} via Page "${page.name}" (${page.id}).`);
-      return page.instagram_business_account.id;
+  try {
+    console.log('Trying me/accounts to find Facebook Pages...');
+    const pages = await graphGet('/me/accounts', { fields: 'id,name,instagram_business_account', limit: 100 });
+    if (pages.data && pages.data.length > 0) {
+      console.log(`Found ${pages.data.length} Facebook Page(s): ${pages.data.map(p => p.name).join(', ')}`);
+      for (const page of pages.data) {
+        if (page.instagram_business_account?.id) {
+          console.log(`Found IG Business Account ${page.instagram_business_account.id} via Page "${page.name}".`);
+          return page.instagram_business_account.id;
+        }
+      }
+      console.log('None of the Pages has a linked Instagram Business Account.');
+    } else {
+      console.log('No Facebook Pages found via me/accounts.');
     }
+  } catch (err) {
+    console.log(`me/accounts failed: ${err.message}`);
   }
 
   throw new Error(
-    `Found ${pages.data.length} Facebook Page(s) but none has a linked Instagram Business Account. ` +
-    `Pages: ${pages.data.map(p => `${p.name} (${p.id})`).join(', ')}`
+    'Could not resolve Instagram Business Account ID.\n' +
+    'Checklist:\n' +
+    '  1. IG_ACCESS_TOKEN must be a Facebook User Access Token (from developers.facebook.com)\n' +
+    '  2. The token needs permissions: pages_show_list, instagram_basic, instagram_manage_insights\n' +
+    '  3. Your Facebook Page must be linked to an Instagram Business/Creator Account\n' +
+    '  4. IG_USER_ID (optional) should be the Instagram Business Account ID (17841...)\n' +
+    '     Find it via: GET /me/accounts?fields=instagram_business_account in the Graph API Explorer'
   );
 }
 
