@@ -42,6 +42,14 @@ export function initMonthSelector() {
       document.dispatchEvent(new CustomEvent('monthChanged', { detail: { month } }));
     });
   });
+
+  const yearButtons = document.querySelectorAll('.year-btn');
+  yearButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      yearButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
 }
 
 /**
@@ -71,6 +79,7 @@ export function updateDashboardData(month) {
   updateKpiSection('linkedin', data.linkedin);
   updateKpiSection('mailchimp', data.mailchimp);
   updateKpiSection('studycheck', data.studycheck);
+  updateKpiSection('infomaterial', data.infomaterial);
 }
 
 /**

@@ -22,6 +22,15 @@ import '../styles/global.css';
     </div>
   </header>
 
+  <!-- ═══ YEAR SELECTOR ═══ -->
+  <nav class="year-selector">
+    <button class="year-btn active" data-year="2026">2026</button>
+    <button class="year-btn" data-year="2027">2027</button>
+    <button class="year-btn" data-year="2028">2028</button>
+    <button class="year-btn" data-year="2029">2029</button>
+    <button class="year-btn" data-year="2030">2030</button>
+  </nav>
+
   <!-- ═══ MONTH SELECTOR ═══ -->
   <nav class="month-selector">
     <button class="month-btn" data-month="jan"><span class="month-label">Jan</span><span class="month-spend">€6.142</span></button>
@@ -49,6 +58,7 @@ import '../styles/global.css';
     <button class="tab-btn" data-tab="linkedin"><span class="tab-icon">💼</span> LinkedIn</button>
     <button class="tab-btn" data-tab="mailchimp"><span class="tab-icon">📧</span> Mailchimp</button>
     <button class="tab-btn" data-tab="studycheck"><span class="tab-icon">⭐</span> StudyCheck</button>
+    <button class="tab-btn" data-tab="infomaterial"><span class="tab-icon">📥</span> Infomaterialanfragen</button>
     <button class="tab-btn" data-tab="ytd"><span class="tab-icon">📈</span> YTD-Trends</button>
     <button class="tab-btn" data-tab="empfehlungen"><span class="tab-icon">🖌️</span> Empfehlungen</button>
   </nav>
@@ -415,6 +425,30 @@ import '../styles/global.css';
           <tr><td>DigitalMediaDesign</td><td>4.5</td><td>18</td><td>1.180</td></tr>
           <tr><td>BA Bachelor</td><td>4.0</td><td>14</td><td>1.020</td></tr>
           <tr><td>CD Master</td><td>4.7</td><td>10</td><td>780</td></tr>
+        </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB: INFOMATERIALANFRAGEN ═══ -->
+  <section id="tab-infomaterial" class="tab-content">
+    <h2 class="section-title"><span class="title-icon">📥</span> Infomaterialanfragen — Februar 2026</h2>
+    <p class="section-subtitle">Übersicht der angeforderten Materialien</p>
+    <div class="kpi-grid cols-4 channel-infomaterial">
+      <div class="kpi-card" data-kpi="infomaterial-gesamt"><div class="kpi-card-header"><span class="kpi-card-label">ANFRAGEN GESAMT</span><span class="kpi-trend positive">▲ 12,4%</span></div><div class="kpi-value">145</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-bachelor"><div class="kpi-card-header"><span class="kpi-card-label">BACHELOR</span><span class="kpi-trend positive">▲ 15,2%</span></div><div class="kpi-value">112</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-master"><div class="kpi-card-header"><span class="kpi-card-label">MASTER</span><span class="kpi-trend positive">▲ 4,5%</span></div><div class="kpi-value">33</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-kosten"><div class="kpi-card-header"><span class="kpi-card-label">CPA (Ø KOSTEN)</span><span class="kpi-trend negative">▼ €2,10</span></div><div class="kpi-value">€14,50</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-card-header"><span class="chart-card-title">Top Studiengänge</span></div>
+        <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Studiengang</th><th>Anfragen</th><th>Vormonat</th></tr></thead><tbody>
+          <tr><td>Grafikdesign Bachelor</td><td>42</td><td class="val-positive">+8</td></tr>
+          <tr><td>PGM Bachelor</td><td>35</td><td class="val-positive">+5</td></tr>
+          <tr><td>SPM Bachelor</td><td>21</td><td class="val-positive">+2</td></tr>
+          <tr><td>DigitalMediaDesign</td><td>14</td><td class="val-negative">-3</td></tr>
+          <tr><td>CD Master</td><td>18</td><td class="val-positive">+4</td></tr>
         </tbody></table></div>
       </div>
     </div>

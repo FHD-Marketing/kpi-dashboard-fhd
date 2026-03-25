@@ -207,6 +207,14 @@ export const dashboardData = {
         { name: 'CD Master',                score: 4.6, reviews: 8,  views: 620 }
       ],
       scoreHistory: { labels: ['Okt','Nov','Dez','Jan'], values: [4.1,4.1,4.2,4.2] }
+    },
+
+    /* ── Infomaterialanfragen ───────────────── */
+    infomaterial: {
+      gesamt:     { value: '129',     trend: null },
+      bachelor:   { value: '97',      trend: null },
+      master:     { value: '32',      trend: null },
+      kosten:     { value: '€16,60',  trend: null }
     }
   },
 
@@ -419,6 +427,14 @@ export const dashboardData = {
         { name: 'CD Master',                score: 4.7, reviews: 10, views: 780 }
       ],
       scoreHistory: { labels: ['Nov','Dez','Jan','Feb'], values: [4.1,4.2,4.2,4.3] }
+    },
+
+    /* ── Infomaterialanfragen ───────────────── */
+    infomaterial: {
+      gesamt:     { value: '145',     trend: '+12,4%', trendDir: 'up-good' },
+      bachelor:   { value: '112',     trend: '+15,2%', trendDir: 'up-good' },
+      master:     { value: '33',      trend: '+4,5%',  trendDir: 'up-good' },
+      kosten:     { value: '€14,50',  trend: '-€2,10', trendDir: 'down-good' }
     },
 
     /* ── YTD-Trends ─────────────────────────── */

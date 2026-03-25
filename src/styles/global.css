@@ -183,6 +183,43 @@ body {
 }
 
 
+/* ── Year Selector ─────────────────────────────────────────── */
+.year-selector {
+    display: flex;
+    gap: var(--space-sm);
+    padding: 0 0 var(--space-xs) 0;
+    margin-bottom: var(--space-xs);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.year-selector::-webkit-scrollbar {
+    display: none;
+}
+
+.year-btn {
+    padding: var(--space-xs) var(--space-md);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+.year-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+}
+.year-btn.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--accent-blue);
+    font-weight: 600;
+}
+
 /* ── Month Selector ────────────────────────────────────────── */
 .month-selector {
     display: flex;
