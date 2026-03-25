@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const META_AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID;
 const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
 
-if (!META_ACCESS_TOKEN || !META_AD_ACCOUNT_ID) {
-  console.error('Missing META_ACCESS_TOKEN or META_AD_ACCOUNT_ID env variables.');
+if (!ACCESS_TOKEN || !META_AD_ACCOUNT_ID) {
+  console.error('Missing ACCESS_TOKEN or META_AD_ACCOUNT_ID env variables.');
   process.exit(1);
 }
 
@@ -21,9 +21,7 @@ async function connectDB(retries = 3, delay = 5000) {
   };
 
   if (!config.host || !config.user || !config.password || !config.database) {
-    throw new Error(
-      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.'
-    );
+    throw new Error('Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.');
   }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -35,10 +33,7 @@ async function connectDB(retries = 3, delay = 5000) {
     } catch (err) {
       console.error(`Attempt ${attempt}/${retries} failed: ${err.message}`);
       if (attempt === retries) {
-        throw new Error(
-          `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
-          `Original error: ${err.message}`
-        );
+        throw new Error(`Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. Original error: ${err.message}`);
       }
       console.log(`Retrying in ${delay / 1000}s...`);
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -56,8 +51,8 @@ async function ensureMetaTablesExist(db, monthKey) {
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${summaryTable}\` (
-      date DATE PRIMARY KEY,
-      spend DECIMAL(10,2) DEFAULT 0.00,
+                                                     date DATE PRIMARY KEY,
+                                                     spend DECIMAL(10,2) DEFAULT 0.00,
       link_clicks INT DEFAULT 0,
       leads INT DEFAULT 0,
       reach INT DEFAULT 0,
@@ -65,12 +60,12 @@ async function ensureMetaTablesExist(db, monthKey) {
       cpc DECIMAL(8,2) DEFAULT 0.00,
       ctr DECIMAL(5,2) DEFAULT 0.00,
       frequency DECIMAL(5,2) DEFAULT 0.00
-    )
+      )
   `);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${campaignsTable}\` (
-      campaign_id VARCHAR(60),
+                                                       campaign_id VARCHAR(60),
       date DATE,
       campaign_name VARCHAR(255),
       status VARCHAR(30),
@@ -85,7 +80,7 @@ async function ensureMetaTablesExist(db, monthKey) {
       frequency DECIMAL(5,2) DEFAULT 0.00,
       adset_count INT DEFAULT 0,
       PRIMARY KEY (campaign_id, date)
-    )
+      )
   `);
 
   console.log(`Tables ${summaryTable}, ${campaignsTable} verified/created.`);
@@ -93,7 +88,7 @@ async function ensureMetaTablesExist(db, monthKey) {
 
 async function graphGet(path, params = {}) {
   const url = new URL(`${GRAPH_API_BASE}${path}`);
-  url.searchParams.set('access_token', META_ACCESS_TOKEN);
+  url.searchParams.set('access_token', ACCESS_TOKEN);
   for (const [key, val] of Object.entries(params)) {
     url.searchParams.set(key, String(val));
   }
@@ -117,12 +112,10 @@ function extractActionValue(actions, actionType) {
 }
 
 async function fetchAccountInsights(startDate, endDate) {
-  const accountId = META_AD_ACCOUNT_ID.startsWith('act_')
-    ? META_AD_ACCOUNT_ID
-    : `act_${META_AD_ACCOUNT_ID}`;
+  const accountId = META_AD_ACCOUNT_ID.startsWith('act_') ? META_AD_ACCOUNT_ID : `act_${META_AD_ACCOUNT_ID}`;
 
   const data = await graphGet(`/${accountId}/insights`, {
-    fields: 'spend,impressions,reach,inline_link_clicks,actions,cpc,ctr,frequency',
+    fields: 'spend,impressions,reach,inline_link_clicks,actions,cost_per_inline_link_click,inline_link_click_ctr,frequency',
     time_range: JSON.stringify({ since: startDate, until: endDate }),
     level: 'account',
   });
@@ -133,8 +126,7 @@ async function fetchAccountInsights(startDate, endDate) {
   }
 
   const row = data.data[0];
-  const leads = extractActionValue(row.actions, 'lead') ||
-                extractActionValue(row.actions, 'offsite_conversion.fb_pixel_lead');
+  const leads = extractActionValue(row.actions, 'lead') + extractActionValue(row.actions, 'offsite_conversion.fb_pixel_lead');
 
   return {
     spend: parseFloat(row.spend || 0),
@@ -142,21 +134,19 @@ async function fetchAccountInsights(startDate, endDate) {
     reach: parseInt(row.reach || 0, 10),
     linkClicks: parseInt(row.inline_link_clicks || 0, 10),
     leads,
-    cpc: parseFloat(row.cpc || 0),
-    ctr: parseFloat(row.ctr || 0),
+    cpc: parseFloat(row.cost_per_inline_link_click || 0),
+    ctr: parseFloat(row.inline_link_click_ctr || 0),
     frequency: parseFloat(row.frequency || 0),
   };
 }
 
 async function fetchCampaignInsights(startDate, endDate) {
-  const accountId = META_AD_ACCOUNT_ID.startsWith('act_')
-    ? META_AD_ACCOUNT_ID
-    : `act_${META_AD_ACCOUNT_ID}`;
+  const accountId = META_AD_ACCOUNT_ID.startsWith('act_') ? META_AD_ACCOUNT_ID : `act_${META_AD_ACCOUNT_ID}`;
 
   let allCampaigns = [];
   let url = `/${accountId}/insights`;
   let params = {
-    fields: 'campaign_id,campaign_name,spend,impressions,reach,inline_link_clicks,actions,cpc,ctr,frequency',
+    fields: 'campaign_id,campaign_name,spend,impressions,reach,inline_link_clicks,actions,cost_per_inline_link_click,inline_link_click_ctr,frequency',
     time_range: JSON.stringify({ since: startDate, until: endDate }),
     level: 'campaign',
     limit: 100,
@@ -167,7 +157,7 @@ async function fetchCampaignInsights(startDate, endDate) {
     const data = await graphGet(url, params);
     if (data.data) allCampaigns = allCampaigns.concat(data.data);
 
-    if (data.paging?.next) {
+    if (data.paging && data.paging.next) {
       const nextUrl = new URL(data.paging.next);
       url = nextUrl.pathname.replace('/v21.0', '');
       params = Object.fromEntries(nextUrl.searchParams.entries());
@@ -187,9 +177,7 @@ async function fetchCampaignStatuses(campaignIds) {
   const statuses = {};
   for (const id of campaignIds) {
     try {
-      const data = await graphGet(`/${id}`, {
-        fields: 'effective_status',
-      });
+      const data = await graphGet(`/${id}`, { fields: 'effective_status' });
       statuses[id] = data.effective_status || 'UNKNOWN';
     } catch {
       statuses[id] = 'UNKNOWN';
@@ -203,10 +191,7 @@ async function fetchAdSetCounts(campaignIds) {
   const counts = {};
   for (const id of campaignIds) {
     try {
-      const data = await graphGet(`/${id}/adsets`, {
-        fields: 'id',
-        limit: 200,
-      });
+      const data = await graphGet(`/${id}/adsets`, { fields: 'id', limit: 200 });
       counts[id] = data.data ? data.data.length : 0;
     } catch {
       counts[id] = 0;
@@ -228,38 +213,37 @@ async function saveToMySQL(summary, campaigns, monthKey, today) {
       await db.query(`
         INSERT INTO \`${summaryTable}\` (date, spend, link_clicks, leads, reach, impressions, cpc, ctr, frequency)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          spend=VALUES(spend),
-          link_clicks=VALUES(link_clicks),
-          leads=VALUES(leads),
-          reach=VALUES(reach),
-          impressions=VALUES(impressions),
-          cpc=VALUES(cpc),
-          ctr=VALUES(ctr),
-          frequency=VALUES(frequency)
-      `, [today, summary.spend, summary.linkClicks, summary.leads, summary.reach,
-          summary.impressions, summary.cpc, summary.ctr, summary.frequency]);
+          ON DUPLICATE KEY UPDATE
+                             spend=VALUES(spend),
+                             link_clicks=VALUES(link_clicks),
+                             leads=VALUES(leads),
+                             reach=VALUES(reach),
+                             impressions=VALUES(impressions),
+                             cpc=VALUES(cpc),
+                             ctr=VALUES(ctr),
+                             frequency=VALUES(frequency)
+      `, [today, summary.spend, summary.linkClicks, summary.leads, summary.reach, summary.impressions, summary.cpc, summary.ctr, summary.frequency]);
       console.log(`Summary saved to ${summaryTable} for ${today}.`);
     }
 
     if (campaigns.length > 0) {
       const query = `
         INSERT INTO \`${campaignsTable}\`
-          (campaign_id, date, campaign_name, status, spend, leads, cpl, link_clicks, cpc, ctr, reach, impressions, frequency, adset_count)
+        (campaign_id, date, campaign_name, status, spend, leads, cpl, link_clicks, cpc, ctr, reach, impressions, frequency, adset_count)
         VALUES ?
-        ON DUPLICATE KEY UPDATE
-          campaign_name=VALUES(campaign_name),
-          status=VALUES(status),
-          spend=VALUES(spend),
-          leads=VALUES(leads),
-          cpl=VALUES(cpl),
-          link_clicks=VALUES(link_clicks),
-          cpc=VALUES(cpc),
-          ctr=VALUES(ctr),
-          reach=VALUES(reach),
-          impressions=VALUES(impressions),
-          frequency=VALUES(frequency),
-          adset_count=VALUES(adset_count)
+          ON DUPLICATE KEY UPDATE
+                             campaign_name=VALUES(campaign_name),
+                             status=VALUES(status),
+                             spend=VALUES(spend),
+                             leads=VALUES(leads),
+                             cpl=VALUES(cpl),
+                             link_clicks=VALUES(link_clicks),
+                             cpc=VALUES(cpc),
+                             ctr=VALUES(ctr),
+                             reach=VALUES(reach),
+                             impressions=VALUES(impressions),
+                             frequency=VALUES(frequency),
+                             adset_count=VALUES(adset_count)
       `;
       const values = campaigns.map(c => [
         c.campaignId, today, c.name, c.status, c.spend, c.leads, c.cpl,
@@ -281,7 +265,6 @@ async function run() {
     const year = now.getFullYear();
     const monthNum = now.getMonth();
     const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
-
     const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
     const today = now.toISOString().split('T')[0];
 
@@ -289,7 +272,7 @@ async function run() {
 
     const summary = await fetchAccountInsights(startOfMonth, today);
     if (summary) {
-      console.log(`Account: €${summary.spend.toFixed(2)} spend, ${summary.linkClicks} clicks, ${summary.leads} leads, ${summary.reach} reach.`);
+      console.log(`Account summary retrieved. Spend: ${summary.spend}`);
     }
 
     const rawCampaigns = await fetchCampaignInsights(startOfMonth, today);
@@ -301,8 +284,7 @@ async function run() {
     ]);
 
     const campaigns = rawCampaigns.map(c => {
-      const leads = extractActionValue(c.actions, 'lead') ||
-                    extractActionValue(c.actions, 'offsite_conversion.fb_pixel_lead');
+      const leads = extractActionValue(c.actions, 'lead') + extractActionValue(c.actions, 'offsite_conversion.fb_pixel_lead');
       const spend = parseFloat(c.spend || 0);
       return {
         campaignId: c.campaign_id,
@@ -310,10 +292,10 @@ async function run() {
         status: statuses[c.campaign_id] || 'UNKNOWN',
         spend,
         leads,
-        cpl: leads > 0 ? Math.round((spend / leads) * 100) / 100 : 0,
+        cpl: leads > 0 ? parseFloat((spend / leads).toFixed(2)) : 0,
         linkClicks: parseInt(c.inline_link_clicks || 0, 10),
-        cpc: parseFloat(c.cpc || 0),
-        ctr: parseFloat(c.ctr || 0),
+        cpc: parseFloat(c.cost_per_inline_link_click || 0),
+        ctr: parseFloat(c.inline_link_click_ctr || 0),
         reach: parseInt(c.reach || 0, 10),
         impressions: parseInt(c.impressions || 0, 10),
         frequency: parseFloat(c.frequency || 0),
@@ -321,21 +303,17 @@ async function run() {
       };
     });
 
-    for (const c of campaigns) {
-      console.log(`  ${c.name}: €${c.spend.toFixed(2)}, ${c.leads} leads, ${c.linkClicks} clicks, ${c.adsetCount} adsets`);
-    }
+    console.log('Campaign metrics processed successfully.');
 
     await saveToMySQL(summary, campaigns, monthKey, today);
-
     console.log('Meta Ads fetch done.');
   } catch (error) {
     console.error('Error during Meta Ads fetch:', error.message);
-    if (error.code) console.error('   Error code:', error.code);
-    if (error.errno) console.error('   Errno:', error.errno);
-    console.error('   Stack:', error.stack);
+    if (error.code) console.error('Error code:', error.code);
+    if (error.errno) console.error('Errno:', error.errno);
+    console.error('Stack:', error.stack);
     process.exit(1);
   }
 }
 
 run();
-

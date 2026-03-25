@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const ACCESS_TOKEN   = process.env.IG_ACCESS_TOKEN;
+const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
 
 if (!ACCESS_TOKEN) {
-  console.error('Missing IG_ACCESS_TOKEN env variable.');
+  console.error('Missing META_ACCESS_TOKEN env variable.');
   process.exit(1);
 }
 
@@ -29,20 +29,15 @@ async function connectDB(retries = 3, delay = 5000) {
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`DB connection attempt ${attempt}/${retries} to ${config.host}:${config.port}...`);
+      console.log(`DB connection attempt ${attempt}/${retries} to ${config.host}...`);
       const connection = await mysql.createConnection(config);
       console.log('DB connection established.');
       return connection;
     } catch (err) {
       console.error(`Attempt ${attempt}/${retries} failed: ${err.message}`);
-      if (attempt === retries) {
-        throw new Error(
-          `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
-          `Original error: ${err.message}`
-        );
-      }
+      if (attempt === retries) throw err;
       console.log(`Retrying in ${delay / 1000}s...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await sleep(delay);
     }
   }
 }
@@ -52,9 +47,9 @@ function monthTable(prefix, monthKey) {
 }
 
 async function ensureInstaTablesExist(db, monthKey) {
-  const statsTable  = monthTable('insta_stats', monthKey);
+  const statsTable = monthTable('insta_stats', monthKey);
   const totalsTable = monthTable('insta_totals', monthKey);
-  const postsTable  = monthTable('insta_top_posts', monthKey);
+  const postsTable = monthTable('insta_top_posts', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
@@ -86,8 +81,7 @@ async function ensureInstaTablesExist(db, monthKey) {
       rank_position TINYINT DEFAULT 0
     )
   `);
-
-  console.log(`Tables ${statsTable}, ${totalsTable}, ${postsTable} verified/created.`);
+  console.log(`Tables ensured for month: ${monthKey}`);
 }
 
 async function graphGet(path, params = {}) {
@@ -112,91 +106,60 @@ function sleep(ms) {
 async function resolveInstagramBusinessId() {
   console.log('Resolving Instagram Business Account ID...');
 
-  try {
-    const me = await graphGet('/me', { fields: 'id,name' });
-    console.log(`Token belongs to: ${me.name} (${me.id})`);
-  } catch (err) {
-    console.log(`me lookup: ${err.message}`);
-  }
-
   if (process.env.IG_USER_ID) {
-    const igId = process.env.IG_USER_ID;
-
-    try {
-      const igData = await graphGet(`/${igId}`, { fields: 'id,username,followers_count' });
-      if (igData.username || igData.followers_count !== undefined) {
-        console.log(`IG_USER_ID ${igId} is a valid IG Business Account (@${igData.username || '?'}).`);
-        return igId;
-      }
-    } catch {
-      console.log(`Direct IG access for ${igId} failed, trying as Facebook Page...`);
-    }
-
-    try {
-      const pageData = await graphGet(`/${igId}`, { fields: 'instagram_business_account' });
-      if (pageData.instagram_business_account?.id) {
-        console.log(`Resolved via Page ${igId} -> IG Business Account: ${pageData.instagram_business_account.id}`);
-        return pageData.instagram_business_account.id;
-      }
-      console.log(`Page ${igId} has no linked Instagram Business Account.`);
-    } catch (err) {
-      console.log(`Page lookup for ${igId} failed: ${err.message}`);
-    }
+    console.log(`Using IG_USER_ID from env: ${process.env.IG_USER_ID}`);
+    return process.env.IG_USER_ID;
   }
 
   try {
-    console.log('Trying me/accounts to find Facebook Pages...');
-    const pages = await graphGet('/me/accounts', { fields: 'id,name,instagram_business_account', limit: 100 });
+    const pages = await graphGet('/me/accounts', { fields: 'id,name,instagram_business_account', limit: 10 });
     if (pages.data && pages.data.length > 0) {
-      console.log(`Found ${pages.data.length} Facebook Page(s): ${pages.data.map(p => p.name).join(', ')}`);
       for (const page of pages.data) {
         if (page.instagram_business_account?.id) {
-          console.log(`Found IG Business Account ${page.instagram_business_account.id} via Page "${page.name}".`);
+          console.log(`Found IG Business Account ${page.instagram_business_account.id} on Page "${page.name}".`);
           return page.instagram_business_account.id;
         }
       }
-      console.log('None of the Pages has a linked Instagram Business Account.');
-    } else {
-      console.log('No Facebook Pages found via me/accounts.');
     }
   } catch (err) {
-    console.log(`me/accounts failed: ${err.message}`);
+    console.error(`Failed to fetch pages via /me/accounts: ${err.message}`);
   }
 
-  throw new Error(
-    'Could not resolve Instagram Business Account ID.\n' +
-    'Checklist:\n' +
-    '  1. IG_ACCESS_TOKEN must be a Facebook User Access Token (from developers.facebook.com)\n' +
-    '  2. The token needs permissions: pages_show_list, instagram_basic, instagram_manage_insights\n' +
-    '  3. Your Facebook Page must be linked to an Instagram Business/Creator Account\n' +
-    '  4. IG_USER_ID (optional) should be the Instagram Business Account ID (17841...)\n' +
-    '     Find it via: GET /me/accounts?fields=instagram_business_account in the Graph API Explorer'
-  );
+  throw new Error('Could not resolve Instagram Business Account ID. Add IG_USER_ID to your Secrets.');
 }
 
 async function fetchAccountInfo() {
   const data = await graphGet(`/${IG_BUSINESS_ID}`, {
     fields: 'followers_count,media_count,username',
   });
-  console.log(`Instagram account: @${data.username || '?'}`);
   return {
-    totalFollowers: data.followers_count,
-    totalPosts:     data.media_count,
+    totalFollowers: data.followers_count || 0,
+    totalPosts: data.media_count || 0,
+    username: data.username || 'Unknown',
   };
 }
 
 async function fetchDailyInsights(startDate, endDate) {
   const since = Math.floor(new Date(startDate + 'T00:00:00Z').getTime() / 1000);
-  const untilDate = new Date(endDate + 'T00:00:00Z');
-  untilDate.setUTCDate(untilDate.getUTCDate() + 1);
-  const until = Math.floor(untilDate.getTime() / 1000);
+  const until = Math.floor(new Date(endDate + 'T23:59:59Z').getTime() / 1000);
 
-  const data = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
-    metric: 'impressions,reach,follower_count',
-    period: 'day',
-    since,
-    until,
-  });
+  let data;
+  try {
+    data = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+      metric: 'impressions,reach,follower_count',
+      period: 'day',
+      since,
+      until,
+    });
+  } catch (err) {
+    console.log(`Daily insights fetch failed: ${err.message}`);
+    return [];
+  }
+
+  if (!data.data || data.data.length === 0) {
+    console.log('No daily insights returned for this period.');
+    return [];
+  }
 
   const metricsMap = {};
   for (const entry of data.data) {
@@ -207,53 +170,47 @@ async function fetchDailyInsights(startDate, endDate) {
     }
   }
 
-  const allDates = new Set();
-  for (const metric of Object.values(metricsMap)) {
-    for (const d of Object.keys(metric)) allDates.add(d);
-  }
-
   const result = [];
-  for (const d of [...allDates].sort()) {
-    if (d < startDate || d > endDate) continue;
-    result.push({
-      date:            d,
-      impressions:     metricsMap.impressions?.[d]   || 0,
-      reach:           metricsMap.reach?.[d]         || 0,
-      follower_gained: metricsMap.follower_count?.[d] || 0,
-    });
-  }
+  const currentDate = new Date(startDate);
+  const end = new Date(endDate);
 
+  while (currentDate <= end) {
+    const dStr = currentDate.toISOString().split('T')[0];
+    result.push({
+      date: dStr,
+      impressions: metricsMap.impressions?.[dStr] || 0,
+      reach: metricsMap.reach?.[dStr] || 0,
+      follower_gained: metricsMap.follower_count?.[dStr] || 0,
+    });
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
   return result;
 }
 
 async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
+  console.log(`Fetching posts between ${startDate} and ${endDate}...`);
   let allMedia = [];
-  let url = `/${IG_BUSINESS_ID}/media`;
-  let params = {
-    fields: 'id,caption,timestamp,like_count,comments_count,media_type',
-    limit: 50,
-  };
+  let urlPath = `/${IG_BUSINESS_ID}/media`;
+  let params = { fields: 'id,caption,timestamp,like_count,comments_count,media_type', limit: 50 };
 
-  let page = 0;
-  while (url && page < 10) {
-    const data = await graphGet(url, params);
-    if (data.data) allMedia = allMedia.concat(data.data);
+  while (urlPath) {
+    const data = await graphGet(urlPath, params);
+    if (!data.data) break;
+    allMedia.push(...data.data);
 
-    if (data.data && data.data.length > 0) {
+    if (data.data.length > 0) {
       const oldest = data.data[data.data.length - 1].timestamp.split('T')[0];
       if (oldest < startDate) break;
     }
 
     if (data.paging?.next) {
       const nextUrl = new URL(data.paging.next);
-      url = nextUrl.pathname.replace('/v21.0', '');
+      urlPath = nextUrl.pathname.replace('/v21.0', '');
       params = Object.fromEntries(nextUrl.searchParams.entries());
       delete params.access_token;
     } else {
       break;
     }
-    page++;
-    await sleep(200);
   }
 
   const monthMedia = allMedia.filter(m => {
@@ -261,49 +218,38 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
     return d >= startDate && d <= endDate;
   });
 
-  console.log(`Found ${monthMedia.length} posts in ${startDate} to ${endDate}.`);
-
+  console.log(`Processing insights for ${monthMedia.length} posts...`);
   const postsWithInsights = [];
+
   for (const media of monthMedia) {
+    let reach = 0, impressions = 0;
     try {
-      const insights = await graphGet(`/${media.id}/insights`, {
-        metric: 'reach,impressions',
-      });
-      const insightsMap = {};
+      const insights = await graphGet(`/${media.id}/insights`, { metric: 'reach,impressions' });
       for (const entry of insights.data) {
-        insightsMap[entry.name] = entry.values[0]?.value || 0;
+        if (entry.name === 'reach') reach = entry.values[0]?.value || 0;
+        if (entry.name === 'impressions') impressions = entry.values[0]?.value || 0;
       }
-      postsWithInsights.push({
-        id:          media.id,
-        caption:     (media.caption || '').substring(0, 500),
-        reach:       insightsMap.reach || 0,
-        impressions: insightsMap.impressions || 0,
-        likes:       media.like_count || 0,
-        comments:    media.comments_count || 0,
-      });
-    } catch (err) {
-      console.log(`Insights for media ${media.id} failed: ${err.message}`);
-      postsWithInsights.push({
-        id:          media.id,
-        caption:     (media.caption || '').substring(0, 500),
-        reach:       0,
-        impressions: 0,
-        likes:       media.like_count || 0,
-        comments:    media.comments_count || 0,
-      });
+    } catch {
+      console.log(`Could not fetch insights for media ${media.id}.`);
     }
-    await sleep(300);
+
+    postsWithInsights.push({
+      id: media.id,
+      caption: (media.caption || '').substring(0, 500),
+      reach,
+      impressions,
+      likes: media.like_count || 0,
+      comments: media.comments_count || 0,
+    });
+    await sleep(200);
   }
 
   postsWithInsights.sort((a, b) => b.reach - a.reach);
-  const topPosts = postsWithInsights.slice(0, 5).map((p, i) => ({
-    ...p,
-    rank: i + 1,
-  }));
+  const topPosts = postsWithInsights.slice(0, 5).map((p, i) => ({ ...p, rank: i + 1 }));
 
-  const totalLikes    = postsWithInsights.reduce((s, p) => s + p.likes, 0);
+  const totalLikes = postsWithInsights.reduce((s, p) => s + p.likes, 0);
   const totalComments = postsWithInsights.reduce((s, p) => s + p.comments, 0);
-  const totalReach    = postsWithInsights.reduce((s, p) => s + p.reach, 0);
+  const totalReach = postsWithInsights.reduce((s, p) => s + p.reach, 0);
 
   const engagementRate = totalReach > 0
     ? Math.round(((totalLikes + totalComments) / totalReach) * 10000) / 100
@@ -314,10 +260,10 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
 
 async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagementRate) {
   const db = await connectDB();
-  const statsTable  = monthTable('insta_stats', monthKey);
+  const statsTable = monthTable('insta_stats', monthKey);
   const totalsTable = monthTable('insta_totals', monthKey);
-  const postsTable  = monthTable('insta_top_posts', monthKey);
-  const today       = new Date().toISOString().split('T')[0];
+  const postsTable = monthTable('insta_top_posts', monthKey);
+  const today = new Date().toISOString().split('T')[0];
 
   try {
     await ensureInstaTablesExist(db, monthKey);
@@ -327,61 +273,44 @@ async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagemen
         INSERT INTO \`${statsTable}\` (date, impressions, reach, follower_count, follower_gained, engagement_rate)
         VALUES ?
         ON DUPLICATE KEY UPDATE
-          impressions=VALUES(impressions),
-          reach=VALUES(reach),
-          follower_count=VALUES(follower_count),
-          follower_gained=VALUES(follower_gained),
+          impressions=VALUES(impressions), reach=VALUES(reach),
+          follower_count=VALUES(follower_count), follower_gained=VALUES(follower_gained),
           engagement_rate=VALUES(engagement_rate)
       `;
 
-      let cumulativeGained = 0;
+      let currentFollowers = accountInfo.totalFollowers;
       const reverseDays = [...dailyData].reverse();
-      const followerCounts = {};
-      for (const d of reverseDays) {
-        followerCounts[d.date] = accountInfo.totalFollowers - cumulativeGained;
-        cumulativeGained += d.follower_gained;
-      }
+
+      reverseDays.forEach(d => {
+        d.absolute_followers = currentFollowers;
+        currentFollowers -= d.follower_gained;
+      });
 
       const values = dailyData.map(d => [
-        d.date,
-        d.impressions,
-        d.reach,
-        followerCounts[d.date] || accountInfo.totalFollowers,
-        d.follower_gained,
-        engagementRate,
+        d.date, d.impressions, d.reach, d.absolute_followers || accountInfo.totalFollowers, d.follower_gained, engagementRate,
       ]);
       await db.query(query, [values]);
-      console.log(`${dailyData.length} days saved to ${statsTable}.`);
     }
 
     const totalsQuery = `
       INSERT INTO \`${totalsTable}\` (date, total_followers, total_posts)
       VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        total_followers=VALUES(total_followers),
-        total_posts=VALUES(total_posts)
+      ON DUPLICATE KEY UPDATE total_followers=VALUES(total_followers), total_posts=VALUES(total_posts)
     `;
     await db.query(totalsQuery, [today, accountInfo.totalFollowers, accountInfo.totalPosts]);
-    console.log(`Totals saved to ${totalsTable} for ${today}.`);
 
     if (topPosts.length > 0) {
       const postsQuery = `
         INSERT INTO \`${postsTable}\` (post_id, caption, reach, impressions, likes, comments, rank_position)
         VALUES ?
         ON DUPLICATE KEY UPDATE
-          caption=VALUES(caption),
-          reach=VALUES(reach),
-          impressions=VALUES(impressions),
-          likes=VALUES(likes),
-          comments=VALUES(comments),
-          rank_position=VALUES(rank_position)
+          caption=VALUES(caption), reach=VALUES(reach), impressions=VALUES(impressions),
+          likes=VALUES(likes), comments=VALUES(comments), rank_position=VALUES(rank_position)
       `;
-      const postValues = topPosts.map(p => [
-        p.id, p.caption, p.reach, p.impressions, p.likes, p.comments, p.rank,
-      ]);
+      const postValues = topPosts.map(p => [p.id, p.caption, p.reach, p.impressions, p.likes, p.comments, p.rank]);
       await db.query(postsQuery, [postValues]);
-      console.log(`${topPosts.length} top posts saved to ${postsTable}.`);
     }
+    console.log('Data successfully saved to MySQL.');
   } finally {
     await db.end();
   }
@@ -389,38 +318,28 @@ async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagemen
 
 async function run() {
   try {
-    console.log('Starting Instagram analytics fetch...');
-
+    console.log('Starting Instagram fetch...');
     IG_BUSINESS_ID = await resolveInstagramBusinessId();
-    console.log(`Using Instagram Business Account ID: ${IG_BUSINESS_ID}`);
 
     const now = new Date();
     const year = now.getFullYear();
     const monthNum = now.getMonth();
     const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
-
     const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
     const today = now.toISOString().split('T')[0];
 
-    console.log(`Fetching Instagram data for month ${monthKey} (${startOfMonth} to ${today})...`);
-
     const accountInfo = await fetchAccountInfo();
-    console.log(`Account: ${accountInfo.totalFollowers} followers, ${accountInfo.totalPosts} posts.`);
+    console.log(`Instagram @${accountInfo.username}: ${accountInfo.totalFollowers} followers, ${accountInfo.totalPosts} posts`);
 
     const dailyData = await fetchDailyInsights(startOfMonth, today);
-    console.log(`Fetched ${dailyData.length} daily records.`);
-
     const { topPosts, engagementRate } = await fetchMonthlyEngagementAndPosts(startOfMonth, today);
-    console.log(`Top ${topPosts.length} posts fetched. Engagement Rate: ${engagementRate}%.`);
+
+    console.log(`Engagement rate: ${engagementRate}%`);
 
     await saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagementRate);
-
     console.log('Instagram fetch done.');
   } catch (error) {
-    console.error('Error during Instagram fetch:', error.message);
-    if (error.code) console.error('   Error code:', error.code);
-    if (error.errno) console.error('   Errno:', error.errno);
-    console.error('   Stack:', error.stack);
+    console.error('Error:', error.message);
     process.exit(1);
   }
 }
