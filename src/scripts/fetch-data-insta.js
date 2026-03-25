@@ -1,0 +1,379 @@
+import 'dotenv/config';
+import mysql from 'mysql2/promise';
+
+const IG_ACCESS_TOKEN = process.env.IG_ACCESS_TOKEN;
+const IG_USER_ID      = process.env.IG_USER_ID;
+const GRAPH_API_BASE  = 'https://graph.facebook.com/v21.0';
+
+if (!IG_ACCESS_TOKEN || !IG_USER_ID) {
+  console.error('Missing IG_ACCESS_TOKEN or IG_USER_ID env variables.');
+  process.exit(1);
+}
+
+async function connectDB(retries = 3, delay = 5000) {
+  const config = {
+    host: process.env.DB_HOST,
+    port: 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    connectTimeout: 30000,
+  };
+
+  if (!config.host || !config.user || !config.password || !config.database) {
+    throw new Error(
+      'Missing DB environment variables. Required: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.'
+    );
+  }
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`DB connection attempt ${attempt}/${retries} to ${config.host}:${config.port}...`);
+      const connection = await mysql.createConnection(config);
+      console.log('DB connection established.');
+      return connection;
+    } catch (err) {
+      console.error(`Attempt ${attempt}/${retries} failed: ${err.message}`);
+      if (attempt === retries) {
+        throw new Error(
+          `Could not connect to MySQL at ${config.host}:${config.port} after ${retries} attempts. ` +
+          `Original error: ${err.message}`
+        );
+      }
+      console.log(`Retrying in ${delay / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+function monthTable(prefix, monthKey) {
+  return `${prefix}_${monthKey.replace('-', '_')}`;
+}
+
+async function ensureInstaTablesExist(db, monthKey) {
+  const statsTable    = monthTable('insta_stats', monthKey);
+  const totalsTable   = monthTable('insta_totals', monthKey);
+  const postsTable    = monthTable('insta_top_posts', monthKey);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
+      date DATE PRIMARY KEY,
+      impressions INT DEFAULT 0,
+      reach INT DEFAULT 0,
+      follower_count INT DEFAULT 0,
+      follower_gained INT DEFAULT 0,
+      engagement_rate DECIMAL(5,2) DEFAULT 0.00
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${totalsTable}\` (
+      date DATE PRIMARY KEY,
+      total_followers INT DEFAULT 0,
+      total_posts INT DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS \`${postsTable}\` (
+      post_id VARCHAR(60) PRIMARY KEY,
+      caption VARCHAR(500),
+      reach INT DEFAULT 0,
+      impressions INT DEFAULT 0,
+      likes INT DEFAULT 0,
+      comments INT DEFAULT 0,
+      rank_position TINYINT DEFAULT 0
+    )
+  `);
+
+  console.log(`Tables ${statsTable}, ${totalsTable}, ${postsTable} verified/created.`);
+}
+
+async function graphGet(path, params = {}) {
+  const url = new URL(`${GRAPH_API_BASE}${path}`);
+  url.searchParams.set('access_token', IG_ACCESS_TOKEN);
+  for (const [key, val] of Object.entries(params)) {
+    url.searchParams.set(key, String(val));
+  }
+
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Graph API ${res.status}: ${body}`);
+  }
+  return res.json();
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchAccountInfo() {
+  const data = await graphGet(`/${IG_USER_ID}`, {
+    fields: 'followers_count,media_count',
+  });
+  return {
+    totalFollowers: data.followers_count,
+    totalPosts:     data.media_count,
+  };
+}
+
+async function fetchDailyInsights(startDate, endDate) {
+  const since = Math.floor(new Date(startDate + 'T00:00:00Z').getTime() / 1000);
+  const untilDate = new Date(endDate + 'T00:00:00Z');
+  untilDate.setUTCDate(untilDate.getUTCDate() + 1);
+  const until = Math.floor(untilDate.getTime() / 1000);
+
+  const metrics = 'impressions,reach,follower_count';
+
+  const data = await graphGet(`/${IG_USER_ID}/insights`, {
+    metric: metrics,
+    period: 'day',
+    since,
+    until,
+  });
+
+  const metricsMap = {};
+  for (const entry of data.data) {
+    metricsMap[entry.name] = {};
+    for (const point of entry.values) {
+      const dateStr = point.end_time.split('T')[0];
+      metricsMap[entry.name][dateStr] = point.value;
+    }
+  }
+
+  const allDates = new Set();
+  for (const metric of Object.values(metricsMap)) {
+    for (const d of Object.keys(metric)) allDates.add(d);
+  }
+
+  const result = [];
+  for (const d of [...allDates].sort()) {
+    if (d < startDate || d > endDate) continue;
+    result.push({
+      date:            d,
+      impressions:     metricsMap.impressions?.[d]   || 0,
+      reach:           metricsMap.reach?.[d]         || 0,
+      follower_gained: metricsMap.follower_count?.[d] || 0,
+    });
+  }
+
+  return result;
+}
+
+async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
+  let allMedia = [];
+  let url = `/${IG_USER_ID}/media`;
+  let params = {
+    fields: 'id,caption,timestamp,like_count,comments_count,media_type',
+    limit: 50,
+  };
+
+  let page = 0;
+  while (url && page < 10) {
+    const data = await graphGet(url, params);
+    if (data.data) allMedia = allMedia.concat(data.data);
+
+    if (data.data && data.data.length > 0) {
+      const oldest = data.data[data.data.length - 1].timestamp.split('T')[0];
+      if (oldest < startDate) break;
+    }
+
+    if (data.paging?.next) {
+      const nextUrl = new URL(data.paging.next);
+      url = nextUrl.pathname.replace('/v21.0', '');
+      params = Object.fromEntries(nextUrl.searchParams.entries());
+      delete params.access_token;
+    } else {
+      break;
+    }
+    page++;
+    await sleep(200);
+  }
+
+  const monthMedia = allMedia.filter(m => {
+    const d = m.timestamp.split('T')[0];
+    return d >= startDate && d <= endDate;
+  });
+
+  console.log(`Found ${monthMedia.length} posts in ${startDate} to ${endDate}.`);
+
+  const postsWithInsights = [];
+  for (const media of monthMedia) {
+    try {
+      const insights = await graphGet(`/${media.id}/insights`, {
+        metric: 'reach,impressions',
+      });
+      const insightsMap = {};
+      for (const entry of insights.data) {
+        insightsMap[entry.name] = entry.values[0]?.value || 0;
+      }
+      postsWithInsights.push({
+        id:          media.id,
+        caption:     (media.caption || '').substring(0, 500),
+        reach:       insightsMap.reach || 0,
+        impressions: insightsMap.impressions || 0,
+        likes:       media.like_count || 0,
+        comments:    media.comments_count || 0,
+      });
+    } catch (err) {
+      console.log(`Insights for media ${media.id} failed: ${err.message}`);
+      postsWithInsights.push({
+        id:          media.id,
+        caption:     (media.caption || '').substring(0, 500),
+        reach:       0,
+        impressions: 0,
+        likes:       media.like_count || 0,
+        comments:    media.comments_count || 0,
+      });
+    }
+    await sleep(300);
+  }
+
+  postsWithInsights.sort((a, b) => b.reach - a.reach);
+  const topPosts = postsWithInsights.slice(0, 5).map((p, i) => ({
+    ...p,
+    rank: i + 1,
+  }));
+
+  const totalLikes    = postsWithInsights.reduce((s, p) => s + p.likes, 0);
+  const totalComments = postsWithInsights.reduce((s, p) => s + p.comments, 0);
+  const totalReach    = postsWithInsights.reduce((s, p) => s + p.reach, 0);
+
+  const engagementRate = totalReach > 0
+    ? Math.round(((totalLikes + totalComments) / totalReach) * 10000) / 100
+    : 0;
+
+  return { topPosts, engagementRate };
+}
+
+async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagementRate) {
+  const db = await connectDB();
+  const statsTable  = monthTable('insta_stats', monthKey);
+  const totalsTable = monthTable('insta_totals', monthKey);
+  const postsTable  = monthTable('insta_top_posts', monthKey);
+  const today       = new Date().toISOString().split('T')[0];
+
+  try {
+    await ensureInstaTablesExist(db, monthKey);
+
+    if (dailyData.length > 0) {
+      const query = `
+        INSERT INTO \`${statsTable}\` (date, impressions, reach, follower_count, follower_gained, engagement_rate)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE
+          impressions=VALUES(impressions),
+          reach=VALUES(reach),
+          follower_count=VALUES(follower_count),
+          follower_gained=VALUES(follower_gained),
+          engagement_rate=VALUES(engagement_rate)
+      `;
+
+      let cumulativeGained = 0;
+      const reverseDays = [...dailyData].reverse();
+      const followerCounts = {};
+      for (const d of reverseDays) {
+        followerCounts[d.date] = accountInfo.totalFollowers - cumulativeGained;
+        cumulativeGained += d.follower_gained;
+      }
+
+      const values = dailyData.map(d => [
+        d.date,
+        d.impressions,
+        d.reach,
+        followerCounts[d.date] || accountInfo.totalFollowers,
+        d.follower_gained,
+        engagementRate,
+      ]);
+      await db.query(query, [values]);
+      console.log(`${dailyData.length} days saved to ${statsTable}.`);
+    }
+
+    const totalsQuery = `
+      INSERT INTO \`${totalsTable}\` (date, total_followers, total_posts)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        total_followers=VALUES(total_followers),
+        total_posts=VALUES(total_posts)
+    `;
+    await db.query(totalsQuery, [today, accountInfo.totalFollowers, accountInfo.totalPosts]);
+    console.log(`Totals saved to ${totalsTable} for ${today}.`);
+
+    if (topPosts.length > 0) {
+      const postsQuery = `
+        INSERT INTO \`${postsTable}\` (post_id, caption, reach, impressions, likes, comments, rank_position)
+        VALUES ?
+        ON DUPLICATE KEY UPDATE
+          caption=VALUES(caption),
+          reach=VALUES(reach),
+          impressions=VALUES(impressions),
+          likes=VALUES(likes),
+          comments=VALUES(comments),
+          rank_position=VALUES(rank_position)
+      `;
+      const postValues = topPosts.map(p => [
+        p.id, p.caption, p.reach, p.impressions, p.likes, p.comments, p.rank,
+      ]);
+      await db.query(postsQuery, [postValues]);
+      console.log(`${topPosts.length} top posts saved to ${postsTable}.`);
+    }
+  } finally {
+    await db.end();
+  }
+}
+
+async function refreshTokenIfNeeded() {
+  try {
+    const res = await fetch(
+      `${GRAPH_API_BASE}/refresh_access_token?` +
+      `grant_type=ig_refresh_token&access_token=${IG_ACCESS_TOKEN}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`Token refreshed. New expiry in ${data.expires_in}s (~${Math.round(data.expires_in / 86400)} days).`);
+    } else {
+      console.log('Token refresh not possible (may be a short-lived or non-refreshable token).');
+    }
+  } catch (err) {
+    console.log('Token refresh attempt failed: ' + err.message);
+  }
+}
+
+async function run() {
+  try {
+    console.log('Starting Instagram analytics fetch...');
+
+    await refreshTokenIfNeeded();
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const monthNum = now.getMonth();
+    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
+
+    const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
+    const today = now.toISOString().split('T')[0];
+
+    console.log(`Fetching Instagram data for month ${monthKey} (${startOfMonth} to ${today})...`);
+
+    const accountInfo = await fetchAccountInfo();
+    console.log(`Account: ${accountInfo.totalFollowers} followers, ${accountInfo.totalPosts} posts.`);
+
+    const dailyData = await fetchDailyInsights(startOfMonth, today);
+    console.log(`Fetched ${dailyData.length} daily records.`);
+
+    const { topPosts, engagementRate } = await fetchMonthlyEngagementAndPosts(startOfMonth, today);
+    console.log(`Top ${topPosts.length} posts fetched. Engagement Rate: ${engagementRate}%.`);
+
+    await saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagementRate);
+
+    console.log('Instagram fetch done.');
+  } catch (error) {
+    console.error('Error during Instagram fetch:', error.message);
+    if (error.code) console.error('   Error code:', error.code);
+    if (error.errno) console.error('   Errno:', error.errno);
+    console.error('   Stack:', error.stack);
+    process.exit(1);
+  }
+}
+
+run();

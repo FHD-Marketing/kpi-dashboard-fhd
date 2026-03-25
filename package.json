@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "fetch:yt": "node src/scripts/fetch-data-youtube.js",
+    "fetch:insta": "node src/scripts/fetch-data-insta.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",
