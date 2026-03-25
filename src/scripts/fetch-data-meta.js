@@ -46,8 +46,8 @@ function monthTable(prefix, monthKey) {
 }
 
 async function ensureMetaTablesExist(db, monthKey) {
-  const summaryTable = monthTable('meta_ads_summary', monthKey);
-  const campaignsTable = monthTable('meta_ads_campaigns', monthKey);
+  const summaryTable = monthTable('meta_summary', monthKey);
+  const campaignsTable = monthTable('meta_campaigns', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${summaryTable}\` (
@@ -203,8 +203,8 @@ async function fetchAdSetCounts(campaignIds) {
 
 async function saveToMySQL(summary, campaigns, monthKey, today) {
   const db = await connectDB();
-  const summaryTable = monthTable('meta_ads_summary', monthKey);
-  const campaignsTable = monthTable('meta_ads_campaigns', monthKey);
+  const summaryTable = monthTable('meta_summary', monthKey);
+  const campaignsTable = monthTable('meta_campaigns', monthKey);
 
   try {
     await ensureMetaTablesExist(db, monthKey);

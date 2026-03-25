@@ -13,12 +13,14 @@
     "fetch:yt": "node src/scripts/fetch-data-youtube.js",
     "fetch:insta": "node src/scripts/fetch-data-insta.js",
     "fetch:meta": "node src/scripts/fetch-data-meta.js",
-    "fetch:mailchimp": "node src/scripts/fetch-data-mailchimp.js"
+    "fetch:mailchimp": "node src/scripts/fetch-data-mailchimp.js",
+    "fetch:google": "node src/scripts/fetch-data-google-ads.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",
     "astro": "^6.0.8",
     "dotenv": "^17.3.1",
+    "google-ads-api": "^23.0.0",
     "googleapis": "^171.4.0",
     "mysql2": "^3.20.0"
   }

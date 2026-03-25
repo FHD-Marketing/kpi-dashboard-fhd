@@ -3,10 +3,10 @@ import { google } from 'googleapis';
 import mysql from 'mysql2/promise';
 
 const oauth2Client = new google.auth.OAuth2(
-    process.env.YT_CLIENT_ID,
-    process.env.YT_CLIENT_SECRET
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET
 );
-oauth2Client.setCredentials({ refresh_token: process.env.YT_REFRESH_TOKEN });
+oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
 
 const youtubeAnalytics = google.youtubeAnalytics({ version: 'v2', auth: oauth2Client });
 const youtubeData = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -53,20 +53,20 @@ function monthTable(prefix, monthKey) {
 }
 
 async function ensureTablesExist(db, monthKey) {
-  const statsTable = monthTable('stats', monthKey);
-  const videosTable = monthTable('top_videos', monthKey);
-  const totalsTable = monthTable('totals', monthKey);
+  const statsTable = monthTable('youtube_stats', monthKey);
+  const videosTable = monthTable('youtube_top_videos', monthKey);
+  const totalsTable = monthTable('youtube_totals', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
-                                                   date DATE PRIMARY KEY,
-                                                   views INT DEFAULT 0,
-                                                   likes INT DEFAULT 0,
-                                                   subscribers_gained INT DEFAULT 0,
-                                                   watch_time_minutes INT DEFAULT 0,
-                                                   impressions INT DEFAULT 0,
-                                                   ctr DECIMAL(5,2) DEFAULT 0.00
-      )
+      date DATE PRIMARY KEY,
+      views INT DEFAULT 0,
+      likes INT DEFAULT 0,
+      subscribers_gained INT DEFAULT 0,
+      watch_time_minutes INT DEFAULT 0,
+      impressions INT DEFAULT 0,
+      ctr DECIMAL(5,2) DEFAULT 0.00
+    )
   `);
 
   await db.query(`
@@ -77,22 +77,22 @@ async function ensureTablesExist(db, monthKey) {
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${totalsTable}\` (
-                                                    date DATE PRIMARY KEY,
-                                                    total_views BIGINT DEFAULT 0,
-                                                    total_likes BIGINT DEFAULT 0,
-                                                    total_subscribers INT DEFAULT 0,
-                                                    total_video_count INT DEFAULT 0
+      date DATE PRIMARY KEY,
+      total_views BIGINT DEFAULT 0,
+      total_likes BIGINT DEFAULT 0,
+      total_subscribers INT DEFAULT 0,
+      total_video_count INT DEFAULT 0
     )
   `);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${videosTable}\` (
-                                                    video_id VARCHAR(20) PRIMARY KEY,
+      video_id VARCHAR(20) PRIMARY KEY,
       title VARCHAR(255),
       views INT DEFAULT 0,
       likes INT DEFAULT 0,
       rank_position TINYINT DEFAULT 0
-      )
+    )
   `);
 
   console.log(`Tables ${statsTable}, ${totalsTable} and ${videosTable} verified/created.`);
@@ -397,9 +397,9 @@ async function fetchTopVideos(startDate, endDate) {
 
 async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideos) {
   const db = await connectDB();
-  const statsTable = monthTable('stats', monthKey);
-  const totalsTable = monthTable('totals', monthKey);
-  const videosTable = monthTable('top_videos', monthKey);
+  const statsTable = monthTable('youtube_stats', monthKey);
+  const totalsTable = monthTable('youtube_totals', monthKey);
+  const videosTable = monthTable('youtube_top_videos', monthKey);
   const today = new Date().toISOString().split('T')[0];
 
   try {
@@ -409,12 +409,12 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
       const channelQuery = `
         INSERT INTO \`${statsTable}\` (date, views, likes, subscribers_gained, watch_time_minutes, impressions, ctr)
         VALUES ?
-          ON DUPLICATE KEY UPDATE
-                             views=VALUES(views), likes=VALUES(likes),
-                             subscribers_gained=VALUES(subscribers_gained),
-                             watch_time_minutes=VALUES(watch_time_minutes),
-                             impressions=VALUES(impressions),
-                             ctr=VALUES(ctr)
+        ON DUPLICATE KEY UPDATE
+          views=VALUES(views), likes=VALUES(likes),
+          subscribers_gained=VALUES(subscribers_gained),
+          watch_time_minutes=VALUES(watch_time_minutes),
+          impressions=VALUES(impressions),
+          ctr=VALUES(ctr)
       `;
       const channelValues = channelData.map(d => [
         d.date, d.views, d.likes, d.subscribers_gained, d.watch_time_minutes, d.impressions, d.ctr,
@@ -426,9 +426,9 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
     const totalsQuery = `
       INSERT INTO \`${totalsTable}\` (date, total_views, total_likes, total_subscribers, total_video_count)
       VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-                           total_views=VALUES(total_views), total_likes=VALUES(total_likes),
-                           total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
+      ON DUPLICATE KEY UPDATE
+        total_views=VALUES(total_views), total_likes=VALUES(total_likes),
+        total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
     `;
     await db.query(totalsQuery, [
       today, channelTotals.totalViews, channelTotals.totalLikes,
@@ -440,8 +440,8 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
       const videoQuery = `
         INSERT INTO \`${videosTable}\` (video_id, title, views, likes, rank_position)
         VALUES ?
-          ON DUPLICATE KEY UPDATE
-                             title=VALUES(title), views=VALUES(views), likes=VALUES(likes), rank_position=VALUES(rank_position)
+        ON DUPLICATE KEY UPDATE
+          title=VALUES(title), views=VALUES(views), likes=VALUES(likes), rank_position=VALUES(rank_position)
       `;
       const videoValues = monthlyTopVideos.map(v => [v.id, v.title, v.views, v.likes, v.rank]);
       await db.query(videoQuery, [videoValues]);

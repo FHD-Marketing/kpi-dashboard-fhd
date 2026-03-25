@@ -47,9 +47,9 @@ function monthTable(prefix, monthKey) {
 }
 
 async function ensureInstaTablesExist(db, monthKey) {
-  const statsTable = monthTable('insta_stats', monthKey);
-  const totalsTable = monthTable('insta_totals', monthKey);
-  const postsTable = monthTable('insta_top_posts', monthKey);
+  const statsTable = monthTable('instagram_stats', monthKey);
+  const totalsTable = monthTable('instagram_totals', monthKey);
+  const postsTable = monthTable('instagram_top_posts', monthKey);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${statsTable}\` (
@@ -260,9 +260,9 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
 
 async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagementRate) {
   const db = await connectDB();
-  const statsTable = monthTable('insta_stats', monthKey);
-  const totalsTable = monthTable('insta_totals', monthKey);
-  const postsTable = monthTable('insta_top_posts', monthKey);
+  const statsTable = monthTable('instagram_stats', monthKey);
+  const totalsTable = monthTable('instagram_totals', monthKey);
+  const postsTable = monthTable('instagram_top_posts', monthKey);
   const today = new Date().toISOString().split('T')[0];
 
   try {
