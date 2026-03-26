@@ -58,7 +58,7 @@ export function getMonthOrder() {
 }
 
 export async function loadDataFromServer() {
-  const base = import.meta.env.BASE_URL || '/';
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
   const url = `${base}api/dashboard-data.json`;
 
   const res = await fetch(url);
