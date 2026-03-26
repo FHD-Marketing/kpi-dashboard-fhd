@@ -45,41 +45,27 @@ jobs:
         run: node src/scripts/fetching/fetch-data-mailchimp.js
         continue-on-error: true
 
-#      - name: Fetch LinkedIn data
-#        env:
-#          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
-#          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
-#          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-#          LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}
-#          LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
-#          DB_HOST: ${{ secrets.DB_HOST }}
-#          DB_USER: ${{ secrets.DB_USER }}
-#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetching/fetch-data-linkedin.js
-#        continue-on-error: true
+      - name: Fetch Instagram data
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node src/scripts/fetching/fetch-data-insta.js
+        continue-on-error: true
 
-#      - name: Fetch Instagram data
-#        env:
-#          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-#          IG_USER_ID: ${{ secrets.IG_USER_ID }}
-#          DB_HOST: ${{ secrets.DB_HOST }}
-#          DB_USER: ${{ secrets.DB_USER }}
-#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetching/fetch-data-insta.js
-#        continue-on-error: true
-#
-#      - name: Fetch Meta Ads data
-#        env:
-#          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-#          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
-#          DB_HOST: ${{ secrets.DB_HOST }}
-#          DB_USER: ${{ secrets.DB_USER }}
-#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetching/fetch-data-meta.js
-#        continue-on-error: true
+      - name: Fetch Meta Ads data
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node src/scripts/fetching/fetch-data-meta.js
+        continue-on-error: true
 
 #      - name: Fetch Google Ads data
 #        env:
@@ -94,6 +80,20 @@ jobs:
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-google-ads.js
+#        continue-on-error: true
+
+#      - name: Fetch LinkedIn data
+#        env:
+#          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+#          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+#          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+#          LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}
+#          LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetching/fetch-data-linkedin.js
 #        continue-on-error: true
 
       - name: Generate dashboard-data.json
