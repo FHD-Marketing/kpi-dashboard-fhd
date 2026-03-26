@@ -32,6 +32,16 @@ jobs:
         run: node src/scripts/fetching/fetch-data-youtube.js
         continue-on-error: false
 
+      - name: Fetch Mailchimp data
+        env:
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node src/scripts/fetching/fetch-data-mailchimp.js
+        continue-on-error: false
+
 #      - name: Fetch Instagram data
 #        env:
 #          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
@@ -54,27 +64,18 @@ jobs:
 #        run: node src/scripts/fetching/fetch-data-meta.js
 #        continue-on-error: false
 
-      - name: Fetch Google Ads data
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GADS_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
-          GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
-          GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
-          GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-google-ads.js
-        continue-on-error: false
+#      - name: Fetch Google Ads data
+#        env:
+#          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+#          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#          GADS_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
+#          GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
+#          GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
+#          GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetching/fetch-data-google-ads.js
+#        continue-on-error: false
 
-      - name: Fetch Mailchimp data
-        env:
-          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-mailchimp.js
-        continue-on-error: false
