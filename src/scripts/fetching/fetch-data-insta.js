@@ -2,7 +2,7 @@ import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
 const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
-const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
+const GRAPH_API_BASE = 'https://graph.facebook.com/v22.0';
 
 if (!ACCESS_TOKEN) {
   console.error('Missing META_ACCESS_TOKEN env variable.');
@@ -146,7 +146,7 @@ async function fetchDailyInsights(startDate, endDate) {
   let data;
   try {
     data = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
-      metric: 'impressions,reach,follower_count',
+      metric: 'views,reach,follower_count',
       period: 'day',
       since,
       until,
@@ -178,7 +178,7 @@ async function fetchDailyInsights(startDate, endDate) {
     const dStr = currentDate.toISOString().split('T')[0];
     result.push({
       date: dStr,
-      impressions: metricsMap.impressions?.[dStr] || 0,
+      impressions: metricsMap.views?.[dStr] || 0,
       reach: metricsMap.reach?.[dStr] || 0,
       follower_gained: metricsMap.follower_count?.[dStr] || 0,
     });
@@ -205,7 +205,7 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
 
     if (data.paging?.next) {
       const nextUrl = new URL(data.paging.next);
-      urlPath = nextUrl.pathname.replace('/v21.0', '');
+      urlPath = nextUrl.pathname.replace('/v22.0', '');
       params = Object.fromEntries(nextUrl.searchParams.entries());
       delete params.access_token;
     } else {
@@ -224,10 +224,10 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
   for (const media of monthMedia) {
     let reach = 0, impressions = 0;
     try {
-      const insights = await graphGet(`/${media.id}/insights`, { metric: 'reach,impressions' });
+      const insights = await graphGet(`/${media.id}/insights`, { metric: 'reach,views' });
       for (const entry of insights.data) {
         if (entry.name === 'reach') reach = entry.values[0]?.value || 0;
-        if (entry.name === 'impressions') impressions = entry.values[0]?.value || 0;
+        if (entry.name === 'views') impressions = entry.values[0]?.value || 0;
       }
     } catch {
       console.log(`Could not fetch insights for media ${media.id}.`);
