@@ -9,6 +9,7 @@ import '../styles/global.css';
   <title>FHD Performance Dashboard 2026</title>
   <meta name="description" content="KPI-Dashboard der Fachhochschule Dresden – Alle Kommunikationskanäle auf einen Blick." />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" is:inline></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" is:inline></script>
 </head>
 <body>
 <div class="dashboard">
@@ -354,12 +355,54 @@ import '../styles/global.css';
   <!-- ═══ TAB: INFOMATERIALANFRAGEN ═══ -->
   <section id="tab-infomaterial" class="tab-content">
     <h2 class="section-title" id="infomaterial-title"><span class="title-icon">📥</span> Infomaterialanfragen</h2>
-    <p class="section-subtitle">Übersicht der angeforderten Materialien</p>
+    <p class="section-subtitle">Übersicht der angeforderten Materialien nach Studiengang</p>
+
+    <!-- Upload Area -->
+    <div class="infomaterial-upload-area" id="infomaterial-upload-area">
+      <input type="file" id="infomaterial-file-input" accept=".xlsx,.xls" hidden />
+      <div class="upload-content">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">
+          <strong>Excel-Datei hochladen</strong>
+          <span>Ziehe eine .xlsx-Datei hierher oder klicke zum Auswählen</span>
+        </div>
+        <button class="upload-btn" id="infomaterial-upload-btn">Datei auswählen</button>
+      </div>
+      <div class="upload-feedback" id="infomaterial-upload-feedback" style="display:none"></div>
+    </div>
+
+    <!-- KPI Summary -->
     <div class="kpi-grid cols-4 channel-infomaterial">
-      <div class="kpi-card" data-kpi="infomaterial-gesamt"><div class="kpi-card-header"><span class="kpi-card-label">ANFRAGEN GESAMT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="infomaterial-bachelor"><div class="kpi-card-header"><span class="kpi-card-label">BACHELOR</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="infomaterial-master"><div class="kpi-card-header"><span class="kpi-card-label">MASTER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="infomaterial-kosten"><div class="kpi-card-header"><span class="kpi-card-label">CPA (Ø KOSTEN)</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-gesamt"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📊</span> ANFRAGEN GESAMT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-bachelor"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎓</span> BACHELOR</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-master"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎓</span> MASTER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="infomaterial-veraenderung"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📈</span> VERÄNDERUNG</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+    </div>
+
+    <!-- Fakultäts-Zusammenfassung -->
+    <h3 class="section-title mb-md"><span class="title-icon">🏛️</span> Fakultäten</h3>
+    <div class="infomaterial-faculty-grid" id="infomaterial-faculty-cards">
+      <div class="infomaterial-faculty-card placeholder-card">
+        <div class="faculty-card-header"><span class="faculty-icon">🎨</span><span class="faculty-name">Fakultät Design</span></div>
+        <div class="faculty-value">—</div>
+      </div>
+      <div class="infomaterial-faculty-card placeholder-card">
+        <div class="faculty-card-header"><span class="faculty-icon">🤝</span><span class="faculty-name">Fakultät ASW</span></div>
+        <div class="faculty-value">—</div>
+      </div>
+      <div class="infomaterial-faculty-card placeholder-card">
+        <div class="faculty-card-header"><span class="faculty-icon">📊</span><span class="faculty-name">Fakultät BW</span></div>
+        <div class="faculty-value">—</div>
+      </div>
+    </div>
+
+    <!-- Studiengang-Charts -->
+    <h3 class="section-title mb-md"><span class="title-icon">📊</span> Anfragen pro Studiengang</h3>
+    <p class="section-subtitle">Vergleich zum Vormonat</p>
+    <div class="infomaterial-charts-grid" id="infomaterial-charts-container">
+      <div class="infomaterial-empty-state">
+        <p>Lade eine Excel-Datei hoch, um die Studiengang-Graphen zu sehen.</p>
+      </div>
     </div>
   </section>
 
@@ -396,12 +439,14 @@ import '../styles/global.css';
   import { initCampaignToggle } from '../scripts/campaign-toggle.js';
   import { initKpiAnimations } from '../scripts/kpi-animations.js';
   import { loadDataFromServer } from '../scripts/data.js';
+  import { initInfomaterial } from '../scripts/infomaterial.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
     initTabNavigation();
     initMonthSelector();
     initCampaignToggle();
     initKpiAnimations();
+    initInfomaterial();
 
     const loadingEl = document.getElementById('loading-state');
     const emptyEl = document.getElementById('tab-empty');

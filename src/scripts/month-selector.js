@@ -5,6 +5,7 @@
 
 import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab } from './data.js';
 import { showOverview } from './tab-navigation.js';
+import { renderInfomaterialTab } from './infomaterial.js';
 
 let currentMonth = null;
 
@@ -66,6 +67,11 @@ function updateTabAvailability(month) {
   tabBtns.forEach(btn => {
     const tab = btn.dataset.tab;
     if (!tab) return;
+    // Infomaterial tab is always enabled (data comes from manual upload)
+    if (tab === 'infomaterial') {
+      btn.classList.remove('disabled');
+      return;
+    }
     if (hasDataForTab(month, tab)) {
       btn.classList.remove('disabled');
     } else {
@@ -160,6 +166,7 @@ export function updateDashboardData(month) {
   renderMetaCampaigns(data.metaAds);
   renderMailchimpTable(data.mailchimp);
   renderStudycheckTable(data.studycheck);
+  renderInfomaterialTab(month);
 }
 
 function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
