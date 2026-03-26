@@ -1,12 +1,12 @@
 {
   "mar": {
     "label": "März 2026",
-    "totalSpend": "€1.827,41",
+    "totalSpend": "€1.827,84",
     "overview": {
       "adSpend": {
-        "value": "€1.827,41",
+        "value": "€1.827,84",
         "trend": null,
-        "detail": "Google €0,00 · Meta €1.827,41"
+        "detail": "Google €0,00 · Meta €1.827,84"
       },
       "klicks": {
         "value": "774",
@@ -44,7 +44,7 @@
           "pct": "0%"
         },
         "meta": {
-          "value": 1827.41,
+          "value": 1827.84,
           "pct": "100%"
         }
       },
@@ -56,7 +56,7 @@
     },
     "metaAds": {
       "spend": {
-        "value": "€1.827,41",
+        "value": "€1.827,84",
         "trend": null,
         "trendDir": null
       },
@@ -81,14 +81,14 @@
           "badge": "WINNER",
           "groups": "11 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€1.474,02",
+          "spend": "€1.474,28",
           "leads": "6",
-          "cpl": "€245,67",
+          "cpl": "€245,71",
           "klicks": "629",
           "cpc": "€2,34",
           "ctr": "0.50%",
           "reichweite": "35284",
-          "impressionen": "125630",
+          "impressionen": "125661",
           "frequenz": "3.56",
           "progressPct": 100
         },
@@ -97,15 +97,15 @@
           "badge": "LOSER",
           "groups": "3 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€353,39",
+          "spend": "€353,56",
           "leads": "0",
           "cpl": "—",
           "klicks": "145",
           "cpc": "€2,44",
           "ctr": "0.48%",
           "reichweite": "7942",
-          "impressionen": "29981",
-          "frequenz": "3.77",
+          "impressionen": "29994",
+          "frequenz": "3.78",
           "progressPct": 0
         }
       ]
@@ -121,10 +121,10 @@
         "value": "6.0%"
       },
       "reichweite": {
-        "value": "112.133"
+        "value": "112167"
       },
       "impressionen": {
-        "value": "7.210"
+        "value": "0"
       },
       "topPosts": [
         {
@@ -337,7 +337,7 @@
     },
     "mailchimp": {
       "openRate": {
-        "value": "29.1%",
+        "value": "29.5%",
         "trend": null,
         "trendDir": null
       },
@@ -359,21 +359,21 @@
         {
           "name": "Newsletter Monatsmailing März 2026 BW",
           "sent": 661,
-          "openRate": "23.9%",
+          "openRate": "24.4%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 ASW",
           "sent": 1232,
-          "openRate": "17.9%",
+          "openRate": "18.7%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 DESIGN",
           "sent": 448,
-          "openRate": "32.1%",
+          "openRate": "32.4%",
           "clickRate": "1.8%",
           "date": "26.03.2026"
         },
@@ -390,7 +390,7 @@
           "Mär"
         ],
         "openRates": [
-          29.14
+          29.49
         ],
         "clickRates": [
           0.97
