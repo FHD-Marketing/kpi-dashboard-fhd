@@ -166,6 +166,26 @@ async function fetchDailyInsights(startDate, endDate) {
   }
 
   try {
+    const impressionsData = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+      metric: 'impressions',
+      period: 'day',
+      since,
+      until,
+    });
+    if (impressionsData.data) {
+      for (const entry of impressionsData.data) {
+        metricsMap[entry.name] = {};
+        for (const point of entry.values) {
+          const dateStr = point.end_time.split('T')[0];
+          metricsMap[entry.name][dateStr] = point.value;
+        }
+      }
+    }
+  } catch (err) {
+    console.log(`Daily insights (impressions) fetch failed: ${err.message}`);
+  }
+
+  try {
     const viewsData = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
       metric: 'views',
       metric_type: 'total_value',
@@ -175,10 +195,13 @@ async function fetchDailyInsights(startDate, endDate) {
     });
     if (viewsData.data) {
       for (const entry of viewsData.data) {
-        metricsMap[entry.name] = {};
-        for (const point of entry.values) {
-          const dateStr = point.end_time.split('T')[0];
-          metricsMap[entry.name][dateStr] = point.value;
+        if (!metricsMap[entry.name]) metricsMap[entry.name] = {};
+        if (entry.total_value) {
+        } else if (entry.values) {
+          for (const point of entry.values) {
+            const dateStr = point.end_time.split('T')[0];
+            metricsMap[entry.name][dateStr] = point.value;
+          }
         }
       }
     }
@@ -199,7 +222,7 @@ async function fetchDailyInsights(startDate, endDate) {
     const dStr = currentDate.toISOString().split('T')[0];
     result.push({
       date: dStr,
-      impressions: metricsMap.views?.[dStr] || 0,
+      impressions: metricsMap.impressions?.[dStr] || metricsMap.views?.[dStr] || 0,
       reach: metricsMap.reach?.[dStr] || 0,
       follower_gained: metricsMap.follower_count?.[dStr] || 0,
     });

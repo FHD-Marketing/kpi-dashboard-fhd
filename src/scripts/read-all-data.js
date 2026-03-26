@@ -204,17 +204,30 @@ async function readInstagram(db, mk, prevMk) {
   if (!latest && !totals) return null;
 
   const follower = totals ? totals.total_followers : (latest ? latest.follower_count : 0);
+
+  let totalReach = 0, totalImpr = 0;
+  if (hasStats) {
+    const [sumRows] = await db.query(`SELECT SUM(reach) as totalReach, SUM(impressions) as totalImpr FROM \`${st}\``);
+    if (sumRows.length > 0) {
+      totalReach = sumRows[0].totalReach || 0;
+      totalImpr = sumRows[0].totalImpr || 0;
+    }
+  }
+
   const engRate = latest ? parseFloat(latest.engagement_rate) : 0;
-  const curReach = latest ? latest.reach : 0;
-  const curImpr = latest ? latest.impressions : 0;
 
   let prevFollower = null, prevEng = null, prevReach = null, prevImpr = null;
   if (prevMk) {
     const pst = tbl('instagram_stats', prevMk);
     const ptt = tbl('instagram_totals', prevMk);
     if (await tableExists(db, pst)) {
-      const p = await latestRow(db, pst, 'follower_count, engagement_rate, impressions, reach');
-      if (p) { prevEng = parseFloat(p.engagement_rate); prevReach = p.reach; prevImpr = p.impressions; }
+      const p = await latestRow(db, pst, 'follower_count, engagement_rate');
+      if (p) { prevEng = parseFloat(p.engagement_rate); }
+      const [prevSums] = await db.query(`SELECT SUM(reach) as totalReach, SUM(impressions) as totalImpr FROM \`${pst}\``);
+      if (prevSums.length > 0) {
+        prevReach = prevSums[0].totalReach || null;
+        prevImpr = prevSums[0].totalImpr || null;
+      }
       if (await tableExists(db, ptt)) { const pt2 = await latestRow(db, ptt, 'total_followers'); if (pt2) prevFollower = pt2.total_followers; }
       if (!prevFollower && p) prevFollower = p.follower_count;
     }
@@ -235,8 +248,8 @@ async function readInstagram(db, mk, prevMk) {
   return {
     follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: trendDirection(follower, prevFollower, true) },
     engagementRate: { value: engRate.toFixed(1) + '%', trend: pct(engRate, prevEng), trendDir: trendDirection(engRate, prevEng, true) },
-    reichweite: { value: fmt(curReach), trend: pct(curReach, prevReach), trendDir: trendDirection(curReach, prevReach, true) },
-    impressionen: { value: fmt(curImpr), trend: pct(curImpr, prevImpr), trendDir: trendDirection(curImpr, prevImpr, true) },
+    reichweite: { value: fmt(totalReach), trend: pct(totalReach, prevReach), trendDir: trendDirection(totalReach, prevReach, true) },
+    impressionen: { value: fmt(totalImpr), trend: pct(totalImpr, prevImpr), trendDir: trendDirection(totalImpr, prevImpr, true) },
     topPosts,
     followerGrowth: growth
   };
