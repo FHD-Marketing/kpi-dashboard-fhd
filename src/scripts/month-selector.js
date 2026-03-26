@@ -3,7 +3,7 @@
  * @module month-selector
  */
 
-import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab } from './data.js';
+import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview } from './data.js';
 import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab } from './infomaterial.js';
 
@@ -42,7 +42,7 @@ export function activateLatestMonth() {
   selectMonth(latest);
 }
 
-function selectMonth(month) {
+async function selectMonth(month) {
   const allMonthBtns = document.querySelectorAll('.month-btn');
   allMonthBtns.forEach(b => b.classList.remove('active'));
 
@@ -54,6 +54,13 @@ function selectMonth(month) {
   // Empty state ausblenden
   const empty = document.getElementById('tab-empty');
   if (empty) empty.classList.remove('active');
+
+  // Fetch overview + ads data from API (cached if already loaded)
+  try {
+    await fetchOverview(month);
+  } catch (err) {
+    console.error(`Failed to fetch overview for ${month}:`, err);
+  }
 
   updateTabAvailability(month);
   updateDashboardData(month);
@@ -81,14 +88,25 @@ function updateTabAvailability(month) {
   });
 }
 
-function activateFirstAvailableTab(month) {
-  const tabBtns = document.querySelectorAll('.tab-btn:not(.disabled)');
+async function activateFirstAvailableTab(month) {
+  const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  tabBtns.forEach(b => b.classList.remove('active'));
   tabContents.forEach(c => c.classList.remove('active'));
 
-  if (tabBtns.length > 0) {
-    const first = tabBtns[0];
+  // Immer zuerst die Übersicht anzeigen
+  const overview = document.getElementById('tab-uebersicht');
+  if (overview) {
+    overview.classList.add('active');
+    document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: 'uebersicht' } }));
+    return;
+  }
+
+  // Fallback: ersten verfügbaren Tab aktivieren
+  const availableBtns = document.querySelectorAll('.tab-btn:not(.disabled)');
+  if (availableBtns.length > 0) {
+    const first = availableBtns[0];
     first.classList.add('active');
     const target = document.getElementById(`tab-${first.dataset.tab}`);
     if (target) target.classList.add('active');

@@ -93,22 +93,7 @@ jobs:
 #          DB_USER: ${{ secrets.DB_USER }}
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
-#        run: node src/scripts/fetching/fetch-data-linkedin.js
-#        continue-on-error: true
+        run: node src/scripts/fetching/fetch-data-linkedin.js
+        continue-on-error: true
 
-      - name: Generate dashboard-data.json
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/read-all-data.js
-
-      - name: Commit & push dashboard-data.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/api/dashboard-data.json
-          git diff --cached --quiet || git commit -m "chore: update dashboard-data.json"
-          git push
 

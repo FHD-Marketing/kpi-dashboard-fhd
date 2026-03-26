@@ -251,6 +251,8 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
 
   destroyChart(canvasId);
 
+  const fullNames = posts.map(p => p.name);
+
   chartInstances[canvasId] = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -270,6 +272,41 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
       indexAxis: 'y',
       scales: {
         x: { beginAtZero: true }
+      },
+      plugins: {
+        tooltip: {
+          enabled: false,
+          external: function(context) {
+            let el = document.getElementById('tooltip-' + canvasId);
+            if (!el) {
+              el = document.createElement('div');
+              el.id = 'tooltip-' + canvasId;
+              el.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-family:Inter,sans-serif;font-size:12px;line-height:1.5;max-width:420px;white-space:normal;word-break:break-word;transition:opacity .15s ease;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+              document.body.appendChild(el);
+            }
+            const tooltip = context.tooltip;
+            if (tooltip.opacity === 0) {
+              el.style.opacity = '0';
+              return;
+            }
+            const idx = tooltip.dataPoints && tooltip.dataPoints[0] ? tooltip.dataPoints[0].dataIndex : null;
+            const name = idx != null ? fullNames[idx] : '';
+            const val = tooltip.dataPoints && tooltip.dataPoints[0] ? tooltip.dataPoints[0].formattedValue : '';
+            el.innerHTML = '<div style="font-weight:700;margin-bottom:3px">' + name + '</div><div style="color:#94a3b8"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + color + ';margin-right:6px"></span>' + label + ': ' + val + '</div>';
+            el.style.opacity = '1';
+
+            const canvas = context.chart.canvas;
+            const rect = canvas.getBoundingClientRect();
+            let left = rect.left + tooltip.caretX + 12;
+            let top = rect.top + tooltip.caretY - el.offsetHeight / 2;
+            if (left + el.offsetWidth > window.innerWidth - 8) {
+              left = rect.left + tooltip.caretX - el.offsetWidth - 12;
+            }
+            top = Math.max(8, Math.min(top, window.innerHeight - el.offsetHeight - 8));
+            el.style.left = left + 'px';
+            el.style.top = top + 'px';
+          }
+        }
       }
     }
   });

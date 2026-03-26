@@ -409,6 +409,59 @@ body {
     to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Card Loading Spinner ──────────────────────────────────── */
+.kpi-card-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-md);
+    animation: overlayFadeIn 0.15s ease;
+}
+.kpi-card-loading .card-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2.5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+.chart-card-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    border-radius: var(--radius-lg);
+    animation: overlayFadeIn 0.15s ease;
+}
+.chart-card-loading .card-spinner {
+    width: 28px;
+    height: 28px;
+    border: 2.5px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+.chart-card-loading .loading-label {
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 /* ── Section Title ─────────────────────────────────────────── */
 .section-title {
     display: flex;
@@ -450,6 +503,7 @@ body {
     transition: all var(--transition-fast);
     position: relative;
     overflow: hidden;
+    min-height: 110px;
 }
 .kpi-card:hover {
     background: var(--bg-card-hover);
@@ -545,6 +599,9 @@ body {
     border-radius: var(--radius-md);
     padding: var(--space-lg);
     transition: border-color var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+    min-height: 290px;
 }
 .chart-card:hover {
     border-color: var(--border-color);

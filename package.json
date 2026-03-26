@@ -10,7 +10,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "read:all": "node src/scripts/read-all-data.js",
     "read:mailchimp": "node src/scripts/reading/read-data-mailchimp.js",
     "fetch:yt": "node src/scripts/fetching/fetch-data-youtube.js",
     "fetch:insta": "node src/scripts/fetching/fetch-data-insta.js",

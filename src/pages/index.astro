@@ -434,11 +434,11 @@ import '../styles/global.css';
 <!-- ═══ SCRIPTS ═══ -->
 <script>
   import { initTabNavigation } from '../scripts/tab-navigation.js';
-  import { initMonthSelector, updateDashboardData, refreshMonthButtons, activateLatestMonth } from '../scripts/month-selector.js';
+  import { initMonthSelector, refreshMonthButtons, activateLatestMonth, updateDashboardData } from '../scripts/month-selector.js';
   import { initCharts } from '../scripts/charts.js';
   import { initCampaignToggle } from '../scripts/campaign-toggle.js';
   import { initKpiAnimations } from '../scripts/kpi-animations.js';
-  import { loadDataFromServer } from '../scripts/data.js';
+  import { fetchMonths } from '../scripts/data.js';
   import { initInfomaterial } from '../scripts/infomaterial.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -452,7 +452,7 @@ import '../styles/global.css';
     const emptyEl = document.getElementById('tab-empty');
 
     try {
-      const months = await loadDataFromServer();
+      const months = await fetchMonths();
 
       if (loadingEl) loadingEl.classList.remove('active');
 
@@ -466,7 +466,7 @@ import '../styles/global.css';
           const h2 = emptyEl.querySelector('h2');
           if (h2) h2.textContent = 'Keine Daten vorhanden';
           const p = emptyEl.querySelector('p');
-          if (p) p.textContent = 'Die Datendatei ist leer. Bitte führe "npm run read:all" aus, um die Daten aus der Datenbank zu laden.';
+          if (p) p.textContent = 'Die API hat keine Monatsdaten zurückgegeben.';
         }
       }
 
@@ -479,7 +479,7 @@ import '../styles/global.css';
         const h2 = emptyEl.querySelector('h2');
         if (h2) h2.textContent = 'Fehler beim Laden der Daten';
         const p = emptyEl.querySelector('p');
-        if (p) p.textContent = `Bitte führe "npm run read:all" aus, um die Daten aus der Datenbank zu lesen. (${err.message})`;
+        if (p) p.textContent = `API nicht erreichbar oder Fehler aufgetreten. (${err.message})`;
       }
     }
 

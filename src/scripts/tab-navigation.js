@@ -3,12 +3,15 @@
  * @module tab-navigation
  */
 
+import { getChannelForTab, isChannelCached, fetchChannel } from './data.js';
+import { getCurrentMonth, updateDashboardData } from './month-selector.js';
+
 export function initTabNavigation() {
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
   tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (btn.classList.contains('disabled')) return;
 
       const targetTab = btn.dataset.tab;
@@ -20,6 +23,38 @@ export function initTabNavigation() {
       const target = document.getElementById(`tab-${targetTab}`);
       if (target) {
         target.classList.add('active');
+      }
+
+      // ── Lazy-load channel data if not cached ──
+      const channel = getChannelForTab(targetTab);
+      const month = getCurrentMonth();
+      if (channel && month && !isChannelCached(channel, month)) {
+        // Show loading spinners inside each data container
+        const spinners = [];
+        if (target) {
+          target.querySelectorAll('.kpi-card').forEach(card => {
+            const overlay = document.createElement('div');
+            overlay.className = 'kpi-card-loading';
+            overlay.innerHTML = '<div class="card-spinner"></div>';
+            card.appendChild(overlay);
+            spinners.push(overlay);
+          });
+          target.querySelectorAll('.chart-card').forEach(card => {
+            const overlay = document.createElement('div');
+            overlay.className = 'chart-card-loading';
+            overlay.innerHTML = '<div class="card-spinner"></div><span class="loading-label">Laden…</span>';
+            card.appendChild(overlay);
+            spinners.push(overlay);
+          });
+        }
+        try {
+          await fetchChannel(channel, month);
+          updateDashboardData(month);
+        } catch (err) {
+          console.error(`Failed to load ${channel} for ${month}:`, err);
+        } finally {
+          spinners.forEach(el => el.remove());
+        }
       }
 
       document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: targetTab } }));
