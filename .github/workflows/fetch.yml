@@ -34,7 +34,7 @@ jobs:
 
       - name: Fetch Instagram data
         env:
-          IG_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
@@ -45,7 +45,7 @@ jobs:
 
       - name: Fetch Meta Ads data
         env:
-          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USER: ${{ secrets.DB_USER }}
@@ -58,7 +58,7 @@ jobs:
 #        env:
 #          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
 #          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-#          GOOGLE_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
+#          GADS_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
 #          GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
 #          GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
 #          GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
