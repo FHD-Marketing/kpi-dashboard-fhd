@@ -1,7 +1,115 @@
 {
   "mar": {
     "label": "März 2026",
-    "totalSpend": "—",
+    "totalSpend": "€1.825,69",
+    "overview": {
+      "adSpend": {
+        "value": "€1.825,69",
+        "trend": null,
+        "detail": "Google €0,00 · Meta €1.825,69"
+      },
+      "klicks": {
+        "value": "774",
+        "trend": null,
+        "detail": "Google 0 · Meta 774"
+      },
+      "conversions": {
+        "value": "6",
+        "trend": null,
+        "detail": "Google 0 Conv. · Meta 6 Leads"
+      },
+      "impressionen": {
+        "value": "146.984",
+        "trend": null,
+        "detail": ""
+      },
+      "reichweite": {
+        "value": "36.746",
+        "trend": null,
+        "detail": "Meta only"
+      },
+      "cpc": {
+        "value": "€2,36",
+        "trend": null,
+        "detail": ""
+      },
+      "ctr": {
+        "value": "—",
+        "trend": null,
+        "detail": ""
+      },
+      "budgetSplit": {
+        "google": {
+          "value": 0,
+          "pct": "0%"
+        },
+        "meta": {
+          "value": 1825.69,
+          "pct": "100%"
+        }
+      },
+      "dailySpend": {
+        "labels": [],
+        "google": [],
+        "meta": []
+      }
+    },
+    "metaAds": {
+      "spend": {
+        "value": "€1.825,69",
+        "trend": null,
+        "trendDir": null
+      },
+      "linkKlicks": {
+        "value": "774",
+        "trend": null,
+        "trendDir": null
+      },
+      "leads": {
+        "value": "6",
+        "trend": null,
+        "trendDir": null
+      },
+      "reichweite": {
+        "value": "36.746",
+        "trend": null,
+        "trendDir": null
+      },
+      "kampagnen": [
+        {
+          "name": "[PROSPECTING] ADSBE/01.Jan2026//Leads//ABO",
+          "badge": "WINNER",
+          "groups": "11 Anzeigengruppen",
+          "status": "AKTIV",
+          "spend": "€1.472,83",
+          "leads": "6",
+          "cpl": "€245,47",
+          "klicks": "629",
+          "cpc": "€2,34",
+          "ctr": "0.50%",
+          "reichweite": "35284",
+          "impressionen": "125495",
+          "frequenz": "3.56",
+          "progressPct": 100
+        },
+        {
+          "name": "[REMARKETING] ADSBE/07.Jan2026//Leads//ABO",
+          "badge": "LOSER",
+          "groups": "3 Anzeigengruppen",
+          "status": "AKTIV",
+          "spend": "€352,86",
+          "leads": "0",
+          "cpl": "—",
+          "klicks": "145",
+          "cpc": "€2,43",
+          "ctr": "0.48%",
+          "reichweite": "7942",
+          "impressionen": "29923",
+          "frequenz": "3.77",
+          "progressPct": 0
+        }
+      ]
+    },
     "youtube": {
       "views": {
         "value": "5300",
@@ -105,7 +213,7 @@
     },
     "mailchimp": {
       "openRate": {
-        "value": "27.7%",
+        "value": "28.3%",
         "trend": null,
         "trendDir": null
       },
@@ -127,21 +235,21 @@
         {
           "name": "Newsletter Monatsmailing März 2026 BW",
           "sent": 661,
-          "openRate": "21.5%",
+          "openRate": "22.9%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 ASW",
           "sent": 1232,
-          "openRate": "15.3%",
+          "openRate": "16.0%",
           "clickRate": "0.8%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 DESIGN",
           "sent": 448,
-          "openRate": "31.4%",
+          "openRate": "31.9%",
           "clickRate": "1.8%",
           "date": "26.03.2026"
         },
@@ -158,7 +266,7 @@
           "Mär"
         ],
         "openRates": [
-          27.71
+          28.33
         ],
         "clickRates": [
           0.95
