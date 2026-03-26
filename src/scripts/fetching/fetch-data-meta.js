@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const META_AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID;
 const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
 
 if (!ACCESS_TOKEN || !META_AD_ACCOUNT_ID) {
-  console.error('Missing ACCESS_TOKEN or META_AD_ACCOUNT_ID env variables.');
+  console.error('Missing META_ACCESS_TOKEN or META_AD_ACCOUNT_ID env variables.');
   process.exit(1);
 }
 
