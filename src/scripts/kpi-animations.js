@@ -59,21 +59,55 @@ function formatNumber(val, template) {
 }
 
 export function initKpiAnimations() {
-  document.addEventListener('tabChanged', () => {
-    setTimeout(animateVisibleKpis, 50);
+  // Animate after data finished loading
+  document.addEventListener('dataReady', () => {
+    setTimeout(() => animateVisibleCards(), 50);
   });
 
-  document.addEventListener('monthChanged', () => {
-    setTimeout(animateVisibleKpis, 100);
+  // Animate on tab switch only if data is already loaded
+  document.addEventListener('tabChanged', () => {
+    setTimeout(() => {
+      const activeTab = document.querySelector('.tab-content.active');
+      if (!activeTab) return;
+      const hasSpinners = activeTab.querySelector('.kpi-card-loading, .chart-card-loading');
+      if (!hasSpinners) {
+        animateVisibleCards();
+      }
+    }, 50);
   });
 }
 
-function animateVisibleKpis() {
+function animateVisibleCards() {
   const activeTab = document.querySelector('.tab-content.active');
   if (!activeTab) return;
 
-  const kpiValues = activeTab.querySelectorAll('.kpi-value');
-  kpiValues.forEach((el, i) => {
-    setTimeout(() => countUp(el, 600), i * 80);
+  // Collect all animatable cards
+  const cards = Array.from(activeTab.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card'));
+  if (cards.length === 0) return;
+
+  // Randomized delays (each card gets a random slot)
+  const baseDelay = 40;  // ms between cards
+  const indices = cards.map((_, i) => i);
+  // Shuffle
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  let maxDelay = 0;
+  cards.forEach((card, i) => {
+    card.classList.remove('kpi-pop');
+    void card.offsetWidth; // force reflow
+    const delay = indices[i] * baseDelay;
+    if (delay > maxDelay) maxDelay = delay;
+    card.style.setProperty('--kpi-delay', delay + 'ms');
+    card.classList.remove('kpi-hidden');
+    card.classList.add('kpi-pop');
+
+    // Start count-up simultaneously with the pop animation
+    const kpiValue = card.querySelector('.kpi-value');
+    if (kpiValue) {
+      setTimeout(() => countUp(kpiValue, 700), delay + 100);
+    }
   });
 }

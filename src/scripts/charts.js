@@ -542,3 +542,16 @@ function destroyChart(id) {
     delete chartInstances[id];
   }
 }
+
+/**
+ * Zerstört ALLE Chart-Instanzen (beim Monatswechsel).
+ */
+export function destroyAllCharts() {
+  Object.keys(chartInstances).forEach(id => {
+    try { chartInstances[id].destroy(); } catch (_) {}
+    delete chartInstances[id];
+  });
+  // Remove external tooltip elements
+  document.querySelectorAll('[id^="tooltip-"]').forEach(el => el.remove());
+}
+

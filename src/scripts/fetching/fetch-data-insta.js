@@ -188,7 +188,6 @@ async function fetchDailyInsights(startDate, endDate) {
   try {
     const viewsData = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
       metric: 'views',
-      metric_type: 'total_value',
       period: 'day',
       since,
       until,
@@ -196,8 +195,7 @@ async function fetchDailyInsights(startDate, endDate) {
     if (viewsData.data) {
       for (const entry of viewsData.data) {
         if (!metricsMap[entry.name]) metricsMap[entry.name] = {};
-        if (entry.total_value) {
-        } else if (entry.values) {
+        if (entry.values) {
           for (const point of entry.values) {
             const dateStr = point.end_time.split('T')[0];
             metricsMap[entry.name][dateStr] = point.value;
@@ -206,7 +204,39 @@ async function fetchDailyInsights(startDate, endDate) {
       }
     }
   } catch (err) {
-    console.log(`Daily insights (views) fetch failed: ${err.message}`);
+    console.log(`Daily insights (views, period=day) fetch failed: ${err.message}`);
+
+    try {
+      const viewsData2 = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+        metric: 'views',
+        metric_type: 'total_value',
+        period: 'day',
+        since,
+        until,
+      });
+      if (viewsData2.data) {
+        for (const entry of viewsData2.data) {
+          if (!metricsMap[entry.name]) metricsMap[entry.name] = {};
+          if (entry.total_value?.breakdowns) {
+            for (const br of entry.total_value.breakdowns) {
+              if (br.results) {
+                for (const result of br.results) {
+                  const dateStr = (result.dimension_values || [])[0];
+                  if (dateStr) metricsMap[entry.name][dateStr] = result.value || 0;
+                }
+              }
+            }
+          } else if (entry.values) {
+            for (const point of entry.values) {
+              const dateStr = point.end_time.split('T')[0];
+              metricsMap[entry.name][dateStr] = point.value;
+            }
+          }
+        }
+      }
+    } catch (err2) {
+      console.log(`Daily insights (views, total_value fallback) also failed: ${err2.message}`);
+    }
   }
 
   if (Object.keys(metricsMap).length === 0) {

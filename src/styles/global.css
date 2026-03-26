@@ -271,6 +271,15 @@ body {
     opacity: 0.3;
     pointer-events: none;
 }
+.month-btn.month-pop-in {
+    animation: monthPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: var(--pop-delay, 0ms);
+}
+@keyframes monthPopIn {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
 /* ── Tab Navigation ────────────────────────────────────────── */
 .tab-navigation-wrapper {
@@ -504,6 +513,19 @@ body {
     position: relative;
     overflow: hidden;
     min-height: 110px;
+}
+.kpi-hidden {
+    opacity: 0 !important;
+    transform: scale(0.85) !important;
+}
+.kpi-pop {
+    animation: kpiCardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+    animation-delay: var(--kpi-delay, 0ms) !important;
+}
+@keyframes kpiCardPop {
+    0%   { transform: scale(0.85); opacity: 0; }
+    60%  { transform: scale(1.03); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
 }
 .kpi-card:hover {
     background: var(--bg-card-hover);

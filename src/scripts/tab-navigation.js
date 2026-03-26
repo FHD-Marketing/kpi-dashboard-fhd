@@ -3,7 +3,6 @@
  * @module tab-navigation
  */
 
-import { getChannelForTab, isChannelCached, fetchChannel } from './data.js';
 import { getCurrentMonth, updateDashboardData } from './month-selector.js';
 
 export function initTabNavigation() {
@@ -25,36 +24,10 @@ export function initTabNavigation() {
         target.classList.add('active');
       }
 
-      // ── Lazy-load channel data if not cached ──
-      const channel = getChannelForTab(targetTab);
+      // All data is already loaded by selectMonth – just re-render
       const month = getCurrentMonth();
-      if (channel && month && !isChannelCached(channel, month)) {
-        // Show loading spinners inside each data container
-        const spinners = [];
-        if (target) {
-          target.querySelectorAll('.kpi-card').forEach(card => {
-            const overlay = document.createElement('div');
-            overlay.className = 'kpi-card-loading';
-            overlay.innerHTML = '<div class="card-spinner"></div>';
-            card.appendChild(overlay);
-            spinners.push(overlay);
-          });
-          target.querySelectorAll('.chart-card').forEach(card => {
-            const overlay = document.createElement('div');
-            overlay.className = 'chart-card-loading';
-            overlay.innerHTML = '<div class="card-spinner"></div><span class="loading-label">Laden…</span>';
-            card.appendChild(overlay);
-            spinners.push(overlay);
-          });
-        }
-        try {
-          await fetchChannel(channel, month);
-          updateDashboardData(month);
-        } catch (err) {
-          console.error(`Failed to load ${channel} for ${month}:`, err);
-        } finally {
-          spinners.forEach(el => el.remove());
-        }
+      if (month) {
+        updateDashboardData(month);
       }
 
       document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: targetTab } }));

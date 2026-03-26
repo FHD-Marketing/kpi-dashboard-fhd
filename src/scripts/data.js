@@ -140,6 +140,33 @@ export function getChannelForTab(tabId) {
   return dataKeyToChannel[dataKey] || null;
 }
 
+// ── Clear / Reset ──
+
+/**
+ * Clears cached channel data for a month (keeps label/totalSpend metadata).
+ */
+export function clearMonthChannels(monthShort) {
+  const keep = ['label', 'totalSpend', '_availableChannels'];
+  const data = dashboardData[monthShort];
+  if (!data) return;
+  Object.keys(data).forEach(k => {
+    if (!keep.includes(k)) delete data[k];
+  });
+  // Also purge fetch cache for that month
+  Object.keys(cache).forEach(k => {
+    if (k.includes('/' + monthShort)) delete cache[k];
+  });
+}
+
+/**
+ * Returns array of channel API names available for a month.
+ */
+export function getAvailableChannelsForMonth(monthShort) {
+  const data = dashboardData[monthShort];
+  if (!data || !data._availableChannels) return [];
+  return data._availableChannels;
+}
+
 // ── Legacy-compatible exports ──
 
 export function getMonthData(month) {

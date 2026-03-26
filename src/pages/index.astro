@@ -434,7 +434,7 @@ import '../styles/global.css';
 <!-- ═══ SCRIPTS ═══ -->
 <script>
   import { initTabNavigation } from '../scripts/tab-navigation.js';
-  import { initMonthSelector, refreshMonthButtons, activateLatestMonth, updateDashboardData } from '../scripts/month-selector.js';
+  import { initMonthSelector, refreshMonthButtons, activateLatestMonth } from '../scripts/month-selector.js';
   import { initCharts } from '../scripts/charts.js';
   import { initCampaignToggle } from '../scripts/campaign-toggle.js';
   import { initKpiAnimations } from '../scripts/kpi-animations.js';
@@ -471,7 +471,8 @@ import '../styles/global.css';
       }
 
       setTimeout(() => { initCharts(); }, 200);
-    } catch (err) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error('Failed to load dashboard data:', err);
       if (loadingEl) loadingEl.classList.remove('active');
       if (emptyEl) {
@@ -479,14 +480,9 @@ import '../styles/global.css';
         const h2 = emptyEl.querySelector('h2');
         if (h2) h2.textContent = 'Fehler beim Laden der Daten';
         const p = emptyEl.querySelector('p');
-        if (p) p.textContent = `API nicht erreichbar oder Fehler aufgetreten. (${err.message})`;
+        if (p) p.textContent = `API nicht erreichbar oder Fehler aufgetreten. (${msg})`;
       }
     }
-
-    document.addEventListener('monthChanged', (e) => {
-      updateDashboardData((e as CustomEvent).detail.month);
-      setTimeout(() => { initCharts(); }, 200);
-    });
   });
 </script>
 </body>

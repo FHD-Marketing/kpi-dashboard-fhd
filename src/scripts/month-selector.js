@@ -3,11 +3,13 @@
  * @module month-selector
  */
 
-import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview } from './data.js';
+import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached } from './data.js';
 import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab } from './infomaterial.js';
+import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
+let loadGeneration = 0;   // Guard gegen Race-Conditions bei schnellem Monatswechsel
 
 export function getCurrentMonth() {
   return currentMonth;
@@ -17,9 +19,13 @@ export function refreshMonthButtons() {
   const allMonthBtns = document.querySelectorAll('.month-btn');
   const available = getAvailableMonths();
 
+  let popIndex = 0;
   allMonthBtns.forEach(btn => {
     const month = btn.dataset.month;
     if (!month) return;
+
+    // Remove old animation class
+    btn.classList.remove('month-pop-in');
 
     if (available.includes(month)) {
       btn.classList.remove('disabled');
@@ -28,6 +34,12 @@ export function refreshMonthButtons() {
       if (spendEl && data && data.totalSpend) {
         spendEl.textContent = data.totalSpend;
       }
+      // Staggered pop-in animation
+      btn.style.setProperty('--pop-delay', (popIndex * 80) + 'ms');
+      // Force reflow so animation replays
+      void btn.offsetWidth;
+      btn.classList.add('month-pop-in');
+      popIndex++;
     } else {
       btn.classList.add('disabled');
     }
@@ -42,31 +54,126 @@ export function activateLatestMonth() {
   selectMonth(latest);
 }
 
+/* ── Reset all KPI values and dynamic containers ─────────── */
+function resetTabContents() {
+  destroyAllCharts();
+
+  document.querySelectorAll('.kpi-value').forEach(el => {
+    el.textContent = '—';
+    el.classList.remove('delta-positive', 'delta-negative');
+    delete el.dataset.target;
+  });
+  document.querySelectorAll('.kpi-trend').forEach(el => {
+    el.textContent = '';
+    el.className = 'kpi-trend';
+    el.style.display = '';
+  });
+  document.querySelectorAll('.kpi-detail').forEach(el => {
+    el.textContent = '';
+  });
+
+  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+
+  document.querySelectorAll('.data-table tbody').forEach(tbody => {
+    tbody.innerHTML = '';
+  });
+
+  document.querySelectorAll('[data-budget]').forEach(card => {
+    const planEl = card.querySelector('.budget-plan span');
+    const istEl = card.querySelector('.budget-actual span');
+    const barFill = card.querySelector('.budget-bar-fill');
+    const diffEl = card.querySelector('.budget-diff');
+    if (planEl) planEl.textContent = '—';
+    if (istEl) istEl.textContent = '—';
+    if (barFill) { barFill.style.width = '0%'; barFill.className = 'budget-bar-fill'; }
+    if (diffEl) { diffEl.textContent = ''; diffEl.className = 'budget-diff'; }
+  });
+
+  // Hide all cards until animation triggers them
+  document.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card').forEach(card => {
+    card.classList.remove('kpi-pop');
+    card.classList.add('kpi-hidden');
+  });
+}
+
+/* ── Show / hide global loading state ────────────────────── */
+function showGlobalLoading() {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const loading = document.getElementById('loading-state');
+  if (loading) loading.classList.add('active');
+}
+
+function hideGlobalLoading() {
+  const loading = document.getElementById('loading-state');
+  if (loading) loading.classList.remove('active');
+}
+
+/* ── Main month selection ────────────────────────────────── */
 async function selectMonth(month) {
+  const myGen = ++loadGeneration;
+
   const allMonthBtns = document.querySelectorAll('.month-btn');
   allMonthBtns.forEach(b => b.classList.remove('active'));
 
   const btn = document.querySelector(`.month-btn[data-month="${month}"]`);
   if (btn) btn.classList.add('active');
 
+  // Clear old month data from cache
+  if (currentMonth && currentMonth !== month) {
+    clearMonthChannels(currentMonth);
+  }
+
   currentMonth = month;
 
-  // Empty state ausblenden
-  const empty = document.getElementById('tab-empty');
-  if (empty) empty.classList.remove('active');
+  // 1. Reset everything + show global "Daten werden geladen…"
+  resetTabContents();
+  showGlobalLoading();
 
-  // Fetch overview + ads data from API (cached if already loaded)
+  // 2. Fetch overview (core data: overview + googleAds + metaAds)
   try {
     await fetchOverview(month);
   } catch (err) {
     console.error(`Failed to fetch overview for ${month}:`, err);
   }
 
+  if (myGen !== loadGeneration) return;
+
+  // 3. Fetch all remaining channels
+  const channels = getAvailableChannelsForMonth(month);
+  const toFetch = channels.filter(ch => !isChannelCached(ch, month));
+
+  for (const channel of toFetch) {
+    if (myGen !== loadGeneration) return;
+    try {
+      await fetchChannel(channel, month);
+    } catch (err) {
+      console.warn(`[Prefetch] ${channel}/${month} failed:`, err);
+    }
+  }
+
+  if (myGen !== loadGeneration) return;
+
+  // 4. ALL data loaded – render everything
   updateTabAvailability(month);
   updateDashboardData(month);
-  activateFirstAvailableTab(month);
 
+  // 4b. Mark all cards (including dynamically created ones) as hidden before animation
+  const animatableSelector = '.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card';
+  document.querySelectorAll(animatableSelector).forEach(card => {
+    card.classList.remove('kpi-pop');
+    card.classList.add('kpi-hidden');
+  });
+
+  // 5. Hide loading, show overview
+  hideGlobalLoading();
+  activateFirstAvailableTab();
+
+  // 6. Fire events for charts + animations
   document.dispatchEvent(new CustomEvent('monthChanged', { detail: { month } }));
+  document.dispatchEvent(new CustomEvent('dataReady'));
 }
 
 function updateTabAvailability(month) {
@@ -79,16 +186,31 @@ function updateTabAvailability(month) {
       btn.classList.remove('disabled');
       return;
     }
+    // YTD always enabled if overview exists
+    if (tab === 'ytd') {
+      const data = getMonthData(month);
+      if (data && data._availableChannels) {
+        btn.classList.remove('disabled');
+      }
+      return;
+    }
     if (hasDataForTab(month, tab)) {
       btn.classList.remove('disabled');
     } else {
-      btn.classList.add('disabled');
-      btn.classList.remove('active');
+      // Check if channel is available (will be prefetched)
+      const channels = getAvailableChannelsForMonth(month);
+      const channelMap = { google: 'googleAds', meta: 'metaAds', instagram: 'instagram', youtube: 'youtube', tiktok: 'tiktok', linkedin: 'linkedin', mailchimp: 'mailchimp' };
+      if (channelMap[tab] && channels.includes(channelMap[tab])) {
+        btn.classList.remove('disabled');
+      } else {
+        btn.classList.add('disabled');
+        btn.classList.remove('active');
+      }
     }
   });
 }
 
-async function activateFirstAvailableTab(month) {
+async function activateFirstAvailableTab() {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
@@ -112,8 +234,8 @@ async function activateFirstAvailableTab(month) {
     if (target) target.classList.add('active');
     document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: first.dataset.tab } }));
   } else {
-    const empty = document.getElementById('tab-empty');
-    if (empty) empty.classList.add('active');
+    const emptyEl = document.getElementById('tab-empty');
+    if (emptyEl) emptyEl.classList.add('active');
   }
 }
 
@@ -196,11 +318,19 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
       if (el) {
         const valueEl = el.querySelector('.kpi-value');
 
+        // Format raw numbers with thousand separators
+        let displayValue = val.value;
+        if (typeof displayValue === 'number' && Number.isFinite(displayValue)) {
+          displayValue = displayValue.toLocaleString('de-DE');
+        } else if (typeof displayValue === 'string' && /^\d{4,}$/.test(displayValue.trim())) {
+          displayValue = Number(displayValue).toLocaleString('de-DE');
+        }
+
         // Delta mode: value is "+34" or "-12", detail is "2.015 gesamt"
         if (val.deltaMode) {
           if (valueEl) {
-            valueEl.textContent = val.value;
-            valueEl.dataset.target = val.value;
+            valueEl.textContent = displayValue;
+            valueEl.dataset.target = displayValue;
             valueEl.classList.remove('delta-positive', 'delta-negative');
             valueEl.classList.add(val.positive !== false ? 'delta-positive' : 'delta-negative');
           }
@@ -217,8 +347,8 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
         }
 
         if (valueEl) {
-          valueEl.textContent = val.value;
-          valueEl.dataset.target = val.value;
+          valueEl.textContent = displayValue;
+          valueEl.dataset.target = displayValue;
           valueEl.classList.remove('delta-positive', 'delta-negative');
         }
 
