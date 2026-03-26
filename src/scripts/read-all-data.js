@@ -236,7 +236,14 @@ async function readInstagram(db, mk) {
   let topPosts = [];
   if (hasPosts) {
     const posts = await allRows(db, pt, 'caption, reach, impressions, likes, comments', 'reach DESC');
-    topPosts = posts.slice(0, 5).map(p => ({ name: (p.caption || '').substring(0, 40), reach: p.reach, engagement: '—' }));
+    topPosts = posts.slice(0, 5).map(p => ({
+      name: (p.caption || '').substring(0, 40),
+      reach: p.reach,
+      impressions: p.impressions || 0,
+      likes: p.likes || 0,
+      comments: p.comments || 0,
+      engagement: String((p.likes || 0) + (p.comments || 0))
+    }));
   }
 
   let growth = { labels: [], values: [] };
@@ -264,7 +271,7 @@ async function readYouTube(db, mk) {
   const rows = await fetchRows(db, st, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
   if (rows.length === 0 || !rows[0].views) return null;
   const r = rows[0];
-  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_subscribers, total_views') : null;
+  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_subscribers, total_views, total_likes, total_video_count') : null;
 
   const totalViews = r.views;
   const totalViewsChannel = totals ? totals.total_views : null;
@@ -283,6 +290,9 @@ async function readYouTube(db, mk) {
 
   return {
     views: { value: fmtDelta(totalViews), detail: totalViewsChannel ? fmt(totalViewsChannel) + ' gesamt' : fmt(totalViews) + ' im Monat', deltaMode: true, positive: totalViews >= 0 },
+    totalViews: { value: totalViewsChannel ? fmt(totalViewsChannel) : fmt(totalViews) },
+    totalLikes: { value: totals && totals.total_likes != null ? fmt(totals.total_likes) : '—' },
+    totalVideoCount: { value: totals && totals.total_video_count != null ? fmt(totals.total_video_count) : '—' },
     subscribers: { value: fmtDelta(subsDelta), detail: fmt(subsNow) + ' gesamt', deltaMode: true, positive: subsDelta >= 0 },
     watchTime: { value: fmt(Math.round(r.wt / 60)) + ' Std.' },
     ctr: { value: parseFloat(r.ctr).toFixed(1) + '%' },

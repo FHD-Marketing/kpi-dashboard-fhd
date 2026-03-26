@@ -121,36 +121,51 @@
         "value": "6.0%"
       },
       "reichweite": {
-        "value": "112133"
+        "value": "112.133"
       },
       "impressionen": {
-        "value": "0"
+        "value": "7.210"
       },
       "topPosts": [
         {
           "name": "Herzlich willkommen an der FHD! ? Wir fr",
           "reach": 825,
-          "engagement": "—"
+          "impressions": 2521,
+          "likes": 71,
+          "comments": 2,
+          "engagement": "73"
         },
         {
           "name": "? Großer Erfolg für unsere Absolventin @",
           "reach": 597,
-          "engagement": "—"
+          "impressions": 1689,
+          "likes": 34,
+          "comments": 0,
+          "engagement": "34"
         },
         {
           "name": "?️? Als Grafikdesigner düst du mit KI-To",
           "reach": 542,
-          "engagement": "—"
+          "impressions": 966,
+          "likes": 13,
+          "comments": 0,
+          "engagement": "13"
         },
         {
           "name": "Mit dem EXIST-Women Stipendium zur Gründ",
           "reach": 511,
-          "engagement": "—"
+          "impressions": 901,
+          "likes": 23,
+          "comments": 0,
+          "engagement": "23"
         },
         {
           "name": "Sei bei unserem 3-tägigen kostenfreien P",
           "reach": 436,
-          "engagement": "—"
+          "impressions": 1133,
+          "likes": 10,
+          "comments": 0,
+          "engagement": "10"
         }
       ],
       "followerGrowth": {
@@ -218,6 +233,15 @@
         "detail": "49.273 gesamt",
         "deltaMode": true,
         "positive": true
+      },
+      "totalViews": {
+        "value": "49.273"
+      },
+      "totalLikes": {
+        "value": "773"
+      },
+      "totalVideoCount": {
+        "value": "83"
       },
       "subscribers": {
         "value": "+1",
