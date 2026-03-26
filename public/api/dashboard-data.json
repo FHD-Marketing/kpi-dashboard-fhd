@@ -1,12 +1,12 @@
 {
   "mar": {
     "label": "März 2026",
-    "totalSpend": "€1.825,69",
+    "totalSpend": "€1.826,15",
     "overview": {
       "adSpend": {
-        "value": "€1.825,69",
+        "value": "€1.826,15",
         "trend": null,
-        "detail": "Google €0,00 · Meta €1.825,69"
+        "detail": "Google €0,00 · Meta €1.826,15"
       },
       "klicks": {
         "value": "774",
@@ -44,7 +44,7 @@
           "pct": "0%"
         },
         "meta": {
-          "value": 1825.69,
+          "value": 1826.15,
           "pct": "100%"
         }
       },
@@ -56,7 +56,7 @@
     },
     "metaAds": {
       "spend": {
-        "value": "€1.825,69",
+        "value": "€1.826,15",
         "trend": null,
         "trendDir": null
       },
@@ -81,14 +81,14 @@
           "badge": "WINNER",
           "groups": "11 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€1.472,83",
+          "spend": "€1.473,24",
           "leads": "6",
-          "cpl": "€245,47",
+          "cpl": "€245,54",
           "klicks": "629",
           "cpc": "€2,34",
           "ctr": "0.50%",
           "reichweite": "35284",
-          "impressionen": "125495",
+          "impressionen": "125537",
           "frequenz": "3.56",
           "progressPct": 100
         },
@@ -97,14 +97,14 @@
           "badge": "LOSER",
           "groups": "3 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€352,86",
+          "spend": "€352,91",
           "leads": "0",
           "cpl": "—",
           "klicks": "145",
           "cpc": "€2,43",
           "ctr": "0.48%",
           "reichweite": "7942",
-          "impressionen": "29923",
+          "impressionen": "29933",
           "frequenz": "3.77",
           "progressPct": 0
         }
@@ -213,7 +213,7 @@
     },
     "mailchimp": {
       "openRate": {
-        "value": "28.3%",
+        "value": "28.6%",
         "trend": null,
         "trendDir": null
       },
@@ -235,14 +235,14 @@
         {
           "name": "Newsletter Monatsmailing März 2026 BW",
           "sent": 661,
-          "openRate": "22.9%",
+          "openRate": "23.0%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 ASW",
           "sent": 1232,
-          "openRate": "16.0%",
+          "openRate": "16.7%",
           "clickRate": "0.8%",
           "date": "26.03.2026"
         },
@@ -266,7 +266,7 @@
           "Mär"
         ],
         "openRates": [
-          28.33
+          28.55
         ],
         "clickRates": [
           0.95
