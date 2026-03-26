@@ -170,9 +170,31 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
       const el = document.querySelector(`[data-kpi="${sectionId}-${key}"]`);
       if (el) {
         const valueEl = el.querySelector('.kpi-value');
+
+        // Delta mode: value is "+34" or "-12", detail is "2.015 gesamt"
+        if (val.deltaMode) {
+          if (valueEl) {
+            valueEl.textContent = val.value;
+            valueEl.dataset.target = val.value;
+            valueEl.classList.remove('delta-positive', 'delta-negative');
+            valueEl.classList.add(val.positive !== false ? 'delta-positive' : 'delta-negative');
+          }
+          // Hide trend badge entirely for delta-mode cards
+          const trendEl = el.querySelector('.kpi-trend');
+          if (trendEl) {
+            trendEl.textContent = '';
+            trendEl.style.display = 'none';
+          }
+          // Show total in detail
+          const detailEl = el.querySelector('.kpi-detail');
+          if (detailEl && val.detail) detailEl.textContent = val.detail;
+          return;
+        }
+
         if (valueEl) {
           valueEl.textContent = val.value;
           valueEl.dataset.target = val.value;
+          valueEl.classList.remove('delta-positive', 'delta-negative');
         }
 
         const trendEl = el.querySelector('.kpi-trend');

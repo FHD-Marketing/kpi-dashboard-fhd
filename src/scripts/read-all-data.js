@@ -43,6 +43,11 @@ async function latestRow(db, table, cols, orderBy = 'date') {
   return rows.length > 0 ? rows[0] : null;
 }
 
+async function firstRow(db, table, cols, orderBy = 'date') {
+  const [rows] = await db.query(`SELECT ${cols} FROM \`${table}\` ORDER BY \`${orderBy}\` ASC LIMIT 1`);
+  return rows.length > 0 ? rows[0] : null;
+}
+
 async function allRows(db, table, cols, orderBy = null) {
   const q = orderBy ? `SELECT ${cols} FROM \`${table}\` ORDER BY ${orderBy}` : `SELECT ${cols} FROM \`${table}\``;
   const [rows] = await db.query(q);
@@ -70,6 +75,11 @@ function trendDirection(cur, prev, higherIsBetter = true) {
 
 function fmt(n) {
   return n.toLocaleString('de-DE');
+}
+
+function fmtDelta(n) {
+  const prefix = n >= 0 ? '+' : '';
+  return prefix + n.toLocaleString('de-DE');
 }
 
 function fmtEur(n) {
@@ -187,7 +197,7 @@ async function readMeta(db, mk, prevMk) {
   };
 }
 
-async function readInstagram(db, mk, prevMk) {
+async function readInstagram(db, mk) {
   const st = tbl('instagram_stats', mk);
   const tt = tbl('instagram_totals', mk);
   const pt = tbl('instagram_top_posts', mk);
@@ -203,7 +213,14 @@ async function readInstagram(db, mk, prevMk) {
 
   if (!latest && !totals) return null;
 
-  const follower = totals ? totals.total_followers : (latest ? latest.follower_count : 0);
+  const followerNow = totals ? totals.total_followers : (latest ? latest.follower_count : 0);
+
+  let followerStart = followerNow;
+  if (hasStats) {
+    const first = await firstRow(db, st, 'follower_count');
+    if (first) followerStart = first.follower_count;
+  }
+  const followerDelta = followerNow - followerStart;
 
   let totalReach = 0, totalImpr = 0;
   if (hasStats) {
@@ -215,23 +232,6 @@ async function readInstagram(db, mk, prevMk) {
   }
 
   const engRate = latest ? parseFloat(latest.engagement_rate) : 0;
-
-  let prevFollower = null, prevEng = null, prevReach = null, prevImpr = null;
-  if (prevMk) {
-    const pst = tbl('instagram_stats', prevMk);
-    const ptt = tbl('instagram_totals', prevMk);
-    if (await tableExists(db, pst)) {
-      const p = await latestRow(db, pst, 'follower_count, engagement_rate');
-      if (p) { prevEng = parseFloat(p.engagement_rate); }
-      const [prevSums] = await db.query(`SELECT SUM(reach) as totalReach, SUM(impressions) as totalImpr FROM \`${pst}\``);
-      if (prevSums.length > 0) {
-        prevReach = prevSums[0].totalReach || null;
-        prevImpr = prevSums[0].totalImpr || null;
-      }
-      if (await tableExists(db, ptt)) { const pt2 = await latestRow(db, ptt, 'total_followers'); if (pt2) prevFollower = pt2.total_followers; }
-      if (!prevFollower && p) prevFollower = p.follower_count;
-    }
-  }
 
   let topPosts = [];
   if (hasPosts) {
@@ -246,16 +246,16 @@ async function readInstagram(db, mk, prevMk) {
   }
 
   return {
-    follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: trendDirection(follower, prevFollower, true) },
-    engagementRate: { value: engRate.toFixed(1) + '%', trend: pct(engRate, prevEng), trendDir: trendDirection(engRate, prevEng, true) },
-    reichweite: { value: fmt(totalReach), trend: pct(totalReach, prevReach), trendDir: trendDirection(totalReach, prevReach, true) },
-    impressionen: { value: fmt(totalImpr), trend: pct(totalImpr, prevImpr), trendDir: trendDirection(totalImpr, prevImpr, true) },
+    follower: { value: fmtDelta(followerDelta), detail: fmt(followerNow) + ' gesamt', deltaMode: true, positive: followerDelta >= 0 },
+    engagementRate: { value: engRate.toFixed(1) + '%' },
+    reichweite: { value: fmt(totalReach) },
+    impressionen: { value: fmt(totalImpr) },
     topPosts,
     followerGrowth: growth
   };
 }
 
-async function readYouTube(db, mk, prevMk) {
+async function readYouTube(db, mk) {
   const st = tbl('youtube_stats', mk);
   const tt = tbl('youtube_totals', mk);
   const vt = tbl('youtube_top_videos', mk);
@@ -264,16 +264,13 @@ async function readYouTube(db, mk, prevMk) {
   const rows = await fetchRows(db, st, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
   if (rows.length === 0 || !rows[0].views) return null;
   const r = rows[0];
-  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_subscribers') : null;
+  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_subscribers, total_views') : null;
 
-  let prevViews = null, prevSubs = null, prevWt = null, prevCtr = null;
-  if (prevMk) {
-    const pst = tbl('youtube_stats', prevMk);
-    if (await tableExists(db, pst)) {
-      const pr = await fetchRows(db, pst, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
-      if (pr.length > 0 && pr[0].views) { prevViews = pr[0].views; prevSubs = pr[0].subs; prevWt = pr[0].wt; prevCtr = parseFloat(pr[0].ctr); }
-    }
-  }
+  const totalViews = r.views;
+  const totalViewsChannel = totals ? totals.total_views : null;
+
+  const subsNow = totals ? totals.total_subscribers : r.subs;
+  const subsDelta = r.subs || 0;
 
   let topVideos = [];
   if (await tableExists(db, vt)) {
@@ -285,10 +282,10 @@ async function readYouTube(db, mk, prevMk) {
   const viewsOT = { labels: statsRows.map(r2 => r2.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r2 => r2.views) };
 
   return {
-    views: { value: fmt(r.views), trend: pct(r.views, prevViews), trendDir: trendDirection(r.views, prevViews, true) },
-    subscribers: { value: fmt(totals ? totals.total_subscribers : r.subs), trend: pct(r.subs, prevSubs), trendDir: trendDirection(r.subs, prevSubs, true) },
-    watchTime: { value: fmt(Math.round(r.wt / 60)) + ' Std.', trend: pct(r.wt, prevWt), trendDir: trendDirection(r.wt, prevWt, true) },
-    ctr: { value: parseFloat(r.ctr).toFixed(1) + '%', trend: pct(parseFloat(r.ctr), prevCtr), trendDir: trendDirection(parseFloat(r.ctr), prevCtr, true) },
+    views: { value: fmtDelta(totalViews), detail: totalViewsChannel ? fmt(totalViewsChannel) + ' gesamt' : fmt(totalViews) + ' im Monat', deltaMode: true, positive: totalViews >= 0 },
+    subscribers: { value: fmtDelta(subsDelta), detail: fmt(subsNow) + ' gesamt', deltaMode: true, positive: subsDelta >= 0 },
+    watchTime: { value: fmt(Math.round(r.wt / 60)) + ' Std.' },
+    ctr: { value: parseFloat(r.ctr).toFixed(1) + '%' },
     topVideos,
     viewsOverTime: viewsOT
   };
@@ -450,8 +447,8 @@ async function run() {
 
       const googleAds = await readGoogle(db, mk, prevMk);
       const metaAds = await readMeta(db, mk, prevMk);
-      const instagram = await readInstagram(db, mk, prevMk);
-      const youtube = await readYouTube(db, mk, prevMk);
+      const instagram = await readInstagram(db, mk);
+      const youtube = await readYouTube(db, mk);
       const linkedin = await readLinkedIn(db, mk, prevMk);
       const mailchimp = await readMailchimp(db, mk, prevMk);
 

@@ -112,24 +112,19 @@
     },
     "instagram": {
       "follower": {
-        "value": "2.015",
-        "trend": null,
-        "trendDir": null
+        "value": "+34",
+        "detail": "2.015 gesamt",
+        "deltaMode": true,
+        "positive": true
       },
       "engagementRate": {
-        "value": "6.0%",
-        "trend": null,
-        "trendDir": null
+        "value": "6.0%"
       },
       "reichweite": {
-        "value": "1.185",
-        "trend": null,
-        "trendDir": null
+        "value": "113.108"
       },
       "impressionen": {
-        "value": "113.108",
-        "trend": null,
-        "trendDir": null
+        "value": "0"
       },
       "topPosts": [
         {
@@ -219,24 +214,22 @@
     },
     "youtube": {
       "views": {
-        "value": "5300",
-        "trend": null,
-        "trendDir": null
+        "value": "+5.300",
+        "detail": "5.300 im Monat",
+        "deltaMode": true,
+        "positive": true
       },
       "subscribers": {
-        "value": "287",
-        "trend": null,
-        "trendDir": null
+        "value": "+3",
+        "detail": "287 gesamt",
+        "deltaMode": true,
+        "positive": true
       },
       "watchTime": {
-        "value": "20 Std.",
-        "trend": null,
-        "trendDir": null
+        "value": "20 Std."
       },
       "ctr": {
-        "value": "0.0%",
-        "trend": null,
-        "trendDir": null
+        "value": "0.0%"
       },
       "topVideos": [
         {

@@ -513,6 +513,12 @@ body {
     margin-bottom: var(--space-xs);
     line-height: 1.2;
 }
+.kpi-value.delta-positive {
+    color: var(--accent-green);
+}
+.kpi-value.delta-negative {
+    color: var(--accent-red);
+}
 
 .kpi-detail {
     font-size: 0.75rem;

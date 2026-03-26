@@ -4,7 +4,7 @@ function countUp(el, duration = 800) {
   const target = el.dataset.target || el.textContent.trim();
   if (!target || target === '—' || target === '-') return;
 
-  const prefixMatch = target.match(/^([€$£]?)/);
+  const prefixMatch = target.match(/^([€$£+\-]?)/);
   const suffixMatch = target.match(/([%]?\s*[A-Za-zÄÖÜäöüß.]*)$/);
   const prefix = prefixMatch ? prefixMatch[1] : '';
   const suffix = suffixMatch ? suffixMatch[1] : '';
