@@ -6,7 +6,11 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "predev": "node src/scripts/reading/read-all-data.js",
     "dev": "astro dev",
+    "read:all": "node src/scripts/reading/read-all-data.js",
+    "read:mailchimp": "node src/scripts/reading/read-data-mailchimp.js",
+    "prebuild": "node src/scripts/reading/read-all-data.js",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -14,7 +18,8 @@
     "fetch:insta": "node src/scripts/fetching/fetch-data-insta.js",
     "fetch:meta": "node src/scripts/fetching/fetch-data-meta.js",
     "fetch:mailchimp": "node src/scripts/fetching/fetch-data-mailchimp.js",
-    "fetch:google": "node src/scripts/fetching/fetch-data-google-ads.js"
+    "fetch:google": "node src/scripts/fetching/fetch-data-google-ads.js",
+    "fetch:linkedin": "node src/scripts/fetching/fetch-data-linkedin.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",

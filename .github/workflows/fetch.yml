@@ -42,6 +42,20 @@ jobs:
         run: node src/scripts/fetching/fetch-data-mailchimp.js
         continue-on-error: false
 
+#      - name: Fetch LinkedIn data
+#        env:
+#          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+#          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+#          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+#          LINKEDIN_REFRESH_TOKEN: ${{ secrets.LINKEDIN_REFRESH_TOKEN }}
+#          LINKEDIN_ORG_ID: ${{ secrets.LINKEDIN_ORG_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetching/fetch-data-linkedin.js
+#        continue-on-error: false
+
 #      - name: Fetch Instagram data
 #        env:
 #          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
@@ -64,18 +78,18 @@ jobs:
 #        run: node src/scripts/fetching/fetch-data-meta.js
 #        continue-on-error: false
 
-      - name: Fetch Google Ads data
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GADS_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
-          GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
-          GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
-          GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-google-ads.js
-        continue-on-error: false
+#      - name: Fetch Google Ads data
+#        env:
+#          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+#          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+#          GADS_REFRESH_TOKEN: ${{ secrets.GADS_REFRESH_TOKEN }}
+#          GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
+#          GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
+#          GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetching/fetch-data-google-ads.js
+#        continue-on-error: false
 

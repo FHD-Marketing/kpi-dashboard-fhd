@@ -66,8 +66,10 @@ function renderAllCharts(month) {
   if (!data) return;
 
   // Übersicht
-  renderDailySpendChart(data.overview);
-  renderBudgetSplitChart(data.overview);
+  if (data.overview) {
+    renderDailySpendChart(data.overview);
+    renderBudgetSplitChart(data.overview);
+  }
 
   // Instagram
   if (data.instagram) {

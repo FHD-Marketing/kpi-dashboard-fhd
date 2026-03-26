@@ -1,43 +1,33 @@
 /**
  * FHD KPI Dashboard – Tab Navigation
- * 
- * Steuert das Wechseln zwischen den Dashboard-Tabs.
- * Wendet CSS-Klassen an, um Tabs ein-/auszublenden.
- * 
  * @module tab-navigation
  */
 
-/**
- * Initialisiert die Tab-Navigation.
- * Registriert Click-Events auf allen Tab-Buttons.
- */
 export function initTabNavigation() {
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+
       const targetTab = btn.dataset.tab;
 
-      // Alle Tabs deaktivieren
       tabButtons.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
 
-      // Ziel-Tab aktivieren
       btn.classList.add('active');
       const target = document.getElementById(`tab-${targetTab}`);
       if (target) {
         target.classList.add('active');
       }
 
-      // Custom Event auslösen (für Charts-Neuinitialisierung)
       document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: targetTab } }));
     });
   });
 
-  // Drag-to-Scroll Funktion für Desktop
-  const slider = document.querySelector('.tab-navigation');
-  if (slider) {
+  const sliders = document.querySelectorAll('.tab-navigation');
+  sliders.forEach(slider => {
     let isDown = false;
     let startX;
     let scrollLeft;
@@ -63,11 +53,26 @@ export function initTabNavigation() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - slider.offsetLeft;
-      const walk = (x - startX) * 2; // scroll-fast
+      const walk = (x - startX) * 2;
       slider.scrollLeft = scrollLeft - walk;
     });
 
-    // Set initial cursor
     slider.style.cursor = 'grab';
-  }
+  });
 }
+
+export function showOverview() {
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(b => b.classList.remove('active'));
+  tabContents.forEach(c => c.classList.remove('active'));
+
+  const overview = document.getElementById('tab-uebersicht');
+  if (overview) {
+    overview.classList.add('active');
+  }
+
+  document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: 'uebersicht' } }));
+}
+
