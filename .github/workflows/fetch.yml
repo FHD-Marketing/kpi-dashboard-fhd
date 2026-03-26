@@ -43,16 +43,16 @@ jobs:
 #        run: node src/scripts/fetching/fetch-data-insta.js
 #        continue-on-error: false
 #
-      - name: Fetch Meta Ads data
-        env:
-          ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-meta.js
-        continue-on-error: false
+#      - name: Fetch Meta Ads data
+#        env:
+#          ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+#          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+#          DB_HOST: ${{ secrets.DB_HOST }}
+#          DB_USER: ${{ secrets.DB_USER }}
+#          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#          DB_NAME: ${{ secrets.DB_NAME }}
+#        run: node src/scripts/fetching/fetch-data-meta.js
+#        continue-on-error: false
 
       - name: Fetch Google Ads data
         env:
