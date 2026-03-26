@@ -6,14 +6,12 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "predev": "node src/scripts/reading/read-all-data.js",
     "dev": "astro dev",
-    "read:all": "node src/scripts/reading/read-all-data.js",
-    "read:mailchimp": "node src/scripts/reading/read-data-mailchimp.js",
-    "prebuild": "node src/scripts/reading/read-all-data.js",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "read:all": "node src/scripts/read-all-data.js",
+    "read:mailchimp": "node src/scripts/reading/read-data-mailchimp.js",
     "fetch:yt": "node src/scripts/fetching/fetch-data-youtube.js",
     "fetch:insta": "node src/scripts/fetching/fetch-data-insta.js",
     "fetch:meta": "node src/scripts/fetching/fetch-data-meta.js",

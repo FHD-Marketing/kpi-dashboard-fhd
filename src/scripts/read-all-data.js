@@ -9,7 +9,6 @@ const OUT_DIR = join(__dirname, '..', '..', 'public', 'api');
 const OUT_FILE = join(OUT_DIR, 'dashboard-data.json');
 
 const MONTH_KEYS_2026 = [];
-const now = new Date();
 for (let m = 1; m <= 12; m++) {
   MONTH_KEYS_2026.push(`2026-${String(m).padStart(2, '0')}`);
 }
@@ -18,22 +17,21 @@ const MONTH_SHORT = ['jan','feb','mar','apr','mai','jun','jul','aug','sep','oct'
 const MONTH_NAMES = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 
 async function connectDB() {
-  const config = {
+  return mysql.createConnection({
     host: process.env.DB_HOST,
     port: 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     connectTimeout: 30000,
-  };
-  return mysql.createConnection(config);
+  });
 }
 
 function tbl(prefix, mk) {
   return `${prefix}_${mk.replace('-', '_')}`;
 }
 
-async function exists(db, table) {
+async function tableExists(db, table) {
   const [rows] = await db.query(
     `SELECT COUNT(*) AS c FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?`, [table]
   );
@@ -51,7 +49,7 @@ async function allRows(db, table, cols, orderBy = null) {
   return rows;
 }
 
-async function sumRows(db, table, cols) {
+async function fetchRows(db, table, cols) {
   const [rows] = await db.query(`SELECT ${cols} FROM \`${table}\``);
   return rows;
 }
@@ -59,15 +57,15 @@ async function sumRows(db, table, cols) {
 function pct(cur, prev) {
   if (!prev || prev === 0) return null;
   const p = ((cur - prev) / Math.abs(prev)) * 100;
-  const s = p >= 0 ? '▲' : '▼';
-  return `${s} ${Math.abs(p).toFixed(1).replace('.', ',')}%`;
+  const arrow = p >= 0 ? '▲' : '▼';
+  return `${arrow} ${Math.abs(p).toFixed(1).replace('.', ',')}%`;
 }
 
-function tDir(cur, prev, good = true) {
+function trendDirection(cur, prev, higherIsBetter = true) {
   if (!prev || prev === 0) return null;
   const d = cur - prev;
   if (d === 0) return null;
-  return good ? (d > 0 ? 'up-good' : 'down-bad') : (d > 0 ? 'up' : 'down');
+  return higherIsBetter ? (d > 0 ? 'up-good' : 'down-bad') : (d > 0 ? 'up' : 'down');
 }
 
 function fmt(n) {
@@ -81,21 +79,19 @@ function fmtEur(n) {
 async function readGoogle(db, mk, prevMk) {
   const st = tbl('google_summary', mk);
   const ct = tbl('google_campaigns', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
-  const rows = await sumRows(db, st, 'date, spend, clicks, conversions, impressions, cpc, ctr');
+  const rows = await fetchRows(db, st, 'date, spend, clicks, conversions, impressions, cpc, ctr');
   if (rows.length === 0) return null;
 
   let spend = 0, clicks = 0, conv = 0, impr = 0;
   rows.forEach(r => { spend += parseFloat(r.spend); clicks += r.clicks; conv += parseFloat(r.conversions); impr += r.impressions; });
-  const cpc = clicks > 0 ? spend / clicks : 0;
-  const ctr = impr > 0 ? (clicks / impr) * 100 : 0;
 
   let prevSpend = null, prevClicks = null, prevConv = null, prevImpr = null;
   if (prevMk) {
     const pst = tbl('google_summary', prevMk);
-    if (await exists(db, pst)) {
-      const pr = await sumRows(db, pst, 'spend, clicks, conversions, impressions');
+    if (await tableExists(db, pst)) {
+      const pr = await fetchRows(db, pst, 'spend, clicks, conversions, impressions');
       if (pr.length > 0) {
         prevSpend = 0; prevClicks = 0; prevConv = 0; prevImpr = 0;
         pr.forEach(r => { prevSpend += parseFloat(r.spend); prevClicks += r.clicks; prevConv += parseFloat(r.conversions); prevImpr += r.impressions; });
@@ -105,7 +101,7 @@ async function readGoogle(db, mk, prevMk) {
 
   let kampagnen = [];
   let spendByKampagne = [];
-  if (await exists(db, ct)) {
+  if (await tableExists(db, ct)) {
     const [cRows] = await db.query(
       `SELECT campaign_name, SUM(spend) as spend, SUM(leads) as leads, SUM(clicks) as clicks, SUM(impressions) as impressions, status
        FROM \`${ct}\` GROUP BY campaign_id, campaign_name, status ORDER BY spend DESC`
@@ -130,10 +126,10 @@ async function readGoogle(db, mk, prevMk) {
   }
 
   return {
-    spend: { value: fmtEur(spend), trend: pct(spend, prevSpend), trendDir: tDir(spend, prevSpend, false) },
-    klicks: { value: fmt(clicks), trend: pct(clicks, prevClicks), trendDir: tDir(clicks, prevClicks, true) },
-    conversions: { value: fmt(Math.round(conv)), trend: pct(conv, prevConv), trendDir: tDir(conv, prevConv, true) },
-    impressionen: { value: fmt(impr), trend: pct(impr, prevImpr), trendDir: tDir(impr, prevImpr, true) },
+    spend: { value: fmtEur(spend), trend: pct(spend, prevSpend), trendDir: trendDirection(spend, prevSpend, false) },
+    klicks: { value: fmt(clicks), trend: pct(clicks, prevClicks), trendDir: trendDirection(clicks, prevClicks, true) },
+    conversions: { value: fmt(Math.round(conv)), trend: pct(conv, prevConv), trendDir: trendDirection(conv, prevConv, true) },
+    impressionen: { value: fmt(impr), trend: pct(impr, prevImpr), trendDir: trendDirection(impr, prevImpr, true) },
     spendByKampagne,
     kampagnen
   };
@@ -142,9 +138,9 @@ async function readGoogle(db, mk, prevMk) {
 async function readMeta(db, mk, prevMk) {
   const st = tbl('meta_summary', mk);
   const ct = tbl('meta_campaigns', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
-  const rows = await sumRows(db, st, 'spend, link_clicks, leads, reach, impressions, cpc, ctr, frequency');
+  const rows = await fetchRows(db, st, 'spend, link_clicks, leads, reach, impressions, cpc, ctr, frequency');
   if (rows.length === 0) return null;
 
   let spend = 0, lc = 0, leads = 0, reach = 0, impr = 0;
@@ -153,8 +149,8 @@ async function readMeta(db, mk, prevMk) {
   let prevSpend = null, prevLc = null, prevLeads = null, prevReach = null;
   if (prevMk) {
     const pst = tbl('meta_summary', prevMk);
-    if (await exists(db, pst)) {
-      const pr = await sumRows(db, pst, 'spend, link_clicks, leads, reach');
+    if (await tableExists(db, pst)) {
+      const pr = await fetchRows(db, pst, 'spend, link_clicks, leads, reach');
       if (pr.length > 0) {
         prevSpend = 0; prevLc = 0; prevLeads = 0; prevReach = 0;
         pr.forEach(r => { prevSpend += parseFloat(r.spend); prevLc += r.link_clicks; prevLeads += r.leads; prevReach += r.reach; });
@@ -163,7 +159,7 @@ async function readMeta(db, mk, prevMk) {
   }
 
   let kampagnen = [];
-  if (await exists(db, ct)) {
+  if (await tableExists(db, ct)) {
     const [cRows] = await db.query(
       `SELECT campaign_name, SUM(spend) as spend, SUM(leads) as leads, SUM(link_clicks) as link_clicks, SUM(reach) as reach, SUM(impressions) as impressions, AVG(frequency) as frequency, AVG(cpc) as cpc, AVG(ctr) as ctr, MAX(adset_count) as adset_count, status
        FROM \`${ct}\` GROUP BY campaign_id, campaign_name, status ORDER BY spend DESC`
@@ -183,10 +179,10 @@ async function readMeta(db, mk, prevMk) {
   }
 
   return {
-    spend: { value: fmtEur(spend), trend: pct(spend, prevSpend), trendDir: tDir(spend, prevSpend, false) },
-    linkKlicks: { value: fmt(lc), trend: pct(lc, prevLc), trendDir: tDir(lc, prevLc, true) },
-    leads: { value: fmt(leads), trend: pct(leads, prevLeads), trendDir: tDir(leads, prevLeads, true) },
-    reichweite: { value: fmt(reach), trend: pct(reach, prevReach), trendDir: tDir(reach, prevReach, true) },
+    spend: { value: fmtEur(spend), trend: pct(spend, prevSpend), trendDir: trendDirection(spend, prevSpend, false) },
+    linkKlicks: { value: fmt(lc), trend: pct(lc, prevLc), trendDir: trendDirection(lc, prevLc, true) },
+    leads: { value: fmt(leads), trend: pct(leads, prevLeads), trendDir: trendDirection(leads, prevLeads, true) },
+    reichweite: { value: fmt(reach), trend: pct(reach, prevReach), trendDir: trendDirection(reach, prevReach, true) },
     kampagnen
   };
 }
@@ -195,27 +191,27 @@ async function readInstagram(db, mk, prevMk) {
   const st = tbl('instagram_stats', mk);
   const tt = tbl('instagram_totals', mk);
   const pt = tbl('instagram_top_posts', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
   const latest = await latestRow(db, st, 'follower_count, engagement_rate, impressions, reach');
   if (!latest) return null;
-  const totals = await exists(db, tt) ? await latestRow(db, tt, 'total_followers') : null;
+  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_followers') : null;
   const follower = totals ? totals.total_followers : latest.follower_count;
 
   let prevFollower = null, prevEng = null, prevReach = null, prevImpr = null;
   if (prevMk) {
     const pst = tbl('instagram_stats', prevMk);
     const ptt = tbl('instagram_totals', prevMk);
-    if (await exists(db, pst)) {
+    if (await tableExists(db, pst)) {
       const p = await latestRow(db, pst, 'follower_count, engagement_rate, impressions, reach');
       if (p) { prevEng = parseFloat(p.engagement_rate); prevReach = p.reach; prevImpr = p.impressions; }
-      if (await exists(db, ptt)) { const pt2 = await latestRow(db, ptt, 'total_followers'); if (pt2) prevFollower = pt2.total_followers; }
+      if (await tableExists(db, ptt)) { const pt2 = await latestRow(db, ptt, 'total_followers'); if (pt2) prevFollower = pt2.total_followers; }
       if (!prevFollower && p) prevFollower = p.follower_count;
     }
   }
 
   let topPosts = [];
-  if (await exists(db, pt)) {
+  if (await tableExists(db, pt)) {
     const posts = await allRows(db, pt, 'caption, reach, impressions, likes, comments', 'reach DESC');
     topPosts = posts.slice(0, 5).map(p => ({ name: (p.caption || '').substring(0, 40), reach: p.reach, engagement: '—' }));
   }
@@ -224,10 +220,10 @@ async function readInstagram(db, mk, prevMk) {
   const growth = { labels: statsRows.map(r => r.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r => r.follower_count) };
 
   return {
-    follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: tDir(follower, prevFollower, true) },
-    engagementRate: { value: parseFloat(latest.engagement_rate).toFixed(1) + '%', trend: pct(parseFloat(latest.engagement_rate), prevEng), trendDir: tDir(parseFloat(latest.engagement_rate), prevEng, true) },
-    reichweite: { value: fmt(latest.reach), trend: pct(latest.reach, prevReach), trendDir: tDir(latest.reach, prevReach, true) },
-    impressionen: { value: fmt(latest.impressions), trend: pct(latest.impressions, prevImpr), trendDir: tDir(latest.impressions, prevImpr, true) },
+    follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: trendDirection(follower, prevFollower, true) },
+    engagementRate: { value: parseFloat(latest.engagement_rate).toFixed(1) + '%', trend: pct(parseFloat(latest.engagement_rate), prevEng), trendDir: trendDirection(parseFloat(latest.engagement_rate), prevEng, true) },
+    reichweite: { value: fmt(latest.reach), trend: pct(latest.reach, prevReach), trendDir: trendDirection(latest.reach, prevReach, true) },
+    impressionen: { value: fmt(latest.impressions), trend: pct(latest.impressions, prevImpr), trendDir: trendDirection(latest.impressions, prevImpr, true) },
     topPosts,
     followerGrowth: growth
   };
@@ -237,24 +233,24 @@ async function readYouTube(db, mk, prevMk) {
   const st = tbl('youtube_stats', mk);
   const tt = tbl('youtube_totals', mk);
   const vt = tbl('youtube_top_videos', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
-  const rows = await sumRows(db, st, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
+  const rows = await fetchRows(db, st, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
   if (rows.length === 0 || !rows[0].views) return null;
   const r = rows[0];
-  const totals = await exists(db, tt) ? await latestRow(db, tt, 'total_subscribers') : null;
+  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_subscribers') : null;
 
   let prevViews = null, prevSubs = null, prevWt = null, prevCtr = null;
   if (prevMk) {
     const pst = tbl('youtube_stats', prevMk);
-    if (await exists(db, pst)) {
-      const pr = await sumRows(db, pst, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
+    if (await tableExists(db, pst)) {
+      const pr = await fetchRows(db, pst, 'SUM(views) as views, SUM(subscribers_gained) as subs, SUM(watch_time_minutes) as wt, AVG(ctr) as ctr');
       if (pr.length > 0 && pr[0].views) { prevViews = pr[0].views; prevSubs = pr[0].subs; prevWt = pr[0].wt; prevCtr = parseFloat(pr[0].ctr); }
     }
   }
 
   let topVideos = [];
-  if (await exists(db, vt)) {
+  if (await tableExists(db, vt)) {
     const vids = await allRows(db, vt, 'title, views, likes', 'views DESC');
     topVideos = vids.slice(0, 5).map(v => ({ name: v.title, views: v.views, watchTime: '—' }));
   }
@@ -263,10 +259,10 @@ async function readYouTube(db, mk, prevMk) {
   const viewsOT = { labels: statsRows.map(r2 => r2.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r2 => r2.views) };
 
   return {
-    views: { value: fmt(r.views), trend: pct(r.views, prevViews), trendDir: tDir(r.views, prevViews, true) },
-    subscribers: { value: fmt(totals ? totals.total_subscribers : r.subs), trend: pct(r.subs, prevSubs), trendDir: tDir(r.subs, prevSubs, true) },
-    watchTime: { value: fmt(Math.round(r.wt / 60)) + ' Std.', trend: pct(r.wt, prevWt), trendDir: tDir(r.wt, prevWt, true) },
-    ctr: { value: parseFloat(r.ctr).toFixed(1) + '%', trend: pct(parseFloat(r.ctr), prevCtr), trendDir: tDir(parseFloat(r.ctr), prevCtr, true) },
+    views: { value: fmt(r.views), trend: pct(r.views, prevViews), trendDir: trendDirection(r.views, prevViews, true) },
+    subscribers: { value: fmt(totals ? totals.total_subscribers : r.subs), trend: pct(r.subs, prevSubs), trendDir: trendDirection(r.subs, prevSubs, true) },
+    watchTime: { value: fmt(Math.round(r.wt / 60)) + ' Std.', trend: pct(r.wt, prevWt), trendDir: trendDirection(r.wt, prevWt, true) },
+    ctr: { value: parseFloat(r.ctr).toFixed(1) + '%', trend: pct(parseFloat(r.ctr), prevCtr), trendDir: trendDirection(parseFloat(r.ctr), prevCtr, true) },
     topVideos,
     viewsOverTime: viewsOT
   };
@@ -276,24 +272,24 @@ async function readLinkedIn(db, mk, prevMk) {
   const st = tbl('linkedin_stats', mk);
   const tt = tbl('linkedin_totals', mk);
   const pt = tbl('linkedin_top_posts', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
   const latest = await latestRow(db, st, 'impressions, clicks, engagement_rate, follower_count');
   if (!latest) return null;
-  const totals = await exists(db, tt) ? await latestRow(db, tt, 'total_followers') : null;
+  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_followers') : null;
   const follower = totals ? totals.total_followers : latest.follower_count;
 
   let prevImpr = null, prevFollower = null, prevEng = null, prevClicks = null;
   if (prevMk) {
     const pst = tbl('linkedin_stats', prevMk);
-    if (await exists(db, pst)) {
+    if (await tableExists(db, pst)) {
       const p = await latestRow(db, pst, 'impressions, clicks, engagement_rate, follower_count');
       if (p) { prevImpr = p.impressions; prevClicks = p.clicks; prevEng = parseFloat(p.engagement_rate); prevFollower = p.follower_count; }
     }
   }
 
   let topPosts = [];
-  if (await exists(db, pt)) {
+  if (await tableExists(db, pt)) {
     const posts = await allRows(db, pt, 'text, impressions, clicks, likes', 'impressions DESC');
     topPosts = posts.slice(0, 5).map(p => ({ name: (p.text || '').substring(0, 40), impressions: p.impressions, engagement: '—' }));
   }
@@ -302,10 +298,10 @@ async function readLinkedIn(db, mk, prevMk) {
   const growth = { labels: statsRows.map(r => r.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r => r.follower_count) };
 
   return {
-    impressionen: { value: fmt(latest.impressions), trend: pct(latest.impressions, prevImpr), trendDir: tDir(latest.impressions, prevImpr, true) },
-    follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: tDir(follower, prevFollower, true) },
-    engagement: { value: parseFloat(latest.engagement_rate).toFixed(1) + '%', trend: pct(parseFloat(latest.engagement_rate), prevEng), trendDir: tDir(parseFloat(latest.engagement_rate), prevEng, true) },
-    klicks: { value: fmt(latest.clicks), trend: pct(latest.clicks, prevClicks), trendDir: tDir(latest.clicks, prevClicks, true) },
+    impressionen: { value: fmt(latest.impressions), trend: pct(latest.impressions, prevImpr), trendDir: trendDirection(latest.impressions, prevImpr, true) },
+    follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: trendDirection(follower, prevFollower, true) },
+    engagement: { value: parseFloat(latest.engagement_rate).toFixed(1) + '%', trend: pct(parseFloat(latest.engagement_rate), prevEng), trendDir: trendDirection(parseFloat(latest.engagement_rate), prevEng, true) },
+    klicks: { value: fmt(latest.clicks), trend: pct(latest.clicks, prevClicks), trendDir: trendDirection(latest.clicks, prevClicks, true) },
     topPosts,
     followerGrowth: growth
   };
@@ -314,7 +310,7 @@ async function readLinkedIn(db, mk, prevMk) {
 async function readMailchimp(db, mk, prevMk) {
   const st = tbl('mailchimp_summary', mk);
   const ct = tbl('mailchimp_campaigns', mk);
-  if (!(await exists(db, st))) return null;
+  if (!(await tableExists(db, st))) return null;
 
   const latest = await latestRow(db, st, 'total_subscribers, open_rate, click_rate, campaign_count');
   if (!latest) return null;
@@ -322,14 +318,14 @@ async function readMailchimp(db, mk, prevMk) {
   let prevOR = null, prevCR = null, prevSubs = null;
   if (prevMk) {
     const pst = tbl('mailchimp_summary', prevMk);
-    if (await exists(db, pst)) {
+    if (await tableExists(db, pst)) {
       const p = await latestRow(db, pst, 'total_subscribers, open_rate, click_rate');
       if (p) { prevOR = parseFloat(p.open_rate); prevCR = parseFloat(p.click_rate); prevSubs = p.total_subscribers; }
     }
   }
 
   let campaignList = [];
-  if (await exists(db, ct)) {
+  if (await tableExists(db, ct)) {
     const camps = await allRows(db, ct, 'title, emails_sent, open_rate, click_rate, send_time', 'send_time DESC');
     campaignList = camps.map(c => {
       const d = c.send_time ? new Date(c.send_time) : null;
@@ -354,16 +350,16 @@ async function readMailchimp(db, mk, prevMk) {
     if (tm <= 0) { tm += 12; ty--; }
     const tmk = `${ty}-${String(tm).padStart(2,'0')}`;
     const tmSt = tbl('mailchimp_summary', tmk);
-    if (await exists(db, tmSt)) {
+    if (await tableExists(db, tmSt)) {
       const tr = await latestRow(db, tmSt, 'open_rate, click_rate');
       if (tr) trendMonths.push({ label: MONTH_NAMES[tm-1].substring(0,3), or: parseFloat(tr.open_rate), cr: parseFloat(tr.click_rate) });
     }
   }
 
   return {
-    openRate: { value: or.toFixed(1) + '%', trend: pct(or, prevOR), trendDir: tDir(or, prevOR, true) },
-    clickRate: { value: cr.toFixed(1) + '%', trend: pct(cr, prevCR), trendDir: tDir(cr, prevCR, true) },
-    subscribers: { value: fmt(latest.total_subscribers), trend: pct(latest.total_subscribers, prevSubs), trendDir: tDir(latest.total_subscribers, prevSubs, true) },
+    openRate: { value: or.toFixed(1) + '%', trend: pct(or, prevOR), trendDir: trendDirection(or, prevOR, true) },
+    clickRate: { value: cr.toFixed(1) + '%', trend: pct(cr, prevCR), trendDir: trendDirection(cr, prevCR, true) },
+    subscribers: { value: fmt(latest.total_subscribers), trend: pct(latest.total_subscribers, prevSubs), trendDir: trendDirection(latest.total_subscribers, prevSubs, true) },
     campaigns: { value: String(latest.campaign_count), trend: null },
     campaignList,
     trend: { labels: trendMonths.map(t => t.label), openRates: trendMonths.map(t => t.or), clickRates: trendMonths.map(t => t.cr) }
@@ -395,7 +391,7 @@ async function buildOverview(googleAds, metaAds) {
     klicks: { value: fmt(totalClicks), trend: null, detail: `Google ${fmt(gClicks)} · Meta ${fmt(mClicks)}` },
     conversions: { value: fmt(totalConv), trend: null, detail: `Google ${fmt(gConv)} Conv. · Meta ${fmt(mLeads)} Leads` },
     impressionen: { value: fmt(gImpr + (metaAds ? parseInt(metaAds.reichweite.value.replace('.',''),10) * 4 : 0)), trend: null, detail: '' },
-    reichweite: { value: fmt(mReach), trend: null, detail: 'Nur Meta' },
+    reichweite: { value: fmt(mReach), trend: null, detail: 'Meta only' },
     cpc: { value: fmtEur(avgCpc), trend: null, detail: '' },
     ctr: { value: totalClicks > 0 && gImpr > 0 ? ((totalClicks / gImpr) * 100).toFixed(2) + '%' : '—', trend: null, detail: '' },
     budgetSplit: {
@@ -412,10 +408,7 @@ async function run() {
   const requiredEnv = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
   const missing = requiredEnv.filter(k => !process.env[k]);
   if (missing.length > 0) {
-    console.warn(`⚠ Fehlende Umgebungsvariablen: ${missing.join(', ')}`);
-    console.warn('  → Bitte .env-Datei anlegen oder Secrets konfigurieren.');
-    console.warn('  → Überspringe Datenbankabfrage, dashboard-data.json bleibt unverändert.');
-    return;
+    throw new Error(`Missing environment variables: ${missing.join(', ')}. Check repo secrets!`);
   }
 
   const db = await connectDB();
@@ -473,4 +466,3 @@ run().catch(err => {
   console.error('FATAL:', err.message);
   process.exit(1);
 });
-

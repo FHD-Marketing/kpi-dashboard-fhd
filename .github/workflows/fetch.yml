@@ -5,6 +5,9 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   fetch-and-save:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/scripts/fetching/fetch-data-youtube.js
-        continue-on-error: false
+        continue-on-error: true
 
       - name: Fetch Mailchimp data
         env:
@@ -40,7 +43,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/scripts/fetching/fetch-data-mailchimp.js
-        continue-on-error: false
+        continue-on-error: true
 
 #      - name: Fetch LinkedIn data
 #        env:
@@ -54,7 +57,7 @@ jobs:
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-linkedin.js
-#        continue-on-error: false
+#        continue-on-error: true
 
 #      - name: Fetch Instagram data
 #        env:
@@ -65,7 +68,7 @@ jobs:
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-insta.js
-#        continue-on-error: false
+#        continue-on-error: true
 #
 #      - name: Fetch Meta Ads data
 #        env:
@@ -76,7 +79,7 @@ jobs:
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-meta.js
-#        continue-on-error: false
+#        continue-on-error: true
 
 #      - name: Fetch Google Ads data
 #        env:
@@ -91,5 +94,21 @@ jobs:
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-google-ads.js
-#        continue-on-error: false
+#        continue-on-error: true
+
+      - name: Generate dashboard-data.json
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node src/scripts/read-all-data.js
+
+      - name: Commit & push dashboard-data.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/api/dashboard-data.json
+          git diff --cached --quiet || git commit -m "chore: update dashboard-data.json"
+          git push
 

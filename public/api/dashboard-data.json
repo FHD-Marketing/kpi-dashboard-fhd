@@ -1,2 +1,169 @@
-{}
-
+{
+  "mar": {
+    "label": "März 2026",
+    "totalSpend": "—",
+    "youtube": {
+      "views": {
+        "value": "5300",
+        "trend": null,
+        "trendDir": null
+      },
+      "subscribers": {
+        "value": "287",
+        "trend": null,
+        "trendDir": null
+      },
+      "watchTime": {
+        "value": "20 Std.",
+        "trend": null,
+        "trendDir": null
+      },
+      "ctr": {
+        "value": "0.0%",
+        "trend": null,
+        "trendDir": null
+      },
+      "topVideos": [
+        {
+          "name": "Studieren an der Fachhochschule Dresden - Spring Edition ?#studieren #abitur #hopecore",
+          "views": 1654,
+          "watchTime": "—"
+        },
+        {
+          "name": "Leadership, Entrepreneurship & Innovation (M.A.) (Google)",
+          "views": 1112,
+          "watchTime": "—"
+        },
+        {
+          "name": "Berufspädagogik für Pflege- & Gesundheitsberufe (M.A.) (Google)",
+          "views": 1005,
+          "watchTime": "—"
+        },
+        {
+          "name": "Business Administration (B.A.) (Google)",
+          "views": 818,
+          "watchTime": "—"
+        },
+        {
+          "name": "Im Gespräch mit Vera Schnee Voigt - Veränderungen in Unternehmen #ausbildung #newwork",
+          "views": 322,
+          "watchTime": "—"
+        }
+      ],
+      "viewsOverTime": {
+        "labels": [
+          "02-28",
+          "03-01",
+          "03-02",
+          "03-03",
+          "03-04",
+          "03-05",
+          "03-06",
+          "03-07",
+          "03-08",
+          "03-09",
+          "03-10",
+          "03-11",
+          "03-12",
+          "03-13",
+          "03-14",
+          "03-15",
+          "03-16",
+          "03-17",
+          "03-18",
+          "03-19",
+          "03-20",
+          "03-21",
+          "03-22"
+        ],
+        "values": [
+          21,
+          547,
+          955,
+          361,
+          360,
+          70,
+          208,
+          220,
+          100,
+          106,
+          216,
+          40,
+          21,
+          33,
+          26,
+          20,
+          26,
+          1680,
+          37,
+          27,
+          30,
+          136,
+          60
+        ]
+      }
+    },
+    "mailchimp": {
+      "openRate": {
+        "value": "25.0%",
+        "trend": null,
+        "trendDir": null
+      },
+      "clickRate": {
+        "value": "0.8%",
+        "trend": null,
+        "trendDir": null
+      },
+      "subscribers": {
+        "value": "10.220",
+        "trend": null,
+        "trendDir": null
+      },
+      "campaigns": {
+        "value": "4",
+        "trend": null
+      },
+      "campaignList": [
+        {
+          "name": "Newsletter Monatsmailing März 2026 BW",
+          "sent": 661,
+          "openRate": "18.6%",
+          "clickRate": "0.8%",
+          "date": "26.03.2026"
+        },
+        {
+          "name": "Newsletter Monatsmailing März 2026 ASW",
+          "sent": 1232,
+          "openRate": "10.4%",
+          "clickRate": "0.6%",
+          "date": "26.03.2026"
+        },
+        {
+          "name": "Newsletter Monatsmailing März 2026 DESIGN",
+          "sent": 448,
+          "openRate": "28.5%",
+          "clickRate": "1.8%",
+          "date": "26.03.2026"
+        },
+        {
+          "name": "Prototyping",
+          "sent": 2415,
+          "openRate": "42.5%",
+          "clickRate": "0.3%",
+          "date": "04.03.2026"
+        }
+      ],
+      "trend": {
+        "labels": [
+          "Mär"
+        ],
+        "openRates": [
+          25.01
+        ],
+        "clickRates": [
+          0.85
+        ]
+      }
+    }
+  }
+}
