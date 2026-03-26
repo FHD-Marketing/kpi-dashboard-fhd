@@ -4,11 +4,12 @@ import { GoogleAdsApi } from 'google-ads-api';
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
+const REFRESH_TOKEN = process.env.GADS_REFRESH_TOKEN;
 const DEVELOPER_TOKEN = process.env.GADS_DEVELOPER_TOKEN;
 const CUSTOMER_ID = process.env.GADS_CUSTOMER_ID;
+const MCC_ID = process.env.GADS_MCC_ID;
 
-if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !DEVELOPER_TOKEN || !CUSTOMER_ID) {
+if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !DEVELOPER_TOKEN || !CUSTOMER_ID || !MCC_ID) {
   console.error('Missing Google Ads environment variables.');
   process.exit(1);
 }
@@ -17,6 +18,7 @@ const client = new GoogleAdsApi({
   client_id: CLIENT_ID,
   client_secret: CLIENT_SECRET,
   developer_token: DEVELOPER_TOKEN,
+  login_customer_id: MCC_ID,
 });
 
 async function connectDB(retries = 3, delay = 5000) {
