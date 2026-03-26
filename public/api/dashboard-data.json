@@ -1,12 +1,12 @@
 {
   "mar": {
     "label": "März 2026",
-    "totalSpend": "€1.826,40",
+    "totalSpend": "€1.826,53",
     "overview": {
       "adSpend": {
-        "value": "€1.826,40",
+        "value": "€1.826,53",
         "trend": null,
-        "detail": "Google €0,00 · Meta €1.826,40"
+        "detail": "Google €0,00 · Meta €1.826,53"
       },
       "klicks": {
         "value": "774",
@@ -44,7 +44,7 @@
           "pct": "0%"
         },
         "meta": {
-          "value": 1826.4,
+          "value": 1826.53,
           "pct": "100%"
         }
       },
@@ -56,7 +56,7 @@
     },
     "metaAds": {
       "spend": {
-        "value": "€1.826,40",
+        "value": "€1.826,53",
         "trend": null,
         "trendDir": null
       },
@@ -81,14 +81,14 @@
           "badge": "WINNER",
           "groups": "11 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€1.473,43",
+          "spend": "€1.473,56",
           "leads": "6",
-          "cpl": "€245,57",
+          "cpl": "€245,59",
           "klicks": "629",
           "cpc": "€2,34",
           "ctr": "0.50%",
           "reichweite": "35284",
-          "impressionen": "125554",
+          "impressionen": "125563",
           "frequenz": "3.56",
           "progressPct": 100
         },
@@ -104,7 +104,7 @@
           "cpc": "€2,43",
           "ctr": "0.48%",
           "reichweite": "7942",
-          "impressionen": "29938",
+          "impressionen": "29941",
           "frequenz": "3.77",
           "progressPct": 0
         }
@@ -112,7 +112,7 @@
     },
     "instagram": {
       "follower": {
-        "value": "2.015",
+        "value": "2.016",
         "trend": null,
         "trendDir": null
       },
@@ -122,12 +122,12 @@
         "trendDir": null
       },
       "reichweite": {
-        "value": "1.185",
+        "value": "112065",
         "trend": null,
         "trendDir": null
       },
       "impressionen": {
-        "value": "113.108",
+        "value": "0",
         "trend": null,
         "trendDir": null
       },
@@ -188,32 +188,32 @@
           "03-26"
         ],
         "values": [
-          1981,
-          1986,
-          1990,
-          1990,
-          1994,
+          1982,
+          1987,
+          1991,
+          1991,
           1995,
-          1997,
-          1997,
-          2000,
-          2002,
-          2002,
+          1996,
+          1998,
+          1998,
+          2001,
           2003,
-          2005,
-          2008,
-          2010,
-          2014,
+          2003,
+          2004,
+          2006,
+          2009,
+          2011,
           2015,
-          2015,
-          2015,
-          2015,
-          2015,
-          2015,
-          2015,
-          2015,
-          2015,
-          2015
+          2016,
+          2016,
+          2016,
+          2016,
+          2016,
+          2016,
+          2016,
+          2016,
+          2016,
+          2016
         ]
       }
     },
@@ -320,7 +320,7 @@
     },
     "mailchimp": {
       "openRate": {
-        "value": "28.7%",
+        "value": "29.0%",
         "trend": null,
         "trendDir": null
       },
@@ -342,14 +342,14 @@
         {
           "name": "Newsletter Monatsmailing März 2026 BW",
           "sent": 661,
-          "openRate": "23.2%",
+          "openRate": "23.5%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 ASW",
           "sent": 1232,
-          "openRate": "16.9%",
+          "openRate": "17.8%",
           "clickRate": "0.8%",
           "date": "26.03.2026"
         },
@@ -373,7 +373,7 @@
           "Mär"
         ],
         "openRates": [
-          28.68
+          28.99
         ],
         "clickRates": [
           0.95
