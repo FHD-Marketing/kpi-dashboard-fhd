@@ -137,9 +137,10 @@ export function updateDashboardData(month) {
     const el = document.getElementById(id);
     if (el) {
       const icon = el.querySelector('.title-icon');
-      const iconText = icon ? icon.outerHTML + ' ' : '';
+      const iconHtml = icon ? icon.outerHTML + ' ' : '';
+      if (icon) icon.remove();
       const base = el.textContent.split('—')[0].trim();
-      el.innerHTML = iconText + base + titleSuffix;
+      el.innerHTML = iconHtml + base + titleSuffix;
     }
   });
 
@@ -169,7 +170,10 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
       const el = document.querySelector(`[data-kpi="${sectionId}-${key}"]`);
       if (el) {
         const valueEl = el.querySelector('.kpi-value');
-        if (valueEl) valueEl.textContent = val.value;
+        if (valueEl) {
+          valueEl.textContent = val.value;
+          valueEl.dataset.target = val.value;
+        }
 
         const trendEl = el.querySelector('.kpi-trend');
         if (trendEl) {
