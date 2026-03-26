@@ -1,12 +1,12 @@
 {
   "mar": {
     "label": "März 2026",
-    "totalSpend": "€1.826,15",
+    "totalSpend": "€1.826,40",
     "overview": {
       "adSpend": {
-        "value": "€1.826,15",
+        "value": "€1.826,40",
         "trend": null,
-        "detail": "Google €0,00 · Meta €1.826,15"
+        "detail": "Google €0,00 · Meta €1.826,40"
       },
       "klicks": {
         "value": "774",
@@ -44,7 +44,7 @@
           "pct": "0%"
         },
         "meta": {
-          "value": 1826.15,
+          "value": 1826.4,
           "pct": "100%"
         }
       },
@@ -56,7 +56,7 @@
     },
     "metaAds": {
       "spend": {
-        "value": "€1.826,15",
+        "value": "€1.826,40",
         "trend": null,
         "trendDir": null
       },
@@ -81,14 +81,14 @@
           "badge": "WINNER",
           "groups": "11 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€1.473,24",
+          "spend": "€1.473,43",
           "leads": "6",
-          "cpl": "€245,54",
+          "cpl": "€245,57",
           "klicks": "629",
           "cpc": "€2,34",
           "ctr": "0.50%",
           "reichweite": "35284",
-          "impressionen": "125537",
+          "impressionen": "125554",
           "frequenz": "3.56",
           "progressPct": 100
         },
@@ -97,18 +97,125 @@
           "badge": "LOSER",
           "groups": "3 Anzeigengruppen",
           "status": "AKTIV",
-          "spend": "€352,91",
+          "spend": "€352,97",
           "leads": "0",
           "cpl": "—",
           "klicks": "145",
           "cpc": "€2,43",
           "ctr": "0.48%",
           "reichweite": "7942",
-          "impressionen": "29933",
+          "impressionen": "29938",
           "frequenz": "3.77",
           "progressPct": 0
         }
       ]
+    },
+    "instagram": {
+      "follower": {
+        "value": "2.015",
+        "trend": null,
+        "trendDir": null
+      },
+      "engagementRate": {
+        "value": "6.0%",
+        "trend": null,
+        "trendDir": null
+      },
+      "reichweite": {
+        "value": "1.185",
+        "trend": null,
+        "trendDir": null
+      },
+      "impressionen": {
+        "value": "0",
+        "trend": null,
+        "trendDir": null
+      },
+      "topPosts": [
+        {
+          "name": "Herzlich willkommen an der FHD! ? Wir fr",
+          "reach": 825,
+          "engagement": "—"
+        },
+        {
+          "name": "? Großer Erfolg für unsere Absolventin @",
+          "reach": 597,
+          "engagement": "—"
+        },
+        {
+          "name": "?️? Als Grafikdesigner düst du mit KI-To",
+          "reach": 542,
+          "engagement": "—"
+        },
+        {
+          "name": "Mit dem EXIST-Women Stipendium zur Gründ",
+          "reach": 511,
+          "engagement": "—"
+        },
+        {
+          "name": "Sei bei unserem 3-tägigen kostenfreien P",
+          "reach": 436,
+          "engagement": "—"
+        }
+      ],
+      "followerGrowth": {
+        "labels": [
+          "03-01",
+          "03-02",
+          "03-03",
+          "03-04",
+          "03-05",
+          "03-06",
+          "03-07",
+          "03-08",
+          "03-09",
+          "03-10",
+          "03-11",
+          "03-12",
+          "03-13",
+          "03-14",
+          "03-15",
+          "03-16",
+          "03-17",
+          "03-18",
+          "03-19",
+          "03-20",
+          "03-21",
+          "03-22",
+          "03-23",
+          "03-24",
+          "03-25",
+          "03-26"
+        ],
+        "values": [
+          1981,
+          1986,
+          1990,
+          1990,
+          1994,
+          1995,
+          1997,
+          1997,
+          2000,
+          2002,
+          2002,
+          2003,
+          2005,
+          2008,
+          2010,
+          2014,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015,
+          2015
+        ]
+      }
     },
     "youtube": {
       "views": {
@@ -213,7 +320,7 @@
     },
     "mailchimp": {
       "openRate": {
-        "value": "28.6%",
+        "value": "28.7%",
         "trend": null,
         "trendDir": null
       },
@@ -235,21 +342,21 @@
         {
           "name": "Newsletter Monatsmailing März 2026 BW",
           "sent": 661,
-          "openRate": "23.0%",
+          "openRate": "23.2%",
           "clickRate": "0.9%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 ASW",
           "sent": 1232,
-          "openRate": "16.7%",
+          "openRate": "16.9%",
           "clickRate": "0.8%",
           "date": "26.03.2026"
         },
         {
           "name": "Newsletter Monatsmailing März 2026 DESIGN",
           "sent": 448,
-          "openRate": "31.9%",
+          "openRate": "32.1%",
           "clickRate": "1.8%",
           "date": "26.03.2026"
         },
@@ -266,7 +373,7 @@
           "Mär"
         ],
         "openRates": [
-          28.55
+          28.68
         ],
         "clickRates": [
           0.95
