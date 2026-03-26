@@ -427,7 +427,7 @@ import '../styles/global.css';
 
       setTimeout(() => { initCharts(); }, 200);
     } catch (err) {
-      console.error('Daten konnten nicht geladen werden:', err);
+      console.error('Failed to load dashboard data:', err);
       if (loadingEl) loadingEl.classList.remove('active');
       if (emptyEl) {
         emptyEl.classList.add('active');
