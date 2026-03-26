@@ -93,7 +93,7 @@ jobs:
 #          DB_USER: ${{ secrets.DB_USER }}
 #          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 #          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-linkedin.js
-        continue-on-error: true
+#        run: node src/scripts/fetching/fetch-data-linkedin.js
+#        continue-on-error: true
 
 
