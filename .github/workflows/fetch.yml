@@ -55,7 +55,7 @@ jobs:
 #
 #      - name: Fetch Meta Ads data
 #        env:
-#          ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+#          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
 #          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
 #          DB_HOST: ${{ secrets.DB_HOST }}
 #          DB_USER: ${{ secrets.DB_USER }}

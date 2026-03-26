@@ -108,7 +108,13 @@ async function fetchGoogleAdsData(startDate, endDate) {
     AND campaign.status != 'REMOVED'
   `;
 
+  console.log('Querying Google Ads API...');
+  console.log('Customer ID:', CUSTOMER_ID);
+  console.log('MCC ID:', MCC_ID);
+
   const rows = await customer.query(query);
+
+  console.log('Query returned', rows?.length ?? 'undefined', 'rows');
 
   const campaigns = rows.map(row => {
     const spend = formatMicros(row.metrics.cost_micros);
@@ -208,12 +214,31 @@ async function run() {
     const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
     const today = now.toISOString().split('T')[0];
 
+    console.log(`Fetching Google Ads data from ${startOfMonth} to ${today}...`);
+
     const { summary, campaigns } = await fetchGoogleAdsData(startOfMonth, today);
+
+    console.log(`Fetched ${campaigns.length} campaigns. Summary:`, JSON.stringify(summary));
+
     await saveToMySQL(summary, campaigns, monthKey, today);
 
+    console.log('Google Ads data saved successfully.');
     process.exit(0);
   } catch (error) {
-    console.error(error.message);
+    console.error('Google Ads fetch failed.');
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    if (error?.errors) console.error('API errors:', JSON.stringify(error.errors, null, 2));
+    if (error?.response) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
+    }
+    try {
+      console.error('Full error:', JSON.stringify(error, null, 2));
+    } catch {
+      console.error('Full error (non-serializable):', error);
+    }
     process.exit(1);
   }
 }
