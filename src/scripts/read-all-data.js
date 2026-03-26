@@ -191,12 +191,22 @@ async function readInstagram(db, mk, prevMk) {
   const st = tbl('instagram_stats', mk);
   const tt = tbl('instagram_totals', mk);
   const pt = tbl('instagram_top_posts', mk);
-  if (!(await tableExists(db, st))) return null;
 
-  const latest = await latestRow(db, st, 'follower_count, engagement_rate, impressions, reach');
-  if (!latest) return null;
-  const totals = await tableExists(db, tt) ? await latestRow(db, tt, 'total_followers') : null;
-  const follower = totals ? totals.total_followers : latest.follower_count;
+  const hasStats = await tableExists(db, st);
+  const hasTotals = await tableExists(db, tt);
+  const hasPosts = await tableExists(db, pt);
+
+  if (!hasStats && !hasTotals && !hasPosts) return null;
+
+  const latest = hasStats ? await latestRow(db, st, 'follower_count, engagement_rate, impressions, reach') : null;
+  const totals = hasTotals ? await latestRow(db, tt, 'total_followers') : null;
+
+  if (!latest && !totals) return null;
+
+  const follower = totals ? totals.total_followers : (latest ? latest.follower_count : 0);
+  const engRate = latest ? parseFloat(latest.engagement_rate) : 0;
+  const curReach = latest ? latest.reach : 0;
+  const curImpr = latest ? latest.impressions : 0;
 
   let prevFollower = null, prevEng = null, prevReach = null, prevImpr = null;
   if (prevMk) {
@@ -211,19 +221,22 @@ async function readInstagram(db, mk, prevMk) {
   }
 
   let topPosts = [];
-  if (await tableExists(db, pt)) {
+  if (hasPosts) {
     const posts = await allRows(db, pt, 'caption, reach, impressions, likes, comments', 'reach DESC');
     topPosts = posts.slice(0, 5).map(p => ({ name: (p.caption || '').substring(0, 40), reach: p.reach, engagement: '—' }));
   }
 
-  const statsRows = await allRows(db, st, 'date, follower_count', '`date` ASC');
-  const growth = { labels: statsRows.map(r => r.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r => r.follower_count) };
+  let growth = { labels: [], values: [] };
+  if (hasStats) {
+    const statsRows = await allRows(db, st, 'date, follower_count', '`date` ASC');
+    growth = { labels: statsRows.map(r => r.date.toISOString().split('T')[0].substring(5)), values: statsRows.map(r => r.follower_count) };
+  }
 
   return {
     follower: { value: fmt(follower), trend: pct(follower, prevFollower), trendDir: trendDirection(follower, prevFollower, true) },
-    engagementRate: { value: parseFloat(latest.engagement_rate).toFixed(1) + '%', trend: pct(parseFloat(latest.engagement_rate), prevEng), trendDir: trendDirection(parseFloat(latest.engagement_rate), prevEng, true) },
-    reichweite: { value: fmt(latest.reach), trend: pct(latest.reach, prevReach), trendDir: trendDirection(latest.reach, prevReach, true) },
-    impressionen: { value: fmt(latest.impressions), trend: pct(latest.impressions, prevImpr), trendDir: trendDirection(latest.impressions, prevImpr, true) },
+    engagementRate: { value: engRate.toFixed(1) + '%', trend: pct(engRate, prevEng), trendDir: trendDirection(engRate, prevEng, true) },
+    reichweite: { value: fmt(curReach), trend: pct(curReach, prevReach), trendDir: trendDirection(curReach, prevReach, true) },
+    impressionen: { value: fmt(curImpr), trend: pct(curImpr, prevImpr), trendDir: trendDirection(curImpr, prevImpr, true) },
     topPosts,
     followerGrowth: growth
   };

@@ -143,31 +143,52 @@ async function fetchDailyInsights(startDate, endDate) {
   const since = Math.floor(new Date(startDate + 'T00:00:00Z').getTime() / 1000);
   const until = Math.floor(new Date(endDate + 'T23:59:59Z').getTime() / 1000);
 
-  let data;
+  const metricsMap = {};
+
   try {
-    data = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
-      metric: 'views,reach,follower_count',
+    const dayData = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+      metric: 'reach,follower_count',
       period: 'day',
       since,
       until,
     });
+    if (dayData.data) {
+      for (const entry of dayData.data) {
+        metricsMap[entry.name] = {};
+        for (const point of entry.values) {
+          const dateStr = point.end_time.split('T')[0];
+          metricsMap[entry.name][dateStr] = point.value;
+        }
+      }
+    }
   } catch (err) {
-    console.log(`Daily insights fetch failed: ${err.message}`);
-    return [];
+    console.log(`Daily insights (reach/follower_count) fetch failed: ${err.message}`);
   }
 
-  if (!data.data || data.data.length === 0) {
+  try {
+    const viewsData = await graphGet(`/${IG_BUSINESS_ID}/insights`, {
+      metric: 'views',
+      metric_type: 'total_value',
+      period: 'day',
+      since,
+      until,
+    });
+    if (viewsData.data) {
+      for (const entry of viewsData.data) {
+        metricsMap[entry.name] = {};
+        for (const point of entry.values) {
+          const dateStr = point.end_time.split('T')[0];
+          metricsMap[entry.name][dateStr] = point.value;
+        }
+      }
+    }
+  } catch (err) {
+    console.log(`Daily insights (views) fetch failed: ${err.message}`);
+  }
+
+  if (Object.keys(metricsMap).length === 0) {
     console.log('No daily insights returned for this period.');
     return [];
-  }
-
-  const metricsMap = {};
-  for (const entry of data.data) {
-    metricsMap[entry.name] = {};
-    for (const point of entry.values) {
-      const dateStr = point.end_time.split('T')[0];
-      metricsMap[entry.name][dateStr] = point.value;
-    }
   }
 
   const result = [];
