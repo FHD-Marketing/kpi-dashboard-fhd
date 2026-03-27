@@ -303,7 +303,7 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
       return null;
     }
 
-    const impressionsMap = {};
+    const aggregated = {};
 
     for (const report of relevantReports) {
       const csvData = await downloadReport(report.downloadUrl);
@@ -318,9 +318,10 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
       const dateIdx = headers.indexOf('date');
       let impIdx = headers.indexOf('impressions');
       if (impIdx === -1) impIdx = headers.indexOf('thumbnail_impressions');
+      if (impIdx === -1) impIdx = headers.indexOf('video_thumbnail_impressions');
       let ctrIdx = headers.indexOf('impressions_click_through_rate');
       if (ctrIdx === -1) ctrIdx = headers.indexOf('click_through_rate');
-      const viewsIdx = headers.indexOf('views');
+      if (ctrIdx === -1) ctrIdx = headers.indexOf('video_thumbnail_impressions_ctr');
 
       if (dateIdx === -1) {
         console.log('Report CSV has no date column.');
@@ -328,9 +329,11 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
       }
 
       if (impIdx === -1) {
-        console.log('Report CSV has no impressions column. Skipping CTR.');
+        console.log('Report CSV has no impressions column. Available: ' + headers.join(', '));
         continue;
       }
+
+      console.log('Parsing report: impIdx=' + impIdx + ' (' + headers[impIdx] + '), ctrIdx=' + ctrIdx + (ctrIdx !== -1 ? ' (' + headers[ctrIdx] + ')' : ''));
 
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(',').map(c => c.trim());
@@ -338,19 +341,26 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
 
         const date = cols[dateIdx];
         if (!date || date < startDate || date > endDate) continue;
-        if (impressionsMap[date]) continue;
 
         const imp = parseInt(cols[impIdx], 10) || 0;
-        let ctr = 0;
-        if (ctrIdx !== -1) {
-          ctr = Math.round(parseFloat(cols[ctrIdx]) * 10000) / 100;
-        } else if (imp > 0 && viewsIdx !== -1) {
-          const views = parseInt(cols[viewsIdx], 10) || 0;
-          ctr = Math.round((views / imp) * 10000) / 100;
-        }
+        const rowCtr = ctrIdx !== -1 ? parseFloat(cols[ctrIdx]) || 0 : 0;
 
-        impressionsMap[date] = { impressions: imp, ctr };
+        if (!aggregated[date]) {
+          aggregated[date] = { impressions: 0, ctrWeightedSum: 0 };
+        }
+        aggregated[date].impressions += imp;
+        aggregated[date].ctrWeightedSum += rowCtr * imp;
       }
+    }
+
+    const impressionsMap = {};
+    for (const [date, agg] of Object.entries(aggregated)) {
+      const imp = agg.impressions;
+      let ctr = 0;
+      if (imp > 0 && agg.ctrWeightedSum > 0) {
+        ctr = Math.round((agg.ctrWeightedSum / imp) * 10000) / 100;
+      }
+      impressionsMap[date] = { impressions: imp, ctr };
     }
 
     console.log('Impressions data parsed for ' + Object.keys(impressionsMap).length + ' days.');
