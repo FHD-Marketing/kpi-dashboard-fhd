@@ -4,18 +4,30 @@ function countUp(el, duration = 800) {
   const target = el.dataset.target || el.textContent.trim();
   if (!target || target === '—' || target === '-') return;
 
-  const prefixMatch = target.match(/^([€$£+\-]?)/);
-  const suffixMatch = target.match(/([%]?\s*[A-Za-zÄÖÜäöüß.]*)$/);
+  // Extract prefix (currency symbols, +/-)
+  const prefixMatch = target.match(/^([€$£+\-]?\s*)/);
   const prefix = prefixMatch ? prefixMatch[1] : '';
+
+  // Extract suffix (%, unit words, trailing dots in abbreviations)
+  const suffixMatch = target.match(/((?:%|\s*[A-Za-zÄÖÜäöüß]+\.?)\s*)$/);
   const suffix = suffixMatch ? suffixMatch[1] : '';
 
-  const numPart = target.slice(prefix.length, target.length - (suffix.length || 0));
+  const numPart = target.slice(prefix.length, target.length - (suffix.length || 0)).trim();
+  if (!numPart) { el.textContent = target; return; }
+
+  // Parse German number format: dots are thousands separators, comma is decimal
   const numStr = numPart.replace(/\./g, '').replace(',', '.');
   const num = parseFloat(numStr);
   if (isNaN(num) || num === 0) {
     el.textContent = target;
     return;
   }
+
+  // Detect decimal places from template
+  const hasComma = numPart.includes(',');
+  const decimals = hasComma ? (numPart.split(',')[1]?.replace(/[^\d]/g, '').length || 0) : 0;
+  // Detect if target number uses thousands separators
+  const hasThousandsSep = numPart.includes('.');
 
   const myId = ++animationId;
   el._animId = myId;
@@ -30,7 +42,7 @@ function countUp(el, duration = 800) {
     const currentVal = num * easedProgress;
 
     if (progress < 1) {
-      el.textContent = prefix + formatNumber(currentVal, numPart) + suffix;
+      el.textContent = prefix + formatNumber(currentVal, decimals, hasThousandsSep || num >= 1000) + suffix;
       requestAnimationFrame(update);
     } else {
       el.textContent = target;
@@ -40,22 +52,18 @@ function countUp(el, duration = 800) {
   requestAnimationFrame(update);
 }
 
-function formatNumber(val, template) {
-  const hasComma = template.includes(',');
-  const hasDot = /\d\.\d{3}/.test(template);
-
-  if (hasComma && hasDot) {
+function formatNumber(val, decimals, useThousandsSep) {
+  if (decimals > 0) {
     return val.toLocaleString('de-DE', {
-      minimumFractionDigits: template.split(',')[1]?.replace(/[^\d]/g,'').length || 0,
-      maximumFractionDigits: 2
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
     });
-  } else if (hasDot && !hasComma) {
-    return Math.round(val).toLocaleString('de-DE');
-  } else if (hasComma) {
-    const decimals = template.split(',')[1]?.replace(/[^\d]/g,'').length || 0;
-    return val.toLocaleString('de-DE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   }
-  return Math.round(val).toString();
+  const rounded = Math.round(val);
+  if (useThousandsSep) {
+    return rounded.toLocaleString('de-DE');
+  }
+  return String(rounded);
 }
 
 export function initKpiAnimations() {

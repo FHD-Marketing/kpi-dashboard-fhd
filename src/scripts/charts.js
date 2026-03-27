@@ -206,12 +206,16 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
 
   destroyChart(canvasId);
 
-  const fullNames = posts.map(p => p.name);
+  // Remove any stale tooltip for this chart
+  const oldTooltip = document.getElementById('tooltip-' + canvasId);
+  if (oldTooltip) oldTooltip.remove();
+
+  const fullNames = posts.map(p => p.name || p.title || p.caption || '');
 
   chartInstances[canvasId] = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: posts.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '…' : p.name),
+      labels: fullNames.map(n => n.length > 20 ? n.substring(0, 20) + '…' : n),
       datasets: [{
         label: label,
         data: posts.map(p => p[valueKey]),
@@ -236,18 +240,22 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
             if (!el) {
               el = document.createElement('div');
               el.id = 'tooltip-' + canvasId;
-              el.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-family:Inter,sans-serif;font-size:12px;line-height:1.5;max-width:420px;white-space:normal;word-break:break-word;transition:opacity .15s ease;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+              el.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-family:Inter,sans-serif;font-size:12px;line-height:1.5;max-width:500px;white-space:normal;word-break:break-word;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transition:opacity .15s ease';
               document.body.appendChild(el);
             }
             const tooltip = context.tooltip;
             if (tooltip.opacity === 0) {
               el.style.opacity = '0';
+              el.style.pointerEvents = 'none';
               return;
             }
             const idx = tooltip.dataPoints && tooltip.dataPoints[0] ? tooltip.dataPoints[0].dataIndex : null;
             const name = idx != null ? fullNames[idx] : '';
             const val = tooltip.dataPoints && tooltip.dataPoints[0] ? tooltip.dataPoints[0].formattedValue : '';
-            el.innerHTML = '<div style="font-weight:700;margin-bottom:3px">' + name + '</div><div style="color:#94a3b8"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + color + ';margin-right:6px"></span>' + label + ': ' + val + '</div>';
+            el.innerHTML = '<div style="font-weight:700;margin-bottom:3px;word-break:break-word">' + name + '</div><div style="color:#94a3b8"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + color + ';margin-right:6px"></span>' + label + ': ' + val + '</div>';
+
+            // Position tooltip: first make visible to measure
+            el.style.visibility = 'hidden';
             el.style.opacity = '1';
 
             const canvas = context.chart.canvas;
@@ -257,9 +265,11 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
             if (left + el.offsetWidth > window.innerWidth - 8) {
               left = rect.left + tooltip.caretX - el.offsetWidth - 12;
             }
+            if (left < 8) left = 8;
             top = Math.max(8, Math.min(top, window.innerHeight - el.offsetHeight - 8));
             el.style.left = left + 'px';
             el.style.top = top + 'px';
+            el.style.visibility = 'visible';
           }
         }
       }
