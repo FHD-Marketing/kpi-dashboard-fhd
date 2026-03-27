@@ -1,4 +1,4 @@
-import { getMonthData, setMonthData, getMonthOrder, uploadInfomaterialTable } from './data.js';
+import { getMonthData, setMonthData, getMonthOrder, uploadInfomaterialTable, reportLastUpdated } from './data.js';
 import { getCurrentMonth } from './month-selector.js';
 
 const chartInstances = {};
@@ -116,10 +116,11 @@ async function processExcelFile(file) {
 
     const tablePayload = buildTablePayload(json);
 
-    // Upload to API (non-blocking – local data injection happens regardless)
     showUploadFeedback('loading', 'Daten werden an API gesendet…');
+    let uploadOk = false;
     try {
       await uploadInfomaterialTable(tablePayload);
+      uploadOk = true;
     } catch (apiErr) {
       console.warn('API upload failed (data still applied locally):', apiErr.message);
     }
@@ -133,6 +134,7 @@ async function processExcelFile(file) {
       if (tabBtn) tabBtn.classList.remove('disabled');
     }
 
+    if (uploadOk) updateLastUpdated();
     showUploadFeedback('success', `✓ ${file.name} erfolgreich hochgeladen – ${parsed.programs.length} Studiengänge erkannt`);
   } catch (err) {
     console.error('Excel parsing error:', err);
@@ -609,6 +611,30 @@ function createProgramChart(canvasId, pg, currentLabel, prevLabel) {
       }
     }
   });
+}
+
+function updateLastUpdated() {
+  const now = new Date();
+  const timestamp = formatTimestamp(now);
+  showTimestampBadge('infomaterial-title', timestamp);
+  reportLastUpdated('infomaterial').catch(() => {});
+}
+
+
+function formatTimestamp(date) {
+  return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}, ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function showTimestampBadge(titleId, timestamp) {
+  const titleEl = document.getElementById(titleId);
+  if (!titleEl) return;
+  let badge = titleEl.querySelector('.last-updated-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'last-updated-badge';
+    titleEl.appendChild(badge);
+  }
+  badge.textContent = `Zuletzt aktualisiert: ${timestamp}`;
 }
 
 function showUploadFeedback(type, message) {

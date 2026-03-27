@@ -1,6 +1,7 @@
-import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached } from './data.js';
+import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached, getLastUpdatedTimestamps } from './data.js';
 import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab } from './infomaterial.js';
+import { renderContractOverviewTab } from './contract-overview.js';
 import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
@@ -154,6 +155,13 @@ async function selectMonth(month) {
     }
   }
 
+  if (!isChannelCached('vertrag', month)) {
+    try {
+      await fetchChannel('vertrag', month);
+    } catch (_) {
+    }
+  }
+
   if (myGen !== loadGeneration) return;
 
   updateTabAvailability(month);
@@ -295,11 +303,44 @@ export function updateDashboardData(month) {
   titleIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      const icon = el.querySelector('.title-icon');
-      const iconHtml = icon ? icon.outerHTML + ' ' : '';
-      if (icon) icon.remove();
-      const base = el.textContent.split('—')[0].trim();
-      el.innerHTML = iconHtml + base + titleSuffix;
+      let textEl = el.querySelector('.title-text');
+      if (!textEl) {
+        const icon = el.querySelector('.title-icon');
+        const badge = el.querySelector('.last-updated-badge');
+        const iconHtml = icon ? icon.outerHTML : '';
+        const base = el.textContent.replace(/—.*$/, '').trim();
+        el.innerHTML = iconHtml + '<span class="title-text"></span>';
+        textEl = el.querySelector('.title-text');
+        if (badge) el.appendChild(badge);
+      }
+      const base = textEl.textContent.split('—')[0].trim();
+      textEl.textContent = base + titleSuffix;
+    }
+  });
+
+  const manualTabs = {
+    'infomaterial-title': { source: 'infomaterial', tab: 'infomaterial' },
+    'vertrag-title': { source: 'vertrag', tab: 'vertrag' },
+  };
+  const timestamps = getLastUpdatedTimestamps();
+  Object.entries(manualTabs).forEach(([titleId, { source, tab }]) => {
+    const el = document.getElementById(titleId);
+    if (!el) return;
+    const hasData = hasDataForTab(month, tab);
+    const ts = timestamps[source];
+    let badge = el.querySelector('.last-updated-badge');
+    if (hasData && ts) {
+      const d = new Date(ts);
+      const formatted = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'last-updated-badge';
+        el.appendChild(badge);
+      }
+      badge.textContent = `Zuletzt aktualisiert: ${formatted}`;
+      badge.style.display = '';
+    } else if (badge) {
+      badge.style.display = 'none';
     }
   });
 
@@ -320,6 +361,7 @@ export function updateDashboardData(month) {
   renderMailchimpTable(data.mailchimp);
   renderStudycheckTable(data.studycheck);
   renderInfomaterialTab(month);
+  renderContractOverviewTab(month);
 }
 
 function updateKpiSection(sectionId, sectionData, hasPrevMonth) {

@@ -482,6 +482,17 @@ body {
 .section-title .title-icon {
     font-size: 1.2rem;
 }
+.section-title .last-updated-badge {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
 .section-subtitle {
     font-size: 0.82rem;
     color: var(--text-muted);
@@ -1700,6 +1711,16 @@ body {
     color: var(--text-muted);
     font-size: 0.9rem;
 }
+.vertrag-empty-placeholder {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    opacity: 0.5;
+}
 @media (max-width: 768px) {
     .vertrag-table thead th,
     .vertrag-table tbody td {
@@ -1710,3 +1731,183 @@ body {
         min-width: 120px;
     }
 }
+
+/* ═══ VERTRAG: Fakultäts-Cards ═══ */
+.vertrag-faculty-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+.vertrag-faculty-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+.vertrag-faculty-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--faculty-color);
+}
+.vertrag-faculty-card:hover {
+    border-color: var(--faculty-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.vertrag-faculty-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+.vertrag-faculty-icon {
+    font-size: 1.3rem;
+}
+.vertrag-faculty-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.vertrag-faculty-main-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+.vertrag-faculty-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
+.vertrag-faculty-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: var(--space-md);
+}
+.vertrag-faculty-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+.vertrag-faculty-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: var(--space-sm);
+}
+.vertrag-faculty-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+.stat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.stat-dot.stat-zusage { background: #10b981; }
+.stat-dot.stat-bearb { background: #f59e0b; }
+.stat-dot.stat-absage { background: #ef4444; }
+.vertrag-faculty-quote {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--card-border);
+}
+.vertrag-faculty-quote strong {
+    color: #10b981;
+}
+
+/* ═══ VERTRAG: Studiengang-Balken ═══ */
+.vertrag-chart-container {
+    margin-bottom: var(--space-xl);
+}
+.vertrag-sg-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.vertrag-sg-bar-row {
+    display: grid;
+    grid-template-columns: 280px 1fr auto;
+    gap: var(--space-md);
+    align-items: center;
+    padding: 8px var(--space-md);
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+.vertrag-sg-bar-row:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+}
+.vertrag-sg-bar-label {
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vertrag-sg-bar-track {
+    height: 22px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    min-width: 100px;
+}
+.vertrag-sg-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    opacity: 0.85;
+}
+.vertrag-sg-bar-value {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.vertrag-sg-bar-meta {
+    display: flex;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+}
+.sg-meta-item {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.sg-meta-item.sg-meta-zusage { color: #10b981; }
+.sg-meta-item.sg-meta-absage { color: #ef4444; }
+.sg-meta-item.sg-meta-bearb { color: #f59e0b; }
+
+@media (max-width: 900px) {
+    .vertrag-sg-bar-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+    .vertrag-sg-bar-meta {
+        justify-content: flex-start;
+    }
+}
+

@@ -211,21 +211,12 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
   if (oldTooltip) oldTooltip.remove();
 
   const fullNames = posts.map(p => p.name || p.title || p.caption || '');
-
-  // Dynamically set chart height based on label lengths
-  const maxLabelLen = Math.max(...fullNames.map(n => n.length), 0);
-  const linesPerLabel = maxLabelLen > 90 ? 3 : maxLabelLen > 45 ? 2 : 1;
-  const barHeight = Math.max(40, linesPerLabel * 28 + 12);
-  const minHeight = posts.length * barHeight + 40;
-  const wrapper = ctx.canvas.parentElement;
-  if (wrapper && minHeight > 220) {
-    wrapper.style.height = minHeight + 'px';
-  }
+  const shortNames = fullNames.map(n => n.length > 40 ? n.substring(0, 40) + '…' : n);
 
   chartInstances[canvasId] = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: fullNames,
+      labels: shortNames,
       datasets: [{
         label: label,
         data: posts.map(p => p[valueKey]),
@@ -243,25 +234,6 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
         x: { beginAtZero: true },
         y: {
           ticks: {
-            callback: function(value) {
-              const lbl = this.getLabelForValue(value);
-              if (!lbl) return '';
-              // Split long labels into multiple lines (~40 chars per line)
-              if (lbl.length <= 45) return lbl;
-              const words = lbl.split(/\s+/);
-              const lines = [];
-              let current = '';
-              for (const word of words) {
-                if (current && (current + ' ' + word).length > 45) {
-                  lines.push(current);
-                  current = word;
-                } else {
-                  current = current ? current + ' ' + word : word;
-                }
-              }
-              if (current) lines.push(current);
-              return lines;
-            },
             font: { size: 10 }
           }
         }

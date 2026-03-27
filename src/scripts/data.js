@@ -30,6 +30,7 @@ const dataKeyToChannel = {
   linkedin: 'linkedin',
   mailchimp: 'mailchimp',
   infomaterial: 'infomaterial',
+  vertrag: 'vertrag',
 };
 
 async function apiFetch(path) {
@@ -161,6 +162,7 @@ export function hasDataForTab(monthKey, tabId) {
 
   const section = data[key];
   if (section && typeof section === 'object') {
+    if (Array.isArray(section.rows) && section.rows.length > 0) return true;
     const vals = Object.values(section);
     if (vals.length === 0) return false;
     for (const v of vals) {
@@ -232,3 +234,37 @@ export async function uploadVertragTable(tableData) {
 
   return res.json();
 }
+
+let lastUpdatedTimestamps = {};
+
+export async function fetchLastUpdated() {
+  const data = await apiFetch('/api/last-updated');
+  lastUpdatedTimestamps = data || {};
+  return lastUpdatedTimestamps;
+}
+
+export function getLastUpdatedTimestamps() {
+  return lastUpdatedTimestamps;
+}
+
+export async function reportLastUpdated(source) {
+  const url = `${API_BASE}/api/last-updated`;
+
+  if (!API_BASE) return;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify({ source }),
+  });
+
+  if (!res.ok) {
+    console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
+  }
+
+  delete cache['/api/last-updated'];
+}
+
