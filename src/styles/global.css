@@ -1605,3 +1605,108 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+
+.channel-vertrag .kpi-card { border-top: 2px solid #8b5cf6; }
+
+.vertrag-table-wrapper {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    overflow-x: auto;
+    margin-bottom: var(--space-xl);
+    background: var(--bg-card);
+}
+.vertrag-table {
+    font-size: 0.82rem;
+}
+.vertrag-table thead th {
+    background: var(--bg-card-hover);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    white-space: nowrap;
+}
+.vertrag-table thead th.col-studiengang {
+    min-width: 200px;
+}
+.vertrag-fakultaet-row {
+    background: rgba(99,102,241,.06);
+}
+.vertrag-fakultaet-row td {
+    border-bottom: none !important;
+}
+.vertrag-fakultaet-header {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--fak-color, var(--accent-blue));
+    padding: var(--space-md) var(--space-md) var(--space-sm) !important;
+    position: relative;
+}
+.vertrag-fakultaet-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--fak-color, var(--accent-blue));
+    border-radius: 0 2px 2px 0;
+}
+.vertrag-sg-row td {
+    font-size: 0.8rem;
+    padding: var(--space-xs) var(--space-md) !important;
+    border-bottom-color: var(--border-subtle) !important;
+}
+.vertrag-sg-row .col-studiengang {
+    color: var(--text-secondary);
+    padding-left: var(--space-lg) !important;
+}
+.vertrag-sg-row td.has-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.vertrag-sg-row td.zero-value {
+    color: var(--text-muted);
+    opacity: 0.4;
+}
+.vertrag-subtotal-row {
+    background: rgba(99,102,241,.03);
+}
+.vertrag-subtotal-row td {
+    padding: var(--space-sm) var(--space-md) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    color: var(--fak-color, var(--text-primary));
+}
+.vertrag-subtotal-row .subtotal-val {
+    font-size: 0.85rem;
+}
+.vertrag-gesamt-row {
+    background: rgba(139,92,246,.08);
+}
+.vertrag-gesamt-row td {
+    padding: var(--space-md) !important;
+    border-bottom: none !important;
+    font-size: 0.9rem;
+}
+.vertrag-gesamt-row .gesamt-val {
+    color: #8b5cf6;
+    font-size: 1rem;
+}
+.vertrag-empty-state {
+    text-align: center;
+    padding: var(--space-2xl) var(--space-lg);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+@media (max-width: 768px) {
+    .vertrag-table thead th,
+    .vertrag-table tbody td {
+        font-size: 0.72rem;
+        padding: var(--space-xs) var(--space-sm) !important;
+    }
+    .vertrag-table thead th.col-studiengang {
+        min-width: 120px;
+    }
+}

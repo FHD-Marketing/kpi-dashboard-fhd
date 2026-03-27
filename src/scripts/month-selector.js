@@ -182,7 +182,7 @@ function updateTabAvailability(month) {
     if (!tab) return;
 
     // Overview and manual tabs are always available for all unlocked months
-    if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck') {
+    if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck' || tab === 'vertrag') {
       btn.classList.remove('disabled');
       return;
     }
@@ -291,7 +291,7 @@ export function updateDashboardData(month) {
   const displayName = monthNames[month] || month;
   const titleSuffix = ` — ${displayName} 2026`;
 
-  const titleIds = ['overview-title', 'google-title', 'meta-title', 'instagram-title', 'youtube-title', 'tiktok-title', 'linkedin-title', 'mailchimp-title', 'studycheck-title', 'infomaterial-title'];
+  const titleIds = ['overview-title', 'google-title', 'meta-title', 'instagram-title', 'youtube-title', 'tiktok-title', 'linkedin-title', 'mailchimp-title', 'studycheck-title', 'infomaterial-title', 'vertrag-title'];
   titleIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) {

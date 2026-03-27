@@ -61,6 +61,7 @@ import '../styles/global.css';
       <span class="tab-row-label">Manuell</span>
       <button class="tab-btn disabled" data-tab="studycheck"><span class="tab-icon">⭐</span> StudyCheck</button>
       <button class="tab-btn disabled" data-tab="infomaterial"><span class="tab-icon">📥</span> Infomaterialanfragen</button>
+      <button class="tab-btn disabled" data-tab="vertrag"><span class="tab-icon">📋</span> Vertragsübersicht</button>
     </nav>
   </div>
 
@@ -401,6 +402,38 @@ import '../styles/global.css';
     </div>
   </section>
 
+  <!-- ═══ TAB: VERTRAGSÜBERSICHT ═══ -->
+  <section id="tab-vertrag" class="tab-content">
+    <h2 class="section-title" id="vertrag-title"><span class="title-icon">📋</span> Vertragsübersicht</h2>
+    <p class="section-subtitle">Bewerbungen, Studienverträge und Zusagen nach Studiengang</p>
+
+    <div class="infomaterial-upload-area" id="vertrag-upload-area">
+      <input type="file" id="vertrag-file-input" accept=".xlsx,.xls" hidden />
+      <div class="upload-content">
+        <div class="upload-icon">📋</div>
+        <div class="upload-text">
+          <strong>Vertragsübersicht hochladen</strong>
+          <span>Ziehe eine .xlsx-Datei hierher oder klicke zum Auswählen</span>
+        </div>
+        <button class="upload-btn" id="vertrag-upload-btn">Datei auswählen</button>
+      </div>
+      <div class="upload-feedback" id="vertrag-upload-feedback" style="display:none"></div>
+    </div>
+
+    <div class="kpi-grid cols-4 channel-vertrag">
+      <div class="kpi-card" data-kpi="vertrag-bewerbungen"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📝</span> BEWERBUNGEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="vertrag-zusagen"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">✅</span> ZUSAGEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="vertrag-absagen"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">❌</span> ABSAGEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="vertrag-inBearbeitung"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">⏳</span> IN BEARBEITUNG</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+    </div>
+
+    <h3 class="section-title mb-md"><span class="title-icon">📊</span> Übersicht nach Studiengang</h3>
+    <div id="vertrag-table-container">
+      <div class="vertrag-empty-state">
+        <p>Lade eine Excel-Datei hoch, um die Vertragsübersicht zu sehen.</p>
+      </div>
+    </div>
+  </section>
 
 
   <footer class="dashboard-footer">
@@ -417,6 +450,7 @@ import '../styles/global.css';
   import { initKpiAnimations } from '../scripts/kpi-animations.js';
   import { fetchMonths } from '../scripts/data.js';
   import { initInfomaterial } from '../scripts/infomaterial.js';
+  import { initVertragsuebersicht } from '../scripts/vertragsuebersicht.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
     initTabNavigation();
@@ -424,6 +458,7 @@ import '../styles/global.css';
     initCampaignToggle();
     initKpiAnimations();
     initInfomaterial();
+    initVertragsuebersicht();
 
     const loadingEl = document.getElementById('loading-state');
 
