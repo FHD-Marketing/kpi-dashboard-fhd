@@ -18,7 +18,8 @@ const tabToDataKey = {
   linkedin: 'linkedin',
   mailchimp: 'mailchimp',
   studycheck: 'studycheck',
-  infomaterial: 'infomaterial'
+  infomaterial: 'infomaterial',
+  vertrag: 'vertrag'
 };
 
 const dataKeyToChannel = {
@@ -207,3 +208,27 @@ export async function uploadInfomaterialTable(tableData) {
   return res.json();
 }
 
+export async function uploadVertragTable(tableData) {
+  const url = `${API_BASE}/api/table1`;
+
+  if (!API_BASE) {
+    console.error('[KPI] PUBLIC_API_BASE is not set');
+    throw new Error('API base not configured');
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify(tableData),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API /api/table1 → HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
