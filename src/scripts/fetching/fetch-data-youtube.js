@@ -335,12 +335,23 @@ async function fetchImpressionsFromReporting(startDate, endDate) {
 
       console.log('Parsing report: impIdx=' + impIdx + ' (' + headers[impIdx] + '), ctrIdx=' + ctrIdx + (ctrIdx !== -1 ? ' (' + headers[ctrIdx] + ')' : ''));
 
+      if (lines.length > 1) {
+        const sampleCols = lines[1].split(',').map(c => c.trim());
+        if (sampleCols.length > dateIdx) {
+          console.log('Sample date value from CSV: "' + sampleCols[dateIdx] + '"');
+        }
+      }
+
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(',').map(c => c.trim());
         if (cols.length <= dateIdx) continue;
 
-        const date = cols[dateIdx];
-        if (!date || date < startDate || date > endDate) continue;
+        let date = cols[dateIdx];
+        if (!date) continue;
+        if (date.length === 8 && !date.includes('-')) {
+          date = date.substring(0, 4) + '-' + date.substring(4, 6) + '-' + date.substring(6, 8);
+        }
+        if (date < startDate || date > endDate) continue;
 
         const imp = parseInt(cols[impIdx], 10) || 0;
         const rowCtr = ctrIdx !== -1 ? parseFloat(cols[ctrIdx]) || 0 : 0;
