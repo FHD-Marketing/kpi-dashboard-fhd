@@ -73,7 +73,7 @@ async function ensureInstaTablesExist(db, monthKey) {
   await db.query(`
     CREATE TABLE IF NOT EXISTS \`${postsTable}\` (
       post_id VARCHAR(60) PRIMARY KEY,
-      caption VARCHAR(500),
+      caption VARCHAR(2000),
       reach INT DEFAULT 0,
       impressions INT DEFAULT 0,
       likes INT DEFAULT 0,
@@ -81,6 +81,10 @@ async function ensureInstaTablesExist(db, monthKey) {
       rank_position TINYINT DEFAULT 0
     )
   `);
+
+  await db.query(`
+    ALTER TABLE \`${postsTable}\` MODIFY COLUMN caption VARCHAR(2000)
+  `).catch(() => {});
   console.log(`Tables ensured for month: ${monthKey}`);
 }
 
@@ -309,7 +313,7 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
 
     postsWithInsights.push({
       id: media.id,
-      caption: (media.title || (media.caption || '').split('\n')[0] || '').substring(0, 500),
+      caption: (media.title || media.caption || '').substring(0, 2000),
       reach,
       impressions,
       likes: media.like_count || 0,
