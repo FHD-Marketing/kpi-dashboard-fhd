@@ -265,7 +265,7 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
   console.log(`Fetching posts between ${startDate} and ${endDate}...`);
   let allMedia = [];
   let urlPath = `/${IG_BUSINESS_ID}/media`;
-  let params = { fields: 'id,caption,timestamp,like_count,comments_count,media_type', limit: 50 };
+  let params = { fields: 'id,caption,title,timestamp,like_count,comments_count,media_type', limit: 50 };
 
   while (urlPath) {
     const data = await graphGet(urlPath, params);
@@ -309,7 +309,7 @@ async function fetchMonthlyEngagementAndPosts(startDate, endDate) {
 
     postsWithInsights.push({
       id: media.id,
-      caption: (media.caption || '').substring(0, 500),
+      caption: (media.title || (media.caption || '').split('\n')[0] || '').substring(0, 500),
       reach,
       impressions,
       likes: media.like_count || 0,
