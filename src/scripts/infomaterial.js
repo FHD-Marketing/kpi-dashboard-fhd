@@ -1,70 +1,42 @@
-/**
- * FHD KPI Dashboard – Infomaterialanfragen Modul
- * 
- * Client-seitiges Excel-Parsing, Chart-Rendering und Upload-Handling
- * für den Infomaterialanfragen-Tab.
- * 
- * @module infomaterial
- */
-
-import { dashboardData, getMonthData, setMonthData, getMonthOrder } from './data.js';
+import { getMonthData, setMonthData, getMonthOrder, uploadInfomaterialTable } from './data.js';
 import { getCurrentMonth } from './month-selector.js';
 
-/** Chart-Instanzen für Cleanup */
 const chartInstances = {};
 
-/** Monatsnamen für Header-Mapping */
 const MONTH_NAMES_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
-/** Farben */
 const COLOR_CURRENT = '#6366f1';
 const COLOR_PREV = '#334155';
 const COLOR_CURRENT_BG = 'rgba(99,102,241,0.85)';
 const COLOR_PREV_BG = 'rgba(51,65,85,0.6)';
 
-/** Fakultäts-Zuordnung */
-const FAKULTAET_MAP = {
+const FACULTY_MAP = {
   'Fakultät Design': ['Grafikdesign Screen- & Printmedia (B.A.)', 'Digital Media Design (B.A.)', 'Creative Direction (M.A.)', 'Creative Direction (M.A.) berufsbegleitend', 'Games & XR Management (M.A.)', 'Games & XR Management (M.A.) berufsbegleitend'],
   'Fakultät ASW': ['Sozialpädagogik & -management (B.A.)', 'Sozialpädagogik & -management (B.A.) berufsbegleitend', 'Sozialpädagogik & -management (B.A.) berufsbegleitend - Lernzentrum Annaberg-Buchholz', 'Pflege- & Gesundheitsmanagement (B.A.)', 'Pflege- & Gesundheitsmanagement (B.A.) berufsbegleitend', 'Pflege- & Gesundheitsmanagement (B.A.) berufsbegleitend - Lernzentrum Annaberg-Buchholz', 'Pflege- & Gesundheitsmanagement (B.A.) berufsbegleitend - Lernzentrum Neustadt in Sachsen', 'Berufspädagogik für Pflege- & Gesundheitsberufe (M.A.) berufsbegleitend', 'Soziale Arbeit & Management (M.A.)', 'Soziale Arbeit & Management (M.A.) berufsbegleitend', 'Berufspädagogik für Pflege- & Gesundheitsberufe (B.A.) berufsbegleitend'],
   'Fakultät BW': ['Business Administration (B.A.)', 'Business Administration (B.A.) berufsbegleitend', 'Business Administration (B.A.) berufsbegleitend - Lernzentrum Annaberg-Buchholz', 'Tourismus & Event Management (B.A.)', 'Tourismus & Event Management (B.A.) berufsbegleitend', 'Leadership, Entrepreneurship & Innovation (M.A.)', 'Leadership, Entrepreneurship & Innovation (M.A.) berufsbegleitend']
 };
 
-/** Farben pro Fakultät */
-const FAKULTAET_COLORS = {
+const FACULTY_COLORS = {
   'Fakultät Design': '#a855f7',
   'Fakultät ASW': '#06b6d4',
   'Fakultät BW': '#f59e0b'
 };
 
-/**
- * Initialisiert den Infomaterial-Tab: Upload-Handler, Drag-and-Drop.
- */
 export function initInfomaterial() {
   setupUploadHandlers();
 }
 
-/**
- * Rendert den kompletten Infomaterial-Tab mit Daten.
- * Wird bei Monats-/Tab-Wechsel aufgerufen.
- */
 export function renderInfomaterialTab(monthKey) {
   const data = getMonthData(monthKey);
   if (!data || !data.infomaterial) return;
 
   const info = data.infomaterial;
 
-  // KPI Cards aktualisieren
   updateInfoKpis(info, monthKey);
-
-  // Fakultäts-Summary
-  renderFakultaetSummary(info, monthKey);
-
-  // Individuelle Studiengang-Charts
-  renderStudiengangCharts(info, monthKey);
+  renderFacultySummary(info, monthKey);
+  renderProgramCharts(info, monthKey);
 }
-
-/* ── Upload Handling ────────────────────────────────────────── */
 
 function setupUploadHandlers() {
   const uploadArea = document.getElementById('infomaterial-upload-area');
@@ -73,23 +45,32 @@ function setupUploadHandlers() {
 
   if (!uploadArea || !fileInput) return;
 
-  // Button click → öffne File Dialog
+  let pickerOpen = false;
+  const openFilePicker = () => {
+    if (pickerOpen) return;
+    pickerOpen = true;
+    fileInput.value = '';
+    fileInput.click();
+    setTimeout(() => { pickerOpen = false; }, 500);
+  };
+
   if (uploadBtn) {
-    uploadBtn.addEventListener('click', () => fileInput.click());
+    uploadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      openFilePicker();
+    });
   }
   uploadArea.addEventListener('click', (e) => {
-    if (e.target === uploadArea || e.target.closest('.upload-content')) {
-      fileInput.click();
-    }
+    if (e.target === fileInput || e.target.closest('.upload-btn')) return;
+    openFilePicker();
   });
 
-  // File selected
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) processExcelFile(file);
   });
 
-  // Drag and Drop
   uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadArea.classList.add('dragover');
@@ -105,9 +86,6 @@ function setupUploadHandlers() {
   });
 }
 
-/**
- * Verarbeitet eine hochgeladene Excel-Datei.
- */
 async function processExcelFile(file) {
   const validExt = ['.xlsx', '.xls'];
   const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -124,25 +102,38 @@ async function processExcelFile(file) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: 0 });
 
+    const validationError = validateExcelFormat(json);
+    if (validationError) {
+      showUploadFeedback('error', validationError);
+      return;
+    }
+
     const parsed = parseInfomaterialSheet(json);
     if (!parsed) {
       showUploadFeedback('error', 'Die Datei konnte nicht verarbeitet werden. Bitte prüfe das Format.');
       return;
     }
 
-    // Daten in alle Monate einspeisen
+    const tablePayload = buildTablePayload(json);
+
+    // Upload to API (non-blocking – local data injection happens regardless)
+    showUploadFeedback('loading', 'Daten werden an API gesendet…');
+    try {
+      await uploadInfomaterialTable(tablePayload);
+    } catch (apiErr) {
+      console.warn('API upload failed (data still applied locally):', apiErr.message);
+    }
+
     injectParsedData(parsed);
 
-    // Aktuellen Tab rendern
     const currentMonth = getCurrentMonth();
     if (currentMonth) {
       renderInfomaterialTab(currentMonth);
-      // Tab-Button aktivieren
       const tabBtn = document.querySelector('.tab-btn[data-tab="infomaterial"]');
       if (tabBtn) tabBtn.classList.remove('disabled');
     }
 
-    showUploadFeedback('success', `✓ ${file.name} erfolgreich geladen – ${parsed.studiengaenge.length} Studiengänge erkannt`);
+    showUploadFeedback('success', `✓ ${file.name} erfolgreich hochgeladen – ${parsed.programs.length} Studiengänge erkannt`);
   } catch (err) {
     console.error('Excel parsing error:', err);
     showUploadFeedback('error', 'Fehler beim Lesen der Datei: ' + err.message);
@@ -158,15 +149,89 @@ function readFileAsArrayBuffer(file) {
   });
 }
 
-/**
- * Parsed das Excel-Sheet in ein strukturiertes Datenformat.
- * Erwartet: Zeile 1 = Header (Zählung, Januar, Februar, ...),
- * danach Studiengänge, Gesamt-Zeilen, dann Fakultäts-Block.
- */
+function validateExcelFormat(rows) {
+  if (!rows || rows.length < 5) {
+    return 'Die Datei enthält zu wenige Zeilen. Erwartetes Format: Zählung + Monatsspalten.';
+  }
+
+  let headerRow = null;
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    const row = rows[i];
+    if (row && row.some(cell => String(cell).trim() === 'Zählung')) {
+      headerRow = row;
+      break;
+    }
+  }
+
+  if (!headerRow) {
+    return 'Ungültiges Format: Spalte „Zählung" nicht gefunden. Die erste Spalte muss „Zählung" heißen.';
+  }
+
+  const headerCells = headerRow.map(c => String(c).trim());
+  const requiredMonths = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const missingMonths = requiredMonths.filter(m => !headerCells.includes(m));
+
+  if (missingMonths.length > 0) {
+    return `Ungültiges Format: Monatsspalten fehlen: ${missingMonths.join(', ')}`;
+  }
+
+  const firstCells = rows.map(r => (r && r[0]) ? String(r[0]).trim() : '');
+  const hasTotal = firstCells.some(c => c.startsWith('Gesamt '));
+  const hasChange = firstCells.includes('Veränderung');
+
+  if (!hasTotal) {
+    return 'Ungültiges Format: Zeile „Gesamt 20XX" nicht gefunden.';
+  }
+  if (!hasChange) {
+    return 'Ungültiges Format: Zeile „Veränderung" nicht gefunden.';
+  }
+
+  return null;
+}
+
+function buildTablePayload(rows) {
+  let headerRowIdx = -1;
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    if (rows[i] && rows[i].some(cell => String(cell).trim() === 'Zählung')) {
+      headerRowIdx = i;
+      break;
+    }
+  }
+
+  const header = rows[headerRowIdx];
+  const columns = header.map(c => String(c).trim());
+
+  const dataRows = [];
+  let emptyCount = 0;
+  for (let i = headerRowIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length === 0 || !String(row[0] || '').trim()) {
+      emptyCount++;
+      if (emptyCount >= 3) break;
+      continue;
+    }
+    emptyCount = 0;
+
+    const name = String(row[0] || '').trim();
+    if (name === 'Fakultät') continue;
+
+    const rowObj = {};
+    columns.forEach((col, idx) => {
+      if (col === 'Zählung') {
+        rowObj[col] = name;
+      } else {
+        rowObj[col] = idx < row.length ? (row[idx] ?? 0) : 0;
+      }
+    });
+    dataRows.push(rowObj);
+  }
+
+  return { columns, rows: dataRows };
+}
+
 function parseInfomaterialSheet(rows) {
   if (!rows || rows.length < 3) return null;
 
-  // Header-Zeile finden (enthält "Zählung" oder "Januar")
   let headerRowIdx = -1;
   for (let i = 0; i < Math.min(5, rows.length); i++) {
     const row = rows[i];
@@ -182,7 +247,6 @@ function parseInfomaterialSheet(rows) {
 
   const header = rows[headerRowIdx];
 
-  // Monatsspalten-Indizes ermitteln
   const monthColIdx = {};
   for (let c = 0; c < header.length; c++) {
     const cell = String(header[c]).trim();
@@ -194,11 +258,10 @@ function parseInfomaterialSheet(rows) {
     }
   }
 
-  // Studiengänge parsen
-  const studiengaenge = [];
-  const gesamtRows = {};
-  let fakultaetBlock = [];
-  let inFakultaetBlock = false;
+  const programs = [];
+  const totalRows = {};
+  let facultyBlock = [];
+  let inFacultyBlock = false;
 
   for (let i = headerRowIdx + 1; i < rows.length; i++) {
     const row = rows[i];
@@ -207,158 +270,174 @@ function parseInfomaterialSheet(rows) {
     const name = String(row[0] || '').trim();
     if (!name) continue;
 
-    // Fakultäts-Block erkennen
     if (name === 'Fakultät' || name.startsWith('Fakultät ')) {
-      inFakultaetBlock = true;
+      inFacultyBlock = true;
     }
 
-    if (inFakultaetBlock) {
+    if (inFacultyBlock) {
       if (name.startsWith('Fakultät ')) {
-        const fakData = { name };
+        const facultyData = { name };
         MONTH_KEYS.forEach(mk => {
           const ci = monthColIdx[mk];
-          fakData[mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
+          facultyData[mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
         });
-        fakultaetBlock.push(fakData);
+        facultyBlock.push(facultyData);
       }
       continue;
     }
 
-    // Gesamt-Zeilen erkennen
     if (name.startsWith('Gesamt ')) {
       const year = name.replace('Gesamt ', '');
-      gesamtRows[year] = {};
+      totalRows[year] = {};
       MONTH_KEYS.forEach(mk => {
         const ci = monthColIdx[mk];
-        gesamtRows[year][mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
+        totalRows[year][mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
       });
       continue;
     }
 
-    // Veränderung-Zeile
-    if (name === 'Veränderung') continue;
+    if (name === 'Veränderung') {
+      const changeRow = {};
+      MONTH_KEYS.forEach(mk => {
+        const ci = monthColIdx[mk];
+        if (ci !== undefined) {
+          const raw = row[ci];
+          if (typeof raw === 'number') {
+            // Excel stores percentages as decimals: 0.0748 = 7.48%, -0.1587 = -15.87%
+            changeRow[mk] = raw * 100;
+          } else {
+            const s = String(raw).replace('%', '').replace(',', '.').trim();
+            changeRow[mk] = parseFloat(s) || 0;
+          }
+        } else {
+          changeRow[mk] = 0;
+        }
+      });
+      totalRows['_change'] = changeRow;
+      continue;
+    }
 
-    // Studiengang-Datenzeile
-    const sgData = { name };
+    const programData = { name };
     MONTH_KEYS.forEach(mk => {
       const ci = monthColIdx[mk];
-      sgData[mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
+      programData[mk] = ci !== undefined ? (parseFloat(row[ci]) || 0) : 0;
     });
-    studiengaenge.push(sgData);
+    programs.push(programData);
   }
 
-  return { studiengaenge, gesamtRows, fakultaeten: fakultaetBlock };
+  return { programs, totalRows, faculties: facultyBlock };
 }
 
-/**
- * Injiziert geparste Infomaterial-Daten in das Dashboard-Datenmodell.
- */
 function injectParsedData(parsed) {
   const monthOrder = getMonthOrder();
+  const changeRow = parsed.totalRows['_change'] || {};
+  const total2026 = parsed.totalRows['2026'] || {};
+  const total2025 = parsed.totalRows['2025'] || {};
 
   monthOrder.forEach((mk, idx) => {
-    // Prüfe ob es Daten für diesen Monat gibt
-    let total = 0;
+    let total = total2026[mk] || 0;
+    if (total === 0) {
+      parsed.programs.forEach(pg => { total += (pg[mk] || 0); });
+    }
+
     let bachelorTotal = 0;
     let masterTotal = 0;
-    const sgForMonth = [];
-
-    parsed.studiengaenge.forEach(sg => {
-      const val = sg[mk] || 0;
-      total += val;
-      sgForMonth.push({ name: sg.name, value: val });
-
-      if (sg.name.includes('(B.A.)')) bachelorTotal += val;
-      if (sg.name.includes('(M.A.)')) masterTotal += val;
+    parsed.programs.forEach(pg => {
+      const val = pg[mk] || 0;
+      if (pg.name.includes('(B.A.)')) bachelorTotal += val;
+      if (pg.name.includes('(M.A.)')) masterTotal += val;
     });
 
-    // Vormonat ermitteln
+    const changePct = changeRow[mk] || null;
+    const prevYearTotal = total2025[mk] || 0;
+
     const prevMk = idx > 0 ? monthOrder[idx - 1] : null;
-    let prevTotal = 0;
-    if (prevMk) {
-      parsed.studiengaenge.forEach(sg => {
-        prevTotal += (sg[prevMk] || 0);
-      });
-    }
 
-    const veraenderung = prevTotal > 0 ? (((total - prevTotal) / prevTotal) * 100) : null;
-
-    // Fakultäts-Daten
-    const fakultaeten = {};
-    if (parsed.fakultaeten && parsed.fakultaeten.length > 0) {
-      parsed.fakultaeten.forEach(f => {
-        fakultaeten[f.name] = f[mk] || 0;
+    const faculties = {};
+    if (parsed.faculties && parsed.faculties.length > 0) {
+      parsed.faculties.forEach(f => {
+        faculties[f.name] = f[mk] || 0;
       });
     } else {
-      // Aus Studiengängen berechnen
-      Object.entries(FAKULTAET_MAP).forEach(([fakName, sgNames]) => {
+      Object.entries(FACULTY_MAP).forEach(([facultyName, programNames]) => {
         let sum = 0;
-        sgNames.forEach(sgName => {
-          const sg = parsed.studiengaenge.find(s => s.name === sgName);
-          if (sg) sum += (sg[mk] || 0);
+        programNames.forEach(pgName => {
+          const pg = parsed.programs.find(s => s.name === pgName);
+          if (pg) sum += (pg[mk] || 0);
         });
-        fakultaeten[fakName] = sum;
+        faculties[facultyName] = sum;
       });
     }
 
-    // Fakultäts-Vormonat
-    const fakultaetenPrev = {};
+    const facultiesPrev = {};
     if (prevMk) {
-      if (parsed.fakultaeten && parsed.fakultaeten.length > 0) {
-        parsed.fakultaeten.forEach(f => {
-          fakultaetenPrev[f.name] = f[prevMk] || 0;
+      if (parsed.faculties && parsed.faculties.length > 0) {
+        parsed.faculties.forEach(f => {
+          facultiesPrev[f.name] = f[prevMk] || 0;
         });
       } else {
-        Object.entries(FAKULTAET_MAP).forEach(([fakName, sgNames]) => {
+        Object.entries(FACULTY_MAP).forEach(([facultyName, programNames]) => {
           let sum = 0;
-          sgNames.forEach(sgName => {
-            const sg = parsed.studiengaenge.find(s => s.name === sgName);
-            if (sg) sum += (sg[prevMk] || 0);
+          programNames.forEach(pgName => {
+            const pg = parsed.programs.find(s => s.name === pgName);
+            if (pg) sum += (pg[prevMk] || 0);
           });
-          fakultaetenPrev[fakName] = sum;
+          facultiesPrev[facultyName] = sum;
         });
       }
     }
 
-    // Studiengang-Daten mit Vormonat
-    const studiengaengeData = parsed.studiengaenge.map(sg => {
-      const prev = prevMk ? (sg[prevMk] || 0) : 0;
+    const programsData = parsed.programs.map(pg => {
+      const prev = prevMk ? (pg[prevMk] || 0) : 0;
       return {
-        name: sg.name,
-        current: sg[mk] || 0,
+        name: pg.name,
+        current: pg[mk] || 0,
         previous: prev
       };
     });
 
-    // Nur Monate mit Daten > 0 aktivieren
-    if (total === 0) return;
+    if (total === 0 && bachelorTotal === 0 && masterTotal === 0) return;
 
-    // Daten ins Dashboard injizieren
     let existing = getMonthData(mk);
     if (!existing) {
       existing = { label: `${MONTH_NAMES_DE[idx]} 2026` };
     }
 
+    let changeValue = '—';
+    let changeTrendDir = null;
+    let changeTrend = null;
+
+    if (changePct !== null && changePct !== 0) {
+      const v = changePct;
+      changeValue = `${v >= 0 ? '+' : ''}${v.toFixed(2).replace('.', ',')}%`;
+      changeTrendDir = v >= 0 ? 'up-good' : 'down-bad';
+      changeTrend = `${v >= 0 ? '▲' : '▼'} ${Math.abs(v).toFixed(2).replace('.', ',')}%`;
+    } else if (total > 0 && prevYearTotal === 0) {
+      changeValue = 'neu';
+      changeTrendDir = 'up-good';
+      changeTrend = null;
+    }
+
     existing.infomaterial = {
-      gesamt: { value: total.toLocaleString('de-DE') },
+      gesamt: { value: total.toLocaleString('de-DE'), detail: prevYearTotal > 0 ? `Vorjahr: ${prevYearTotal.toLocaleString('de-DE')}` : '' },
       bachelor: { value: bachelorTotal.toLocaleString('de-DE') },
       master: { value: masterTotal.toLocaleString('de-DE') },
       veraenderung: {
-        value: veraenderung !== null ? `${veraenderung >= 0 ? '+' : ''}${veraenderung.toFixed(1).replace('.', ',')}%` : '—',
-        trendDir: veraenderung !== null ? (veraenderung >= 0 ? 'up-good' : 'down-bad') : null,
-        trend: veraenderung !== null ? `${veraenderung >= 0 ? '▲' : '▼'} ${Math.abs(veraenderung).toFixed(1).replace('.', ',')}%` : null
+        value: changeValue,
+        trendDir: changeTrendDir,
+        trend: changeTrend,
+        deltaMode: true,
+        positive: changePct !== null ? changePct >= 0 : true
       },
-      fakultaeten,
-      fakultaetenPrev,
-      studiengaenge: studiengaengeData,
+      fakultaeten: faculties,
+      fakultaetenPrev: facultiesPrev,
+      studiengaenge: programsData,
       _raw: parsed
     };
 
     setMonthData(mk, existing);
   });
 }
-
-/* ── KPI Cards ──────────────────────────────────────────────── */
 
 function updateInfoKpis(info) {
   const kpis = {
@@ -383,9 +462,7 @@ function updateInfoKpis(info) {
   });
 }
 
-/* ── Fakultäts-Summary ──────────────────────────────────────── */
-
-function renderFakultaetSummary(info, monthKey) {
+function renderFacultySummary(info, monthKey) {
   const container = document.getElementById('infomaterial-faculty-cards');
   if (!container) return;
 
@@ -394,13 +471,13 @@ function renderFakultaetSummary(info, monthKey) {
 
   container.innerHTML = '';
 
-  const fakEntries = Object.entries(info.fakultaeten || {});
-  if (fakEntries.length === 0) return;
+  const facultyEntries = Object.entries(info.fakultaeten || {});
+  if (facultyEntries.length === 0) return;
 
-  fakEntries.forEach(([name, value]) => {
+  facultyEntries.forEach(([name, value]) => {
     const prevValue = info.fakultaetenPrev ? (info.fakultaetenPrev[name] || 0) : 0;
     const change = prevValue > 0 ? (((value - prevValue) / prevValue) * 100) : null;
-    const color = FAKULTAET_COLORS[name] || '#6366f1';
+    const color = FACULTY_COLORS[name] || '#6366f1';
     const icon = name.includes('Design') ? '🎨' : name.includes('ASW') ? '🤝' : '📊';
 
     const changeHtml = change !== null
@@ -424,15 +501,13 @@ function renderFakultaetSummary(info, monthKey) {
   });
 }
 
-/* ── Studiengang Charts ─────────────────────────────────────── */
-
-function renderStudiengangCharts(info, monthKey) {
+function renderProgramCharts(info, monthKey) {
   const container = document.getElementById('infomaterial-charts-container');
   if (!container) return;
 
-  // Cleanup alte Charts
+  // Destroy existing program charts
   Object.keys(chartInstances).forEach(key => {
-    if (key.startsWith('infomaterial-sg-')) {
+    if (key.startsWith('infomaterial-pg-')) {
       chartInstances[key].destroy();
       delete chartInstances[key];
     }
@@ -443,17 +518,16 @@ function renderStudiengangCharts(info, monthKey) {
   if (!info.studiengaenge || info.studiengaenge.length === 0) return;
 
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
-  const mName = monthNames[monthKey] || monthKey;
+  const currentMonthName = monthNames[monthKey] || monthKey;
   const mkIdx = MONTH_KEYS.indexOf(monthKey);
-  const prevMName = mkIdx > 0 ? monthNames[MONTH_KEYS[mkIdx - 1]] : null;
+  const prevMonthName = mkIdx > 0 ? monthNames[MONTH_KEYS[mkIdx - 1]] : null;
 
-  // Nur Studiengänge anzeigen, die mindestens in einem der beiden Monate > 0 sind
-  const activeSg = info.studiengaenge.filter(sg => sg.current > 0 || sg.previous > 0);
+  const activePrograms = info.studiengaenge.filter(pg => pg.current > 0 || pg.previous > 0);
 
-  activeSg.forEach((sg, idx) => {
-    const canvasId = `infomaterial-sg-${idx}`;
-    const shortName = sg.name.length > 55 ? sg.name.substring(0, 52) + '…' : sg.name;
-    const change = sg.previous > 0 ? (((sg.current - sg.previous) / sg.previous) * 100) : null;
+  activePrograms.forEach((pg, idx) => {
+    const canvasId = `infomaterial-pg-${idx}`;
+    const shortName = pg.name.length > 55 ? pg.name.substring(0, 52) + '…' : pg.name;
+    const change = pg.previous > 0 ? (((pg.current - pg.previous) / pg.previous) * 100) : null;
     const changeStr = change !== null
       ? `<span class="sg-change ${change >= 0 ? 'positive' : 'negative'}">${change >= 0 ? '+' : ''}${change.toFixed(1).replace('.', ',')}%</span>`
       : '';
@@ -461,34 +535,33 @@ function renderStudiengangCharts(info, monthKey) {
     container.innerHTML += `
       <div class="infomaterial-chart-card">
         <div class="infomaterial-chart-header">
-          <span class="infomaterial-chart-title" title="${sg.name}">${shortName}</span>
+          <span class="infomaterial-chart-title" title="${pg.name}">${shortName}</span>
           ${changeStr}
         </div>
         <div class="infomaterial-chart-values">
-          <span class="sg-current"><span class="sg-dot" style="background:${COLOR_CURRENT}"></span>${mName}: <strong>${sg.current}</strong></span>
-          ${prevMName ? `<span class="sg-prev"><span class="sg-dot" style="background:${COLOR_PREV}"></span>${prevMName}: <strong>${sg.previous}</strong></span>` : ''}
+          <span class="sg-current"><span class="sg-dot" style="background:${COLOR_CURRENT}"></span>${currentMonthName}: <strong>${pg.current}</strong></span>
+          ${prevMonthName ? `<span class="sg-prev"><span class="sg-dot" style="background:${COLOR_PREV}"></span>${prevMonthName}: <strong>${pg.previous}</strong></span>` : ''}
         </div>
         <div class="infomaterial-chart-wrapper"><canvas id="${canvasId}"></canvas></div>
       </div>
     `;
   });
 
-  // Charts erstellen (nach DOM-Update)
   requestAnimationFrame(() => {
-    activeSg.forEach((sg, idx) => {
-      const canvasId = `infomaterial-sg-${idx}`;
-      createStudiengangChart(canvasId, sg, mName, prevMName);
+    activePrograms.forEach((pg, idx) => {
+      const canvasId = `infomaterial-pg-${idx}`;
+      createProgramChart(canvasId, pg, currentMonthName, prevMonthName);
     });
   });
 }
 
-function createStudiengangChart(canvasId, sg, currentLabel, prevLabel) {
+function createProgramChart(canvasId, pg, currentLabel, prevLabel) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   const labels = prevLabel ? [prevLabel, currentLabel] : [currentLabel];
-  const data = prevLabel ? [sg.previous, sg.current] : [sg.current];
+  const data = prevLabel ? [pg.previous, pg.current] : [pg.current];
   const bgColors = prevLabel
     ? [COLOR_PREV_BG, COLOR_CURRENT_BG]
     : [COLOR_CURRENT_BG];
@@ -538,8 +611,6 @@ function createStudiengangChart(canvasId, sg, currentLabel, prevLabel) {
   });
 }
 
-/* ── Upload Feedback ────────────────────────────────────────── */
-
 function showUploadFeedback(type, message) {
   const feedbackEl = document.getElementById('infomaterial-upload-feedback');
   if (!feedbackEl) return;
@@ -561,3 +632,4 @@ function showUploadFeedback(type, message) {
     setTimeout(() => { feedbackEl.style.display = 'none'; }, 6000);
   }
 }
+

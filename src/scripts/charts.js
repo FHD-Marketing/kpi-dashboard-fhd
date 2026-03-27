@@ -1,24 +1,11 @@
-/**
- * FHD KPI Dashboard – Chart.js Initialisierung
- * 
- * Erstellt und aktualisiert alle Charts im Dashboard.
- * Verwendet Chart.js v4 via CDN (im HTML geladen).
- * 
- * Einheitliche Styling-Konfiguration für das Dark Theme.
- * 
- * @module charts
- */
-
 import { getMonthData } from './data.js';
 import { getCurrentMonth } from './month-selector.js';
 
-/** Speichert erstellte Chart-Instanzen für Cleanup/Update */
 const chartInstances = {};
 
-/* ── Globale Chart.js Defaults ─────────────────────────────── */
 function setChartDefaults() {
   if (typeof Chart === 'undefined') return;
-  
+
   Chart.defaults.color = '#94a3b8';
   Chart.defaults.borderColor = '#1e293b';
   Chart.defaults.font.family = "'Inter', sans-serif";
@@ -37,84 +24,64 @@ function setChartDefaults() {
   Chart.defaults.scale.grid = { color: '#1e293b', lineWidth: 0.5 };
 }
 
-/**
- * Initialisiert alle Charts.
- * Wird beim Laden und bei Tab-/Monatswechsel aufgerufen.
- */
 export function initCharts() {
   setChartDefaults();
   const month = getCurrentMonth();
   renderAllCharts(month);
 
-  // Bei Tab-Wechsel Charts im neuen Tab rendern
-  document.addEventListener('tabChanged', (e) => {
+  document.addEventListener('tabChanged', () => {
     setTimeout(() => renderAllCharts(getCurrentMonth()), 100);
   });
 
-  // Bei Monatswechsel alle Charts aktualisieren
   document.addEventListener('monthChanged', (e) => {
     setTimeout(() => renderAllCharts(e.detail.month), 150);
   });
 }
 
-/**
- * Rendert/Aktualisiert alle Charts basierend auf den Monatsdaten.
- * @param {string} month - Monatskürzel
- */
 function renderAllCharts(month) {
   const data = getMonthData(month);
   if (!data) return;
 
-  // Übersicht
   if (data.overview) {
     renderDailySpendChart(data.overview);
     renderBudgetSplitChart(data.overview);
   }
 
-  // Instagram
   if (data.instagram) {
     renderLineChart('instagram-follower-chart', data.instagram.followerGrowth, 'Follower', '#e1306c');
     renderBarChartFromPosts('instagram-top-posts-chart', data.instagram.topPosts, 'reach', 'Reichweite', '#e1306c');
   }
 
-  // YouTube
   if (data.youtube) {
     renderLineChart('youtube-views-chart', data.youtube.viewsOverTime, 'Views', '#ff0000');
     renderBarChartFromVideos('youtube-top-videos-chart', data.youtube.topVideos, 'views', 'Views', '#ff0000');
   }
 
-  // TikTok
   if (data.tiktok) {
     renderBarChartFromVideos('tiktok-performance-chart', data.tiktok.topVideos, 'views', 'Views', '#00f2ea');
     renderLineChart('tiktok-growth-chart', data.tiktok.growth, 'Follower', '#00f2ea');
   }
 
-  // LinkedIn
   if (data.linkedin) {
     renderBarChartFromPosts('linkedin-impressions-chart', data.linkedin.topPosts, 'impressions', 'Impressionen', '#0a66c2');
     renderLineChart('linkedin-follower-chart', data.linkedin.followerGrowth, 'Follower', '#0a66c2');
   }
 
-  // Mailchimp
   if (data.mailchimp) {
     renderMailchimpTrendChart(data.mailchimp.trend);
   }
 
-  // StudyCheck
   if (data.studycheck) {
     renderLineChart('studycheck-score-chart', data.studycheck.scoreHistory, 'Ø Score', '#00b67a');
   }
 
-  // YTD-Trends (nur bei Feb-Daten verfügbar)
   if (data.ytdTrends) {
-    renderYtdAusgabenChart(data.ytdTrends);
+    renderYtdSpendChart(data.ytdTrends);
     renderYtdConversionsChart(data.ytdTrends);
     renderYtdCpcChart(data.ytdTrends);
-    renderYtdImpressionenChart(data.ytdTrends);
+    renderYtdImpressionsChart(data.ytdTrends);
   }
 }
-
-/* ── Übersicht Charts ──────────────────────────────────────── */
 
 function renderDailySpendChart(overview) {
   const ctx = getCtx('daily-spend-chart');
@@ -190,8 +157,8 @@ function renderBudgetSplitChart(overview) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx) => {
-              const val = ctx.parsed;
+            label: (tooltipCtx) => {
+              const val = tooltipCtx.parsed;
               return `€${val.toLocaleString('de-DE', { minimumFractionDigits: 2 })}`;
             }
           }
@@ -201,15 +168,6 @@ function renderBudgetSplitChart(overview) {
   });
 }
 
-/* ── Generische Chart-Helfer ───────────────────────────────── */
-
-/**
- * Rendert einen einfachen Line-Chart.
- * @param {string} canvasId - ID des Canvas-Elements
- * @param {Object} chartData - { labels: string[], values: number[] }
- * @param {string} label - Datensatz-Label
- * @param {string} color - Linienfarbe
- */
 function renderLineChart(canvasId, chartData, label, color) {
   const ctx = getCtx(canvasId);
   if (!ctx || !chartData) return;
@@ -242,9 +200,6 @@ function renderLineChart(canvasId, chartData, label, color) {
   });
 }
 
-/**
- * Rendert ein Bar-Chart aus Top-Posts-Daten.
- */
 function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
   const ctx = getCtx(canvasId);
   if (!ctx || !posts) return;
@@ -316,8 +271,6 @@ function renderBarChartFromVideos(canvasId, videos, valueKey, label, color) {
   renderBarChartFromPosts(canvasId, videos, valueKey, label, color);
 }
 
-/* ── Mailchimp Trend ───────────────────────────────────────── */
-
 function renderMailchimpTrendChart(trend) {
   const ctx = getCtx('mailchimp-trend-chart');
   if (!ctx || !trend) return;
@@ -368,9 +321,7 @@ function renderMailchimpTrendChart(trend) {
   });
 }
 
-/* ── YTD Trend Charts ──────────────────────────────────────── */
-
-function renderYtdAusgabenChart(ytd) {
+function renderYtdSpendChart(ytd) {
   const ctx = getCtx('ytd-ausgaben-chart');
   if (!ctx) return;
   destroyChart('ytd-ausgaben-chart');
@@ -491,7 +442,7 @@ function renderYtdCpcChart(ytd) {
   });
 }
 
-function renderYtdImpressionenChart(ytd) {
+function renderYtdImpressionsChart(ytd) {
   const ctx = getCtx('ytd-impressionen-chart');
   if (!ctx) return;
   destroyChart('ytd-impressionen-chart');
@@ -519,23 +470,12 @@ function renderYtdImpressionenChart(ytd) {
   });
 }
 
-/* ── Utilities ─────────────────────────────────────────────── */
-
-/**
- * Holt den 2D-Context eines Canvas-Elements.
- * @param {string} id - Canvas-ID
- * @returns {CanvasRenderingContext2D|null}
- */
 function getCtx(id) {
   const canvas = document.getElementById(id);
   if (!canvas) return null;
   return canvas.getContext('2d');
 }
 
-/**
- * Zerstört eine bestehende Chart-Instanz.
- * @param {string} id - Chart-Key
- */
 function destroyChart(id) {
   if (chartInstances[id]) {
     chartInstances[id].destroy();
@@ -543,15 +483,11 @@ function destroyChart(id) {
   }
 }
 
-/**
- * Zerstört ALLE Chart-Instanzen (beim Monatswechsel).
- */
 export function destroyAllCharts() {
   Object.keys(chartInstances).forEach(id => {
     try { chartInstances[id].destroy(); } catch (_) {}
     delete chartInstances[id];
   });
-  // Remove external tooltip elements
   document.querySelectorAll('[id^="tooltip-"]').forEach(el => el.remove());
 }
 

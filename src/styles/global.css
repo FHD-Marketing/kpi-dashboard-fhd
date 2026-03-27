@@ -1,9 +1,3 @@
-/* ============================================================
-   FHD KPI DASHBOARD – GLOBAL STYLES
-   Alle CSS-Änderungen zentral in dieser Datei.
-   ============================================================ */
-
-/* ── Fonts ─────────────────────────────────────────────────── */
 @font-face {
     font-family: 'Inter';
     font-style: normal;
@@ -33,9 +27,9 @@
     src: url('/kpi-dashboard-fhd/fonts/inter-v19-latin-700.woff2') format('woff2');
 }
 
-/* ── Design Tokens (CSS Custom Properties) ─────────────────── */
+
 :root {
-    /* Background */
+    
     --bg-primary:      #0a0e1a;
     --bg-secondary:    #0f1629;
     --bg-card:         #111827;
@@ -45,13 +39,13 @@
     --bg-nav-active:   #3b82f6;
     --bg-input:        #1e293b;
 
-    /* Text */
+    
     --text-primary:    #f1f5f9;
     --text-secondary:  #94a3b8;
     --text-muted:      #64748b;
     --text-label:      #cbd5e1;
 
-    /* Accent colors */
+    
     --accent-blue:     #3b82f6;
     --accent-blue-dim: #2563eb;
     --accent-cyan:     #06b6d4;
@@ -62,7 +56,7 @@
     --accent-purple:   #a855f7;
     --accent-pink:     #ec4899;
 
-    /* Channel brand colors */
+    
     --color-google:    #4285f4;
     --color-meta:      #0668e1;
     --color-instagram: #e1306c;
@@ -72,17 +66,17 @@
     --color-mailchimp: #ffe01b;
     --color-studycheck:#00b67a;
 
-    /* Borders */
+    
     --border-color:    #1e293b;
     --border-subtle:   #1a2332;
 
-    /* Sizing */
+    
     --radius-sm:       6px;
     --radius-md:       10px;
     --radius-lg:       14px;
     --radius-xl:       20px;
 
-    /* Spacing */
+    
     --space-xs:        4px;
     --space-sm:        8px;
     --space-md:        16px;
@@ -90,17 +84,17 @@
     --space-xl:        32px;
     --space-2xl:       48px;
 
-    /* Shadows */
+    
     --shadow-card:     0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
     --shadow-elevated: 0 4px 24px rgba(0,0,0,.4);
 
-    /* Transitions */
+    
     --transition-fast: 150ms ease;
     --transition-base: 250ms ease;
     --transition-slow: 400ms ease;
 }
 
-/* ── Reset & Base ──────────────────────────────────────────── */
+
 *,
 *::before,
 *::after {
@@ -124,7 +118,7 @@ body {
     min-height: 100vh;
 }
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -140,7 +134,7 @@ body {
     background: var(--text-muted);
 }
 
-/* ── Dashboard Shell ───────────────────────────────────────── */
+
 .dashboard {
     max-width: 1200px;
     margin: 0 auto;
@@ -150,7 +144,7 @@ body {
     flex-direction: column;
 }
 
-/* ── Header ────────────────────────────────────────────────── */
+
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -183,7 +177,7 @@ body {
 }
 
 
-/* ── Year Selector ─────────────────────────────────────────── */
+
 .year-selector {
     display: flex;
     gap: var(--space-sm);
@@ -219,8 +213,13 @@ body {
     border-color: var(--accent-blue);
     font-weight: 600;
 }
+.year-btn.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: default;
+}
 
-/* ── Month Selector ────────────────────────────────────────── */
+
 .month-selector {
     display: flex;
     gap: var(--space-xs);
@@ -281,7 +280,7 @@ body {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* ── Tab Navigation ────────────────────────────────────────── */
+
 .tab-navigation-wrapper {
     display: flex;
     flex-direction: column;
@@ -350,7 +349,7 @@ body {
     cursor: default;
 }
 
-/* ── Empty State ───────────────────────────────────────────── */
+
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -377,7 +376,7 @@ body {
     max-width: 400px;
 }
 
-/* ── Loading State ─────────────────────────────────────────── */
+
 .loading-state {
     display: flex;
     flex-direction: column;
@@ -404,7 +403,7 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ── Tab Content ───────────────────────────────────────────── */
+
 .tab-content {
     display: none;
     animation: fadeIn var(--transition-base) ease;
@@ -418,7 +417,7 @@ body {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Card Loading Spinner ──────────────────────────────────── */
+
 .kpi-card-loading {
     position: absolute;
     inset: 0;
@@ -471,7 +470,7 @@ body {
     to   { opacity: 1; }
 }
 
-/* ── Section Title ─────────────────────────────────────────── */
+
 .section-title {
     display: flex;
     align-items: center;
@@ -489,7 +488,7 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* ── KPI Cards Grid ────────────────────────────────────────── */
+
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -503,7 +502,7 @@ body {
     grid-template-columns: repeat(3, 1fr);
 }
 
-/* ── KPI Card ──────────────────────────────────────────────── */
+
 .kpi-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
@@ -572,7 +571,7 @@ body {
     color: var(--accent-green);
     background: rgba(34,197,94,.1);
 }
-/* For metrics where "up" is good */
+
 .kpi-trend.positive {
     color: var(--accent-green);
     background: rgba(34,197,94,.1);
@@ -601,7 +600,7 @@ body {
     color: var(--text-muted);
 }
 
-/* ── Chart Container ───────────────────────────────────────── */
+
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -691,7 +690,7 @@ body {
     flex-shrink: 0;
 }
 
-/* ── Budget Cards ──────────────────────────────────────────── */
+
 .budget-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -788,7 +787,7 @@ body {
     color: var(--accent-green);
 }
 
-/* ── Campaign Sections (Meta Ads / Google Ads) ─────────────── */
+
 .campaign-section {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
@@ -863,7 +862,7 @@ body {
     background: var(--accent-green);
 }
 
-/* Campaign Metrics Grid */
+
 .campaign-metrics {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -891,7 +890,7 @@ body {
     font-weight: 700;
 }
 
-/* Campaign expand/collapse */
+
 .campaign-toggle-btn {
     display: inline-flex;
     align-items: center;
@@ -919,7 +918,7 @@ body {
     animation: fadeIn var(--transition-base) ease;
 }
 
-/* ── Data Table ────────────────────────────────────────────── */
+
 .data-table-wrapper {
     overflow-x: auto;
     margin-bottom: var(--space-xl);
@@ -955,7 +954,7 @@ body {
     color: var(--accent-red);
 }
 
-/* ── Empfehlungen (Recommendations) ────────────────────────── */
+
 .recommendation-list {
     display: flex;
     flex-direction: column;
@@ -977,7 +976,7 @@ body {
     transform: translateX(4px);
 }
 
-/* Severity coloring */
+
 .recommendation-card.high {
     background: rgba(239,68,68,.06);
     border-left-color: var(--accent-red);
@@ -1023,7 +1022,7 @@ body {
     color: var(--accent-yellow);
 }
 
-/* ── Summary Box ───────────────────────────────────────────── */
+
 .summary-box {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
@@ -1055,7 +1054,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* ── Google Ads Campaign Table ─────────────────────────────── */
+
 .google-campaign-card {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
@@ -1137,7 +1136,7 @@ body {
     color: var(--accent-red);
 }
 
-/* ── Horizontal Bar Chart (Google Ads Spend) ───────────────── */
+
 .horiz-bar-chart {
     display: flex;
     flex-direction: column;
@@ -1180,7 +1179,7 @@ body {
     color: var(--text-primary);
 }
 
-/* ── Sub-Tab (Filters within a Tab) ────────────────────────── */
+
 .sub-tabs {
     display: flex;
     gap: var(--space-xs);
@@ -1209,7 +1208,7 @@ body {
     color: #fff;
 }
 
-/* ── Footer ────────────────────────────────────────────────── */
+
 .dashboard-footer {
     display: flex;
     justify-content: space-between;
@@ -1221,7 +1220,7 @@ body {
     color: var(--text-muted);
 }
 
-/* ── Utility Classes ───────────────────────────────────────── */
+
 .text-green  { color: var(--accent-green); }
 .text-red    { color: var(--accent-red); }
 .text-blue   { color: var(--accent-blue); }
@@ -1234,7 +1233,7 @@ body {
 .mb-lg       { margin-bottom: var(--space-lg); }
 .mb-xl       { margin-bottom: var(--space-xl); }
 
-/* ── Channel color accents ─────────────────────────────────── */
+
 .channel-google    .kpi-card { border-top: 2px solid var(--color-google); }
 .channel-meta      .kpi-card { border-top: 2px solid var(--color-meta); }
 .channel-instagram .kpi-card { border-top: 2px solid var(--color-instagram); }
@@ -1244,7 +1243,7 @@ body {
 .channel-mailchimp .kpi-card { border-top: 2px solid var(--color-mailchimp); }
 .channel-studycheck .kpi-card { border-top: 2px solid var(--color-studycheck); }
 
-/* ── Responsive ────────────────────────────────────────────── */
+
 @media (max-width: 1200px) {
     .kpi-grid.cols-4 {
         grid-template-columns: repeat(2, 1fr);
@@ -1311,9 +1310,9 @@ body {
     }
 }
 
-/* ── Infomaterialanfragen ──────────────────────────────────── */
 
-/* Upload Area */
+
+
 .infomaterial-upload-area {
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-lg);
@@ -1387,7 +1386,7 @@ body {
     box-shadow: 0 4px 12px rgba(59,130,246,.3);
 }
 
-/* Upload Feedback */
+
 .upload-feedback {
     margin-top: var(--space-md);
     padding: var(--space-sm) var(--space-md);
@@ -1412,7 +1411,7 @@ body {
     border: 1px solid rgba(59,130,246,.2);
 }
 
-/* Faculty Grid */
+
 .infomaterial-faculty-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1498,7 +1497,7 @@ body {
     margin-top: var(--space-xs);
 }
 
-/* Studiengang Charts Grid */
+
 .infomaterial-charts-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1577,7 +1576,7 @@ body {
     width: 100% !important;
 }
 
-/* Empty State */
+
 .infomaterial-empty-state {
     grid-column: 1 / -1;
     text-align: center;
@@ -1586,18 +1585,18 @@ body {
     font-size: 0.9rem;
 }
 
-/* Placeholder cards */
+
 .placeholder-card .faculty-value {
     color: var(--text-muted);
     opacity: 0.5;
 }
 
-/* Utility */
+
 .mb-md {
     margin-bottom: var(--space-md);
 }
 
-/* Medium screens */
+
 @media (max-width: 900px) {
     .infomaterial-faculty-grid {
         grid-template-columns: 1fr 1fr;

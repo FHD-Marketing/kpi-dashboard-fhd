@@ -14,7 +14,6 @@ import '../styles/global.css';
 <body>
 <div class="dashboard">
 
-  <!-- ═══ HEADER ═══ -->
   <header class="dashboard-header">
     <div class="header-left">
       <div class="header-label">Performance Dashboard 2026</div>
@@ -23,7 +22,6 @@ import '../styles/global.css';
     </div>
   </header>
 
-  <!-- ═══ YEAR SELECTOR ═══ -->
   <nav class="year-selector">
     <button class="year-btn active" data-year="2026">2026</button>
     <button class="year-btn" data-year="2027">2027</button>
@@ -32,7 +30,6 @@ import '../styles/global.css';
     <button class="year-btn" data-year="2030">2030</button>
   </nav>
 
-  <!-- ═══ MONTH SELECTOR ═══ -->
   <nav class="month-selector">
     <button class="month-btn disabled" data-month="jan"><span class="month-label">Jan</span><span class="month-spend"></span></button>
     <button class="month-btn disabled" data-month="feb"><span class="month-label">Feb</span><span class="month-spend"></span></button>
@@ -48,10 +45,10 @@ import '../styles/global.css';
     <button class="month-btn disabled" data-month="dec"><span class="month-label">Dez</span><span class="month-spend"></span></button>
   </nav>
 
-  <!-- ═══ TAB NAVIGATION ═══ -->
   <div class="tab-navigation-wrapper">
     <nav class="tab-navigation" data-row="echtzeit">
       <span class="tab-row-label">Echtzeit</span>
+      <button class="tab-btn disabled" data-tab="uebersicht"><span class="tab-icon">📊</span> Übersicht</button>
       <button class="tab-btn disabled" data-tab="google"><span class="tab-icon">🔵</span> Google Ads</button>
       <button class="tab-btn disabled" data-tab="meta"><span class="tab-icon">🟦</span> Meta Ads</button>
       <button class="tab-btn disabled" data-tab="instagram"><span class="tab-icon">📸</span> Instagram</button>
@@ -59,7 +56,6 @@ import '../styles/global.css';
       <button class="tab-btn disabled" data-tab="tiktok"><span class="tab-icon">🎵</span> TikTok</button>
       <button class="tab-btn disabled" data-tab="linkedin"><span class="tab-icon">💼</span> LinkedIn</button>
       <button class="tab-btn disabled" data-tab="mailchimp"><span class="tab-icon">📧</span> Mailchimp</button>
-      <button class="tab-btn disabled" data-tab="ytd"><span class="tab-icon">📈</span> YTD-Trends</button>
     </nav>
     <nav class="tab-navigation" data-row="manuell">
       <span class="tab-row-label">Manuell</span>
@@ -68,7 +64,6 @@ import '../styles/global.css';
     </nav>
   </div>
 
-  <!-- ═══ LADEANIMATION ═══ -->
   <section id="loading-state" class="tab-content active">
     <div class="loading-state">
       <div class="loading-spinner"></div>
@@ -76,15 +71,13 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ KEIN MONAT AUSGEWÄHLT ═══ -->
   <section id="tab-empty" class="tab-content">
     <div class="empty-state">
-      <h2>Kein Monat mit Daten verfügbar</h2>
-      <p>Sobald Daten aus der Datenbank geladen werden, erscheinen die Monate oben als aktiv.</p>
+      <h2>Keine API-Daten für diesen Monat</h2>
+      <p>Es sind noch keine Echtzeit-Daten für diesen Monat verfügbar. Die manuellen Tabs (StudyCheck, Infomaterial) können trotzdem genutzt werden.</p>
     </div>
   </section>
 
-  <!-- ═══ TAB: ÜBERSICHT ═══ -->
   <section id="tab-uebersicht" class="tab-content">
     <h2 class="section-title" id="overview-title"><span class="title-icon">📊</span> Übersicht</h2>
     <p class="section-subtitle">Alle Kanäle auf einen Blick</p>
@@ -189,9 +182,23 @@ import '../styles/global.css';
         <div class="budget-footer"><span></span><span class="budget-diff"></span></div>
       </div>
     </div>
+
+    <h3 class="section-title mb-md" id="ytd-trends-title"><span class="title-icon">📈</span> Year-to-Date Trends</h3>
+    <p class="section-subtitle">Monatlicher Vergleich</p>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Monatliche Ausgaben — Plan vs. Ist</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-ausgaben-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Conversions / Leads</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-conversions-chart"></canvas></div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">CPC-Entwicklung</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-cpc-chart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Impressionen pro Monat</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-impressionen-chart"></canvas></div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header"><span class="chart-card-title">Monatsvergleich — KPIs</span></div>
+      <div class="data-table-wrapper"><table class="data-table" id="ytd-comparison-table"><thead><tr><th>Monat</th><th>Plan</th><th>Ist</th><th>Δ Budget</th><th>Klicks</th><th>Conv./Leads</th><th>Ø CPC</th></tr></thead><tbody></tbody></table></div>
+    </div>
   </section>
 
-  <!-- ═══ TAB: GOOGLE ADS ═══ -->
   <section id="tab-google" class="tab-content">
     <h2 class="section-title" id="google-title"><span class="title-icon">🔵</span> Google Ads Kampagnen</h2>
     <p class="section-subtitle">Klicke auf eine Kampagne, um Details zu sehen</p>
@@ -223,7 +230,6 @@ import '../styles/global.css';
     <div id="google-campaign-cards"></div>
   </section>
 
-  <!-- ═══ TAB: META ADS ═══ -->
   <section id="tab-meta" class="tab-content">
     <h2 class="section-title" id="meta-title"><span class="title-icon">🟦</span> Meta Kampagnen</h2>
     <p class="section-subtitle">Klicke auf eine Kampagne, um die Anzeigengruppen zu sehen</p>
@@ -250,7 +256,6 @@ import '../styles/global.css';
     <div id="meta-campaign-sections"></div>
   </section>
 
-  <!-- ═══ TAB: INSTAGRAM ═══ -->
   <section id="tab-instagram" class="tab-content">
     <h2 class="section-title" id="instagram-title"><span class="title-icon">📸</span> Instagram</h2>
     <p class="section-subtitle">Organische Performance</p>
@@ -266,7 +271,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: YOUTUBE ═══ -->
   <section id="tab-youtube" class="tab-content">
     <h2 class="section-title" id="youtube-title"><span class="title-icon">▶️</span> YouTube</h2>
     <p class="section-subtitle">Kanal-Performance</p>
@@ -282,7 +286,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: TIKTOK ═══ -->
   <section id="tab-tiktok" class="tab-content">
     <h2 class="section-title" id="tiktok-title"><span class="title-icon">🎵</span> TikTok</h2>
     <p class="section-subtitle">Kanal-Performance</p>
@@ -298,7 +301,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: LINKEDIN ═══ -->
   <section id="tab-linkedin" class="tab-content">
     <h2 class="section-title" id="linkedin-title"><span class="title-icon">💼</span> LinkedIn</h2>
     <p class="section-subtitle">Unternehmensseite Performance</p>
@@ -314,7 +316,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: MAILCHIMP ═══ -->
   <section id="tab-mailchimp" class="tab-content">
     <h2 class="section-title" id="mailchimp-title"><span class="title-icon">📧</span> Mailchimp</h2>
     <p class="section-subtitle">E-Mail Marketing Performance</p>
@@ -333,7 +334,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: STUDYCHECK ═══ -->
   <section id="tab-studycheck" class="tab-content">
     <h2 class="section-title" id="studycheck-title"><span class="title-icon">⭐</span> StudyCheck</h2>
     <p class="section-subtitle">Bewertungsportal Performance</p>
@@ -352,12 +352,10 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: INFOMATERIALANFRAGEN ═══ -->
   <section id="tab-infomaterial" class="tab-content">
     <h2 class="section-title" id="infomaterial-title"><span class="title-icon">📥</span> Infomaterialanfragen</h2>
     <p class="section-subtitle">Übersicht der angeforderten Materialien nach Studiengang</p>
 
-    <!-- Upload Area -->
     <div class="infomaterial-upload-area" id="infomaterial-upload-area">
       <input type="file" id="infomaterial-file-input" accept=".xlsx,.xls" hidden />
       <div class="upload-content">
@@ -371,7 +369,6 @@ import '../styles/global.css';
       <div class="upload-feedback" id="infomaterial-upload-feedback" style="display:none"></div>
     </div>
 
-    <!-- KPI Summary -->
     <div class="kpi-grid cols-4 channel-infomaterial">
       <div class="kpi-card" data-kpi="infomaterial-gesamt"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📊</span> ANFRAGEN GESAMT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="infomaterial-bachelor"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎓</span> BACHELOR</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -379,7 +376,6 @@ import '../styles/global.css';
       <div class="kpi-card" data-kpi="infomaterial-veraenderung"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📈</span> VERÄNDERUNG</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
     </div>
 
-    <!-- Fakultäts-Zusammenfassung -->
     <h3 class="section-title mb-md"><span class="title-icon">🏛️</span> Fakultäten</h3>
     <div class="infomaterial-faculty-grid" id="infomaterial-faculty-cards">
       <div class="infomaterial-faculty-card placeholder-card">
@@ -396,7 +392,6 @@ import '../styles/global.css';
       </div>
     </div>
 
-    <!-- Studiengang-Charts -->
     <h3 class="section-title mb-md"><span class="title-icon">📊</span> Anfragen pro Studiengang</h3>
     <p class="section-subtitle">Vergleich zum Vormonat</p>
     <div class="infomaterial-charts-grid" id="infomaterial-charts-container">
@@ -406,32 +401,14 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: YTD-TRENDS ═══ -->
-  <section id="tab-ytd" class="tab-content">
-    <h2 class="section-title"><span class="title-icon">📈</span> Year-to-Date Trends</h2>
-    <p class="section-subtitle">Monatlicher Vergleich</p>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Monatliche Ausgaben — Plan vs. Ist</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-ausgaben-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Conversions / Leads</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-conversions-chart"></canvas></div></div>
-    </div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">CPC-Entwicklung</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-cpc-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Impressionen pro Monat</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-impressionen-chart"></canvas></div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-header"><span class="chart-card-title">Monatsvergleich — KPIs</span></div>
-      <div class="data-table-wrapper"><table class="data-table" id="ytd-comparison-table"><thead><tr><th>Monat</th><th>Plan</th><th>Ist</th><th>Δ Budget</th><th>Klicks</th><th>Conv./Leads</th><th>Ø CPC</th></tr></thead><tbody></tbody></table></div>
-    </div>
-  </section>
 
-  <!-- ═══ FOOTER ═══ -->
+
   <footer class="dashboard-footer">
     <span>FHD Performance Dashboard 2026</span>
     <span>Datenquelle: Datenbank · Automatisch aktualisiert</span>
   </footer>
 </div>
 
-<!-- ═══ SCRIPTS ═══ -->
 <script>
   import { initTabNavigation } from '../scripts/tab-navigation.js';
   import { initMonthSelector, refreshMonthButtons, activateLatestMonth } from '../scripts/month-selector.js';
@@ -449,39 +426,19 @@ import '../styles/global.css';
     initInfomaterial();
 
     const loadingEl = document.getElementById('loading-state');
-    const emptyEl = document.getElementById('tab-empty');
 
     try {
-      const months = await fetchMonths();
-
+      await fetchMonths();
       if (loadingEl) loadingEl.classList.remove('active');
-
       refreshMonthButtons();
-
-      if (months.length > 0) {
-        activateLatestMonth();
-      } else {
-        if (emptyEl) {
-          emptyEl.classList.add('active');
-          const h2 = emptyEl.querySelector('h2');
-          if (h2) h2.textContent = 'Keine Daten vorhanden';
-          const p = emptyEl.querySelector('p');
-          if (p) p.textContent = 'Die API hat keine Monatsdaten zurückgegeben.';
-        }
-      }
-
+      activateLatestMonth();
       setTimeout(() => { initCharts(); }, 200);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
       console.error('Failed to load dashboard data:', err);
       if (loadingEl) loadingEl.classList.remove('active');
-      if (emptyEl) {
-        emptyEl.classList.add('active');
-        const h2 = emptyEl.querySelector('h2');
-        if (h2) h2.textContent = 'Fehler beim Laden der Daten';
-        const p = emptyEl.querySelector('p');
-        if (p) p.textContent = `API nicht erreichbar oder Fehler aufgetreten. (${msg})`;
-      }
+      refreshMonthButtons();
+      activateLatestMonth();
+      setTimeout(() => { initCharts(); }, 200);
     }
   });
 </script>

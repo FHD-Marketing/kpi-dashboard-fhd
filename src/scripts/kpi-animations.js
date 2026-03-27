@@ -59,12 +59,10 @@ function formatNumber(val, template) {
 }
 
 export function initKpiAnimations() {
-  // Animate after data finished loading
   document.addEventListener('dataReady', () => {
     setTimeout(() => animateVisibleCards(), 50);
   });
 
-  // Animate on tab switch only if data is already loaded
   document.addEventListener('tabChanged', () => {
     setTimeout(() => {
       const activeTab = document.querySelector('.tab-content.active');
@@ -81,33 +79,24 @@ function animateVisibleCards() {
   const activeTab = document.querySelector('.tab-content.active');
   if (!activeTab) return;
 
-  // Collect all animatable cards
   const cards = Array.from(activeTab.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card'));
   if (cards.length === 0) return;
 
-  // Randomized delays (each card gets a random slot)
-  const baseDelay = 40;  // ms between cards
-  const indices = cards.map((_, i) => i);
-  // Shuffle
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
+  const totalWindow = 500;
+  const step = cards.length > 1 ? totalWindow / (cards.length - 1) : 0;
 
-  let maxDelay = 0;
   cards.forEach((card, i) => {
     card.classList.remove('kpi-pop');
-    void card.offsetWidth; // force reflow
-    const delay = indices[i] * baseDelay;
-    if (delay > maxDelay) maxDelay = delay;
+    void card.offsetWidth;
+    const delay = Math.round(i * step);
     card.style.setProperty('--kpi-delay', delay + 'ms');
     card.classList.remove('kpi-hidden');
     card.classList.add('kpi-pop');
 
-    // Start count-up simultaneously with the pop animation
     const kpiValue = card.querySelector('.kpi-value');
     if (kpiValue) {
-      setTimeout(() => countUp(kpiValue, 700), delay + 100);
+      setTimeout(() => countUp(kpiValue, 700), delay + 50);
     }
   });
 }
+

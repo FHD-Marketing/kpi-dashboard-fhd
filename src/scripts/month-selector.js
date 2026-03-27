@@ -1,15 +1,10 @@
-/**
- * FHD KPI Dashboard – Month Selector
- * @module month-selector
- */
-
 import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached } from './data.js';
 import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab } from './infomaterial.js';
 import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
-let loadGeneration = 0;   // Guard gegen Race-Conditions bei schnellem Monatswechsel
+let loadGeneration = 0;
 
 export function getCurrentMonth() {
   return currentMonth;
@@ -18,43 +13,48 @@ export function getCurrentMonth() {
 export function refreshMonthButtons() {
   const allMonthBtns = document.querySelectorAll('.month-btn');
   const available = getAvailableMonths();
+  const currentMonthIndex = new Date().getMonth();
 
   let popIndex = 0;
-  allMonthBtns.forEach(btn => {
+  allMonthBtns.forEach((btn, index) => {
     const month = btn.dataset.month;
     if (!month) return;
 
-    // Remove old animation class
     btn.classList.remove('month-pop-in');
 
-    if (available.includes(month)) {
+    if (index <= currentMonthIndex) {
       btn.classList.remove('disabled');
+
       const data = getMonthData(month);
       const spendEl = btn.querySelector('.month-spend');
-      if (spendEl && data && data.totalSpend) {
-        spendEl.textContent = data.totalSpend;
+      if (spendEl) {
+        spendEl.textContent = (data && data.totalSpend) ? data.totalSpend : '';
       }
-      // Staggered pop-in animation
+
+      if (available.includes(month)) {
+        btn.classList.add('has-data');
+      } else {
+        btn.classList.remove('has-data');
+      }
+
       btn.style.setProperty('--pop-delay', (popIndex * 80) + 'ms');
-      // Force reflow so animation replays
       void btn.offsetWidth;
       btn.classList.add('month-pop-in');
       popIndex++;
     } else {
       btn.classList.add('disabled');
+      btn.classList.remove('has-data');
     }
   });
 }
 
 export function activateLatestMonth() {
-  const available = getAvailableMonths();
-  if (available.length === 0) return;
-
-  const latest = available[available.length - 1];
-  selectMonth(latest);
+  const monthOrder = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const currentMonthIdx = new Date().getMonth();
+  const currentMonthKey = monthOrder[currentMonthIdx];
+  selectMonth(currentMonthKey);
 }
 
-/* ── Reset all KPI values and dynamic containers ─────────── */
 function resetTabContents() {
   destroyAllCharts();
 
@@ -83,23 +83,21 @@ function resetTabContents() {
 
   document.querySelectorAll('[data-budget]').forEach(card => {
     const planEl = card.querySelector('.budget-plan span');
-    const istEl = card.querySelector('.budget-actual span');
+    const actualEl = card.querySelector('.budget-actual span');
     const barFill = card.querySelector('.budget-bar-fill');
     const diffEl = card.querySelector('.budget-diff');
     if (planEl) planEl.textContent = '—';
-    if (istEl) istEl.textContent = '—';
+    if (actualEl) actualEl.textContent = '—';
     if (barFill) { barFill.style.width = '0%'; barFill.className = 'budget-bar-fill'; }
     if (diffEl) { diffEl.textContent = ''; diffEl.className = 'budget-diff'; }
   });
 
-  // Hide all cards until animation triggers them
   document.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card').forEach(card => {
     card.classList.remove('kpi-pop');
     card.classList.add('kpi-hidden');
   });
 }
 
-/* ── Show / hide global loading state ────────────────────── */
 function showGlobalLoading() {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   const loading = document.getElementById('loading-state');
@@ -111,7 +109,6 @@ function hideGlobalLoading() {
   if (loading) loading.classList.remove('active');
 }
 
-/* ── Main month selection ────────────────────────────────── */
 async function selectMonth(month) {
   const myGen = ++loadGeneration;
 
@@ -121,18 +118,15 @@ async function selectMonth(month) {
   const btn = document.querySelector(`.month-btn[data-month="${month}"]`);
   if (btn) btn.classList.add('active');
 
-  // Clear old month data from cache
   if (currentMonth && currentMonth !== month) {
     clearMonthChannels(currentMonth);
   }
 
   currentMonth = month;
 
-  // 1. Reset everything + show global "Daten werden geladen…"
   resetTabContents();
   showGlobalLoading();
 
-  // 2. Fetch overview (core data: overview + googleAds + metaAds)
   try {
     await fetchOverview(month);
   } catch (err) {
@@ -141,7 +135,6 @@ async function selectMonth(month) {
 
   if (myGen !== loadGeneration) return;
 
-  // 3. Fetch all remaining channels
   const channels = getAvailableChannelsForMonth(month);
   const toFetch = channels.filter(ch => !isChannelCached(ch, month));
 
@@ -154,50 +147,55 @@ async function selectMonth(month) {
     }
   }
 
+  if (!isChannelCached('infomaterial', month)) {
+    try {
+      await fetchChannel('infomaterial', month);
+    } catch (_) {
+    }
+  }
+
   if (myGen !== loadGeneration) return;
 
-  // 4. ALL data loaded – render everything
   updateTabAvailability(month);
   updateDashboardData(month);
 
-  // 4b. Mark all cards (including dynamically created ones) as hidden before animation
   const animatableSelector = '.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card';
   document.querySelectorAll(animatableSelector).forEach(card => {
     card.classList.remove('kpi-pop');
     card.classList.add('kpi-hidden');
   });
 
-  // 5. Hide loading, show overview
   hideGlobalLoading();
   activateFirstAvailableTab();
 
-  // 6. Fire events for charts + animations
   document.dispatchEvent(new CustomEvent('monthChanged', { detail: { month } }));
   document.dispatchEvent(new CustomEvent('dataReady'));
 }
 
 function updateTabAvailability(month) {
+  const data = getMonthData(month);
+  const hasApiData = data && data._availableChannels;
+
   const tabBtns = document.querySelectorAll('.tab-btn');
   tabBtns.forEach(btn => {
     const tab = btn.dataset.tab;
     if (!tab) return;
-    // Infomaterial tab is always enabled (data comes from manual upload)
-    if (tab === 'infomaterial') {
+
+    // Overview and manual tabs are always available for all unlocked months
+    if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck') {
       btn.classList.remove('disabled');
       return;
     }
-    // YTD always enabled if overview exists
-    if (tab === 'ytd') {
-      const data = getMonthData(month);
-      if (data && data._availableChannels) {
-        btn.classList.remove('disabled');
-      }
+
+    if (!hasApiData) {
+      btn.classList.add('disabled');
+      btn.classList.remove('active');
       return;
     }
+
     if (hasDataForTab(month, tab)) {
       btn.classList.remove('disabled');
     } else {
-      // Check if channel is available (will be prefetched)
       const channels = getAvailableChannelsForMonth(month);
       const channelMap = { google: 'googleAds', meta: 'metaAds', instagram: 'instagram', youtube: 'youtube', tiktok: 'tiktok', linkedin: 'linkedin', mailchimp: 'mailchimp' };
       if (channelMap[tab] && channels.includes(channelMap[tab])) {
@@ -210,22 +208,23 @@ function updateTabAvailability(month) {
   });
 }
 
-async function activateFirstAvailableTab() {
+function activateFirstAvailableTab() {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
   tabBtns.forEach(b => b.classList.remove('active'));
   tabContents.forEach(c => c.classList.remove('active'));
 
-  // Immer zuerst die Übersicht anzeigen
+  // Overview is always the default tab
+  const overviewBtn = document.querySelector('.tab-btn[data-tab="uebersicht"]');
   const overview = document.getElementById('tab-uebersicht');
-  if (overview) {
-    overview.classList.add('active');
+  if (overviewBtn && !overviewBtn.classList.contains('disabled')) {
+    overviewBtn.classList.add('active');
+    if (overview) overview.classList.add('active');
     document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: 'uebersicht' } }));
     return;
   }
 
-  // Fallback: ersten verfügbaren Tab aktivieren
   const availableBtns = document.querySelectorAll('.tab-btn:not(.disabled)');
   if (availableBtns.length > 0) {
     const first = availableBtns[0];
@@ -258,9 +257,22 @@ export function initMonthSelector() {
     selectMonth(month);
   });
 
+  initYearSelector();
+}
+
+function initYearSelector() {
+  const currentYear = new Date().getFullYear();
   const yearButtons = document.querySelectorAll('.year-btn');
+
   yearButtons.forEach(btn => {
+    const year = parseInt(btn.dataset.year, 10);
+    if (year > currentYear) {
+      btn.classList.add('disabled');
+      btn.setAttribute('disabled', 'true');
+    }
+
     btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
       yearButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
@@ -274,9 +286,10 @@ export function updateDashboardData(month) {
   const prevMonthKey = getPreviousMonthKey(month);
   const prevData = prevMonthKey ? getMonthData(prevMonthKey) : null;
 
+  // Month names for frontend display (German)
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
-  const mName = monthNames[month] || month;
-  const titleSuffix = ` — ${mName} 2026`;
+  const displayName = monthNames[month] || month;
+  const titleSuffix = ` — ${displayName} 2026`;
 
   const titleIds = ['overview-title', 'google-title', 'meta-title', 'instagram-title', 'youtube-title', 'tiktok-title', 'linkedin-title', 'mailchimp-title', 'studycheck-title', 'infomaterial-title'];
   titleIds.forEach(id => {
@@ -318,7 +331,6 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
       if (el) {
         const valueEl = el.querySelector('.kpi-value');
 
-        // Format raw numbers with thousand separators
         let displayValue = val.value;
         if (typeof displayValue === 'number' && Number.isFinite(displayValue)) {
           displayValue = displayValue.toLocaleString('de-DE');
@@ -326,7 +338,6 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
           displayValue = Number(displayValue).toLocaleString('de-DE');
         }
 
-        // Delta mode: value is "+34" or "-12", detail is "2.015 gesamt"
         if (val.deltaMode) {
           if (valueEl) {
             valueEl.textContent = displayValue;
@@ -334,13 +345,11 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
             valueEl.classList.remove('delta-positive', 'delta-negative');
             valueEl.classList.add(val.positive !== false ? 'delta-positive' : 'delta-negative');
           }
-          // Hide trend badge entirely for delta-mode cards
           const trendEl = el.querySelector('.kpi-trend');
           if (trendEl) {
             trendEl.textContent = '';
             trendEl.style.display = 'none';
           }
-          // Show total in detail
           const detailEl = el.querySelector('.kpi-detail');
           if (detailEl && val.detail) detailEl.textContent = val.detail;
           return;
@@ -385,12 +394,12 @@ function updateBudgetCards(budgetData) {
     if (!card) return;
 
     const planEl = card.querySelector('.budget-plan span');
-    const istEl = card.querySelector('.budget-actual span');
+    const actualEl = card.querySelector('.budget-actual span');
     const barFill = card.querySelector('.budget-bar-fill');
     const diffEl = card.querySelector('.budget-diff');
 
     if (planEl) planEl.textContent = val.plan;
-    if (istEl) istEl.textContent = val.ist;
+    if (actualEl) actualEl.textContent = val.ist;
     if (barFill) {
       barFill.style.width = `${Math.min(val.pct, 100)}%`;
       barFill.className = `budget-bar-fill ${val.status}`;

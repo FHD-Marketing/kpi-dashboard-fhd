@@ -18,8 +18,7 @@ const tabToDataKey = {
   linkedin: 'linkedin',
   mailchimp: 'mailchimp',
   studycheck: 'studycheck',
-  infomaterial: 'infomaterial',
-  ytd: 'ytdTrends'
+  infomaterial: 'infomaterial'
 };
 
 const dataKeyToChannel = {
@@ -29,9 +28,9 @@ const dataKeyToChannel = {
   youtube: 'youtube',
   linkedin: 'linkedin',
   mailchimp: 'mailchimp',
+  infomaterial: 'infomaterial',
 };
 
-// ── Fetch helper with API key ──
 async function apiFetch(path) {
   const cacheKey = path;
   if (cache[cacheKey]) return cache[cacheKey];
@@ -39,7 +38,7 @@ async function apiFetch(path) {
   const url = `${API_BASE}${path}`;
 
   if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE ist nicht gesetzt – .env prüfen und neu bauen');
+    console.error('[KPI] PUBLIC_API_BASE is not set');
     return null;
   }
 
@@ -49,7 +48,7 @@ async function apiFetch(path) {
       headers: { 'x-api-key': API_KEY },
     });
   } catch (err) {
-    console.error(`[KPI] Netzwerkfehler bei ${url}:`, err.message);
+    console.error(`[KPI] Network error for ${url}:`, err.message);
     return null;
   }
 
@@ -61,7 +60,6 @@ async function apiFetch(path) {
 
   const data = await res.json();
 
-  // Treat API-level error responses as failures
   if (data && typeof data === 'object' && 'error' in data) {
     console.error(`[KPI] API ${path} returned error:`, data.error || '(empty)');
     return null;
@@ -71,19 +69,10 @@ async function apiFetch(path) {
   return data;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PUBLIC API
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Fetch available months from the API.
- * Returns array of short month keys that have data (e.g. ['jan', 'mar']).
- */
 export async function fetchMonths() {
   const data = await apiFetch('/api/months');
   monthsMeta = data || {};
 
-  // Populate dashboardData with month metadata
   Object.entries(monthsMeta).forEach(([key, meta]) => {
     if (!dashboardData[key]) dashboardData[key] = {};
     dashboardData[key].label = meta.label;
@@ -94,14 +83,10 @@ export async function fetchMonths() {
   return Object.keys(monthsMeta);
 }
 
-/**
- * Fetch overview data (overview + googleAds + metaAds) for a month.
- */
 export async function fetchOverview(monthShort) {
   const data = await apiFetch(`/api/overview/${monthShort}`);
   if (!data) return null;
 
-  // Merge into dashboardData
   if (!dashboardData[monthShort]) dashboardData[monthShort] = {};
   if (data.overview) dashboardData[monthShort].overview = data.overview;
   if (data.googleAds) dashboardData[monthShort].googleAds = data.googleAds;
@@ -110,41 +95,25 @@ export async function fetchOverview(monthShort) {
   return data;
 }
 
-/**
- * Fetch data for a specific channel in a month.
- * channel: 'googleAds' | 'metaAds' | 'instagram' | 'youtube' | 'linkedin' | 'mailchimp'
- */
 export async function fetchChannel(channel, monthShort) {
   const data = await apiFetch(`/api/channel/${channel}/${monthShort}`);
   if (!data) return null;
 
-  // Merge into dashboardData
   if (!dashboardData[monthShort]) dashboardData[monthShort] = {};
   dashboardData[monthShort][channel] = data;
 
   return data;
 }
 
-/**
- * Check if channel data is already cached locally.
- */
 export function isChannelCached(channel, monthShort) {
   return !!(dashboardData[monthShort] && dashboardData[monthShort][channel]);
 }
 
-/**
- * Get the channel API name for a tab id.
- */
 export function getChannelForTab(tabId) {
   const dataKey = tabToDataKey[tabId];
   return dataKeyToChannel[dataKey] || null;
 }
 
-// ── Clear / Reset ──
-
-/**
- * Clears cached channel data for a month (keeps label/totalSpend metadata).
- */
 export function clearMonthChannels(monthShort) {
   const keep = ['label', 'totalSpend', '_availableChannels'];
   const data = dashboardData[monthShort];
@@ -152,22 +121,16 @@ export function clearMonthChannels(monthShort) {
   Object.keys(data).forEach(k => {
     if (!keep.includes(k)) delete data[k];
   });
-  // Also purge fetch cache for that month
   Object.keys(cache).forEach(k => {
     if (k.includes('/' + monthShort)) delete cache[k];
   });
 }
 
-/**
- * Returns array of channel API names available for a month.
- */
 export function getAvailableChannelsForMonth(monthShort) {
   const data = dashboardData[monthShort];
   if (!data || !data._availableChannels) return [];
   return data._availableChannels;
 }
-
-// ── Legacy-compatible exports ──
 
 export function getMonthData(month) {
   return dashboardData[month] || null;
@@ -195,7 +158,6 @@ export function hasDataForTab(monthKey, tabId) {
   const key = tabToDataKey[tabId];
   if (!key) return false;
 
-  // Check if we have it cached already
   const section = data[key];
   if (section && typeof section === 'object') {
     const vals = Object.values(section);
@@ -208,7 +170,6 @@ export function hasDataForTab(monthKey, tabId) {
     return false;
   }
 
-  // Otherwise check availableChannels from /api/months metadata
   const channelName = dataKeyToChannel[key];
   if (channelName && data._availableChannels) {
     return data._availableChannels.includes(channelName);
@@ -220,3 +181,29 @@ export function hasDataForTab(monthKey, tabId) {
 export function getMonthOrder() {
   return monthOrder;
 }
+
+export async function uploadInfomaterialTable(tableData) {
+  const url = `${API_BASE}/api/table`;
+
+  if (!API_BASE) {
+    console.error('[KPI] PUBLIC_API_BASE is not set');
+    throw new Error('API base not configured');
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify(tableData),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API /api/table → HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+

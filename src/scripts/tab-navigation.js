@@ -1,8 +1,3 @@
-/**
- * FHD KPI Dashboard – Tab Navigation
- * @module tab-navigation
- */
-
 import { getCurrentMonth, updateDashboardData } from './month-selector.js';
 
 export function initTabNavigation() {
@@ -24,7 +19,6 @@ export function initTabNavigation() {
         target.classList.add('active');
       }
 
-      // All data is already loaded by selectMonth – just re-render
       const month = getCurrentMonth();
       if (month) {
         updateDashboardData(month);
@@ -83,4 +77,3 @@ export function showOverview() {
 
   document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: 'uebersicht' } }));
 }
-
