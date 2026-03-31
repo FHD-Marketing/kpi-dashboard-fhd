@@ -2,14 +2,15 @@ name: Fetch Data
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '0 * * * *'
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  fetch-and-save:
+  fetch-hourly:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,18 +23,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Fetch YouTube data
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-youtube.js
-        continue-on-error: true
 
       - name: Fetch Mailchimp data
         env:
@@ -95,5 +84,32 @@ jobs:
 #          DB_NAME: ${{ secrets.DB_NAME }}
 #        run: node src/scripts/fetching/fetch-data-linkedin.js
 #        continue-on-error: true
+
+  fetch-youtube:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 */3 * * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Fetch YouTube data
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node src/scripts/fetching/fetch-data-youtube.js
+        continue-on-error: true
 
 
