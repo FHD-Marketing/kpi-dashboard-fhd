@@ -220,7 +220,8 @@ async function run() {
 
     console.log(`Fetched ${campaigns.length} campaigns. Summary:`, JSON.stringify(summary));
 
-    await saveToMySQL(summary, campaigns, monthKey, today);
+    const dbDate = startOfMonth;
+    await saveToMySQL(summary, campaigns, monthKey, dbDate);
 
     console.log('Google Ads data saved successfully.');
     process.exit(0);

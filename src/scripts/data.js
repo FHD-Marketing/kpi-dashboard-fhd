@@ -37,7 +37,7 @@ async function apiFetch(path) {
   const cacheKey = path;
   if (cache[cacheKey]) return cache[cacheKey];
 
-  const url = `${API_BASE}${path}`;
+  const url = `${API_BASE}${path}?_t=${Date.now()}`;
 
   if (!API_BASE) {
     console.error('[KPI] PUBLIC_API_BASE is not set');

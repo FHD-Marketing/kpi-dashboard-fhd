@@ -270,6 +270,8 @@ async function run() {
 
     console.log(`Fetching Meta Ads data for ${monthKey} (${startOfMonth} to ${today})...`);
 
+    const dbDate = startOfMonth;
+
     const summary = await fetchAccountInsights(startOfMonth, today);
     if (summary) {
       console.log(`Account summary retrieved. Spend: ${summary.spend}`);
@@ -305,7 +307,7 @@ async function run() {
 
     console.log('Campaign metrics processed successfully.');
 
-    await saveToMySQL(summary, campaigns, monthKey, today);
+    await saveToMySQL(summary, campaigns, monthKey, dbDate);
     console.log('Meta Ads fetch done.');
   } catch (error) {
     console.error('Error during Meta Ads fetch:', error.message);

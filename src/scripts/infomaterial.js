@@ -33,6 +33,12 @@ export function renderInfomaterialTab(monthKey) {
 
   const info = data.infomaterial;
 
+  const rawGesamt = info.gesamt && info.gesamt.value;
+  const gesamtNum = typeof rawGesamt === 'number'
+    ? rawGesamt
+    : parseInt(String(rawGesamt || '0').replace(/\./g, '').replace(',', '.'), 10);
+  if (!gesamtNum || gesamtNum <= 0) return;
+
   updateInfoKpis(info, monthKey);
   renderFacultySummary(info, monthKey);
   renderProgramCharts(info, monthKey);
