@@ -465,12 +465,11 @@ async function saveToMySQL(channelData, monthKey, channelTotals, monthlyTopVideo
       console.log(`${channelData.length} days saved to ${statsTable}.`);
     }
 
+    await db.query(`TRUNCATE TABLE \`${totalsTable}\``);
+
     const totalsQuery = `
       INSERT INTO \`${totalsTable}\` (date, total_views, total_likes, total_subscribers, total_video_count)
       VALUES (?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        total_views=VALUES(total_views), total_likes=VALUES(total_likes),
-        total_subscribers=VALUES(total_subscribers), total_video_count=VALUES(total_video_count)
     `;
     await db.query(totalsQuery, [
       today, channelTotals.totalViews, channelTotals.totalLikes,

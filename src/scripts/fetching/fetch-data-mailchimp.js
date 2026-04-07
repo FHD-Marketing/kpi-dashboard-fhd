@@ -188,14 +188,11 @@ async function saveToMySQL(summary, campaignReports, monthKey, today) {
   try {
     await ensureMailchimpTablesExist(db, monthKey);
 
+    await db.query(`TRUNCATE TABLE \`${summaryTable}\``);
+
     await db.query(`
       INSERT INTO \`${summaryTable}\` (date, total_subscribers, open_rate, click_rate, campaign_count)
       VALUES (?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        total_subscribers=VALUES(total_subscribers),
-        open_rate=VALUES(open_rate),
-        click_rate=VALUES(click_rate),
-        campaign_count=VALUES(campaign_count)
     `, [today, summary.totalSubscribers, summary.avgOpenRate, summary.avgClickRate, summary.campaignCount]);
     console.log(`Summary saved to ${summaryTable} for ${today}.`);
 

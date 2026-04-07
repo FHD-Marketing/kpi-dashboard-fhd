@@ -148,14 +148,14 @@ async function selectMonth(month) {
     }
   }
 
-  if (!isChannelCached('infomaterial', month)) {
+  if (!isChannelCached('infomaterial', month) && channels.includes('infomaterial')) {
     try {
       await fetchChannel('infomaterial', month);
     } catch (_) {
     }
   }
 
-  if (!isChannelCached('vertrag', month)) {
+  if (!isChannelCached('vertrag', month) && channels.includes('vertrag')) {
     try {
       await fetchChannel('vertrag', month);
     } catch (_) {
@@ -189,7 +189,6 @@ function updateTabAvailability(month) {
     const tab = btn.dataset.tab;
     if (!tab) return;
 
-    // Overview and manual tabs are always available for all unlocked months
     if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck' || tab === 'vertrag') {
       btn.classList.remove('disabled');
       return;
@@ -294,7 +293,6 @@ export function updateDashboardData(month) {
   const prevMonthKey = getPreviousMonthKey(month);
   const prevData = prevMonthKey ? getMonthData(prevMonthKey) : null;
 
-  // Month names for frontend display (German)
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
   const displayName = monthNames[month] || month;
   const titleSuffix = ` — ${displayName} 2026`;

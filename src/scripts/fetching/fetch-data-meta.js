@@ -209,19 +209,14 @@ async function saveToMySQL(summary, campaigns, monthKey, today) {
   try {
     await ensureMetaTablesExist(db, monthKey);
 
+    await db.query(`TRUNCATE TABLE \`${summaryTable}\``);
+    await db.query(`TRUNCATE TABLE \`${campaignsTable}\``);
+    console.log(`Truncated ${summaryTable} and ${campaignsTable}.`);
+
     if (summary) {
       await db.query(`
         INSERT INTO \`${summaryTable}\` (date, spend, link_clicks, leads, reach, impressions, cpc, ctr, frequency)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-                             spend=VALUES(spend),
-                             link_clicks=VALUES(link_clicks),
-                             leads=VALUES(leads),
-                             reach=VALUES(reach),
-                             impressions=VALUES(impressions),
-                             cpc=VALUES(cpc),
-                             ctr=VALUES(ctr),
-                             frequency=VALUES(frequency)
       `, [today, summary.spend, summary.linkClicks, summary.leads, summary.reach, summary.impressions, summary.cpc, summary.ctr, summary.frequency]);
       console.log(`Summary saved to ${summaryTable} for ${today}.`);
     }
@@ -231,19 +226,6 @@ async function saveToMySQL(summary, campaigns, monthKey, today) {
         INSERT INTO \`${campaignsTable}\`
         (campaign_id, date, campaign_name, status, spend, leads, cpl, link_clicks, cpc, ctr, reach, impressions, frequency, adset_count)
         VALUES ?
-          ON DUPLICATE KEY UPDATE
-                             campaign_name=VALUES(campaign_name),
-                             status=VALUES(status),
-                             spend=VALUES(spend),
-                             leads=VALUES(leads),
-                             cpl=VALUES(cpl),
-                             link_clicks=VALUES(link_clicks),
-                             cpc=VALUES(cpc),
-                             ctr=VALUES(ctr),
-                             reach=VALUES(reach),
-                             impressions=VALUES(impressions),
-                             frequency=VALUES(frequency),
-                             adset_count=VALUES(adset_count)
       `;
       const values = campaigns.map(c => [
         c.campaignId, today, c.name, c.status, c.spend, c.leads, c.cpl,

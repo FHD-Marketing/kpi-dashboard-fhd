@@ -375,10 +375,11 @@ async function saveToMySQL(dailyStats, followerGrowth, totalFollowers, topPosts,
       console.log(`Saved ${values.length} daily stat rows to ${statsTable}.`);
     }
 
+    await db.query(`TRUNCATE TABLE \`${totalsTable}\``);
+
     await db.query(`
       INSERT INTO \`${totalsTable}\` (date, total_followers)
       VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE total_followers=VALUES(total_followers)
     `, [today, totalFollowers]);
     console.log(`Totals saved to ${totalsTable}.`);
 

@@ -102,7 +102,13 @@ export async function fetchChannel(channel, monthShort) {
   if (!data) return null;
 
   if (!dashboardData[monthShort]) dashboardData[monthShort] = {};
-  dashboardData[monthShort][channel] = data;
+
+  const existing = dashboardData[monthShort][channel];
+  if (existing && typeof existing === 'object' && typeof data === 'object') {
+    dashboardData[monthShort][channel] = { ...existing, ...data };
+  } else {
+    dashboardData[monthShort][channel] = data;
+  }
 
   return data;
 }

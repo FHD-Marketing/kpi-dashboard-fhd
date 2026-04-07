@@ -370,10 +370,11 @@ async function saveToMySQL(dailyData, monthKey, accountInfo, topPosts, engagemen
       await db.query(query, [values]);
     }
 
+    await db.query(`TRUNCATE TABLE \`${totalsTable}\``);
+
     const totalsQuery = `
       INSERT INTO \`${totalsTable}\` (date, total_followers, total_posts)
       VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE total_followers=VALUES(total_followers), total_posts=VALUES(total_posts)
     `;
     await db.query(totalsQuery, [today, accountInfo.totalFollowers, accountInfo.totalPosts]);
 

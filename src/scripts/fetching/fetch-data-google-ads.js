@@ -166,16 +166,13 @@ async function saveToMySQL(summary, campaigns, monthKey, today) {
   try {
     await ensureGadsTablesExist(db, monthKey);
 
+    await db.query(`TRUNCATE TABLE \`${summaryTable}\``);
+    await db.query(`TRUNCATE TABLE \`${campaignsTable}\``);
+    console.log(`Truncated ${summaryTable} and ${campaignsTable}.`);
+
     await db.query(`
       INSERT INTO \`${summaryTable}\` (date, spend, clicks, conversions, impressions, cpc, ctr)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        spend=VALUES(spend),
-        clicks=VALUES(clicks),
-        conversions=VALUES(conversions),
-        impressions=VALUES(impressions),
-        cpc=VALUES(cpc),
-        ctr=VALUES(ctr)
     `, [today, summary.spend, summary.clicks, summary.conversions, summary.impressions, summary.cpc, summary.ctr]);
 
     if (campaigns.length > 0) {
@@ -183,16 +180,6 @@ async function saveToMySQL(summary, campaigns, monthKey, today) {
         INSERT INTO \`${campaignsTable}\`
         (campaign_id, date, campaign_name, status, spend, leads, cpl, clicks, cpc, ctr, impressions)
         VALUES ?
-        ON DUPLICATE KEY UPDATE
-          campaign_name=VALUES(campaign_name),
-          status=VALUES(status),
-          spend=VALUES(spend),
-          leads=VALUES(leads),
-          cpl=VALUES(cpl),
-          clicks=VALUES(clicks),
-          cpc=VALUES(cpc),
-          ctr=VALUES(ctr),
-          impressions=VALUES(impressions)
       `;
       const values = campaigns.map(c => [
         c.campaignId, today, c.name, c.status, c.spend, c.leads, c.cpl,
