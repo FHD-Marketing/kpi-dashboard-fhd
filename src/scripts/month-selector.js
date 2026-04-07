@@ -83,18 +83,7 @@ function resetTabContents() {
     tbody.innerHTML = '';
   });
 
-  document.querySelectorAll('[data-budget]').forEach(card => {
-    const planEl = card.querySelector('.budget-plan span');
-    const actualEl = card.querySelector('.budget-actual span');
-    const barFill = card.querySelector('.budget-bar-fill');
-    const diffEl = card.querySelector('.budget-diff');
-    if (planEl) planEl.textContent = '—';
-    if (actualEl) actualEl.textContent = '—';
-    if (barFill) { barFill.style.width = '0%'; barFill.className = 'budget-bar-fill'; }
-    if (diffEl) { diffEl.textContent = ''; diffEl.className = 'budget-diff'; }
-  });
-
-  document.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card').forEach(card => {
+  document.querySelectorAll('.kpi-card, .chart-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card').forEach(card => {
     card.classList.remove('kpi-pop');
     card.classList.add('kpi-hidden');
   });
@@ -168,7 +157,7 @@ async function selectMonth(month) {
   updateTabAvailability(month);
   updateDashboardData(month);
 
-  const animatableSelector = '.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card';
+  const animatableSelector = '.kpi-card, .chart-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card';
   document.querySelectorAll(animatableSelector).forEach(card => {
     card.classList.remove('kpi-pop');
     card.classList.add('kpi-hidden');
@@ -343,8 +332,9 @@ export function updateDashboardData(month) {
     }
   });
 
+  enrichOverviewWithAllChannels(data);
+
   updateKpiSection('overview', data.overview, !!prevData);
-  if (data.overview) updateBudgetCards(data.overview.budgetPlan);
   updateKpiSection('google', data.googleAds, !!prevData);
   updateKpiSection('meta', data.metaAds, !!prevData);
   updateKpiSection('instagram', data.instagram, !!prevData);
@@ -361,6 +351,117 @@ export function updateDashboardData(month) {
   renderStudycheckTable(data.studycheck);
   renderInfomaterialTab(month);
   renderContractOverviewTab(month);
+}
+
+function parseKpiNumber(val) {
+  if (val === undefined || val === null || val === '—' || val === '-') return 0;
+  if (typeof val === 'number') return val;
+  const str = String(val).replace(/[€$£%\s]/g, '').replace(/\./g, '').replace(',', '.');
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
+function getKpiVal(channelData, key) {
+  if (!channelData) return 0;
+  const kpi = channelData[key];
+  if (!kpi || typeof kpi !== 'object') return 0;
+  return parseKpiNumber(kpi.value);
+}
+
+function fmtNum(n) {
+  return Math.round(n).toLocaleString('de-DE');
+}
+
+function enrichOverviewWithAllChannels(data) {
+  if (!data.overview) data.overview = {};
+
+  const g = data.googleAds;
+  const m = data.metaAds;
+  const ig = data.instagram;
+  const yt = data.youtube;
+  const tt = data.tiktok;
+  const li = data.linkedin;
+  const mc = data.mailchimp;
+
+  // --- Impressionen Gesamt: Google + Meta + Instagram + YouTube + LinkedIn ---
+  const impGoogle = getKpiVal(g, 'impressionen');
+  const impMeta = getKpiVal(m, 'impressionen');
+  const impInsta = getKpiVal(ig, 'impressionen');
+  const impYouTube = getKpiVal(yt, 'views');
+  const impLinkedIn = getKpiVal(li, 'impressionen');
+  const impTotal = impGoogle + impMeta + impInsta + impYouTube + impLinkedIn;
+
+  const impSources = [];
+  if (impGoogle) impSources.push(`Google: ${fmtNum(impGoogle)}`);
+  if (impMeta) impSources.push(`Meta: ${fmtNum(impMeta)}`);
+  if (impInsta) impSources.push(`Insta: ${fmtNum(impInsta)}`);
+  if (impYouTube) impSources.push(`YT: ${fmtNum(impYouTube)}`);
+  if (impLinkedIn) impSources.push(`LI: ${fmtNum(impLinkedIn)}`);
+
+  data.overview.impressionen = {
+    value: fmtNum(impTotal),
+    detail: impSources.join(' · ') || 'Keine Daten',
+  };
+
+  // --- Reichweite Gesamt: Meta + Instagram + LinkedIn ---
+  const rwMeta = getKpiVal(m, 'reichweite');
+  const rwInsta = getKpiVal(ig, 'reichweite');
+  const rwTotal = rwMeta + rwInsta;
+
+  const rwSources = [];
+  if (rwMeta) rwSources.push(`Meta: ${fmtNum(rwMeta)}`);
+  if (rwInsta) rwSources.push(`Insta: ${fmtNum(rwInsta)}`);
+
+  data.overview.reichweite = {
+    value: fmtNum(rwTotal),
+    detail: rwSources.join(' · ') || 'Keine Daten',
+  };
+
+  // --- Klicks Gesamt: Google + Meta + LinkedIn ---
+  const klGoogle = getKpiVal(g, 'klicks');
+  const klMeta = getKpiVal(m, 'linkKlicks');
+  const klLinkedIn = getKpiVal(li, 'klicks');
+  const klTotal = klGoogle + klMeta + klLinkedIn;
+
+  const klSources = [];
+  if (klGoogle) klSources.push(`Google: ${fmtNum(klGoogle)}`);
+  if (klMeta) klSources.push(`Meta: ${fmtNum(klMeta)}`);
+  if (klLinkedIn) klSources.push(`LI: ${fmtNum(klLinkedIn)}`);
+
+  data.overview.klicks = {
+    value: fmtNum(klTotal),
+    detail: klSources.join(' · ') || 'Keine Daten',
+  };
+
+  // --- Follower Gesamt: Instagram + YouTube + LinkedIn + TikTok ---
+  const fInsta = getKpiVal(ig, 'follower');
+  const fYouTube = getKpiVal(yt, 'subscribers');
+  const fLinkedIn = getKpiVal(li, 'follower');
+  const fTikTok = getKpiVal(tt, 'follower');
+  const fTotal = fInsta + fYouTube + fLinkedIn + fTikTok;
+
+  const fSources = [];
+  if (fInsta) fSources.push(`Insta: ${fmtNum(fInsta)}`);
+  if (fYouTube) fSources.push(`YT: ${fmtNum(fYouTube)}`);
+  if (fLinkedIn) fSources.push(`LI: ${fmtNum(fLinkedIn)}`);
+  if (fTikTok) fSources.push(`TT: ${fmtNum(fTikTok)}`);
+
+  data.overview.followerGesamt = {
+    value: fmtNum(fTotal),
+    detail: fSources.join(' · ') || 'Keine Daten',
+  };
+
+  // --- E-Mail-Abonnenten: Mailchimp ---
+  const emailSubs = getKpiVal(mc, 'subscribers');
+
+  data.overview.emailAbonnenten = {
+    value: emailSubs ? fmtNum(emailSubs) : '—',
+    detail: emailSubs ? 'Mailchimp Newsletter' : 'Keine Daten',
+  };
+
+  // --- Remove old CPC/CTR from overview ---
+  delete data.overview.cpc;
+  delete data.overview.ctr;
 }
 
 function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
@@ -427,30 +528,6 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
   });
 }
 
-function updateBudgetCards(budgetData) {
-  if (!budgetData) return;
-
-  Object.entries(budgetData).forEach(([key, val]) => {
-    const card = document.querySelector(`[data-budget="${key}"]`);
-    if (!card) return;
-
-    const planEl = card.querySelector('.budget-plan span');
-    const actualEl = card.querySelector('.budget-actual span');
-    const barFill = card.querySelector('.budget-bar-fill');
-    const diffEl = card.querySelector('.budget-diff');
-
-    if (planEl) planEl.textContent = val.plan;
-    if (actualEl) actualEl.textContent = val.ist;
-    if (barFill) {
-      barFill.style.width = `${Math.min(val.pct, 100)}%`;
-      barFill.className = `budget-bar-fill ${val.status}`;
-    }
-    if (diffEl) {
-      diffEl.textContent = val.diff;
-      diffEl.className = `budget-diff ${val.status}`;
-    }
-  });
-}
 
 function renderGoogleCampaigns(googleAds) {
   const barsContainer = document.getElementById('google-spend-bars');

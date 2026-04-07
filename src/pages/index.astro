@@ -18,7 +18,7 @@ import '../styles/global.css';
     <div class="header-left">
       <div class="header-label">Performance Dashboard 2026</div>
       <h1>Fachhochschule Dresden</h1>
-      <div class="header-subtitle">Google Ads · Meta Ads · Jahresübersicht</div>
+      <div class="header-subtitle">Alle Kanäle · Jahresübersicht</div>
     </div>
   </header>
 
@@ -81,7 +81,7 @@ import '../styles/global.css';
 
   <section id="tab-uebersicht" class="tab-content">
     <h2 class="section-title" id="overview-title"><span class="title-icon">📊</span><span class="title-text">Übersicht</span></h2>
-    <p class="section-subtitle">Alle Kanäle auf einen Blick</p>
+    <p class="section-subtitle">Kanalübergreifende Gesamtwerte</p>
 
     <div class="kpi-grid cols-3">
       <div class="kpi-card" data-kpi="overview-adSpend">
@@ -94,7 +94,7 @@ import '../styles/global.css';
       </div>
       <div class="kpi-card" data-kpi="overview-klicks">
         <div class="kpi-card-header">
-          <span class="kpi-card-label"><span class="kpi-icon">👆</span> KLICKS</span>
+          <span class="kpi-card-label"><span class="kpi-icon">👆</span> KLICKS GESAMT</span>
           <span class="kpi-trend"></span>
         </div>
         <div class="kpi-value">—</div>
@@ -113,7 +113,7 @@ import '../styles/global.css';
     <div class="kpi-grid cols-4">
       <div class="kpi-card" data-kpi="overview-impressionen">
         <div class="kpi-card-header">
-          <span class="kpi-card-label">IMPRESSIONEN</span>
+          <span class="kpi-card-label">IMPRESSIONEN GESAMT</span>
           <span class="kpi-trend"></span>
         </div>
         <div class="kpi-value">—</div>
@@ -121,83 +121,30 @@ import '../styles/global.css';
       </div>
       <div class="kpi-card" data-kpi="overview-reichweite">
         <div class="kpi-card-header">
-          <span class="kpi-card-label"><span class="kpi-icon">👁️</span> REICHWEITE</span>
+          <span class="kpi-card-label"><span class="kpi-icon">👁️</span> REICHWEITE GESAMT</span>
           <span class="kpi-trend"></span>
         </div>
         <div class="kpi-value">—</div>
         <div class="kpi-detail">—</div>
       </div>
-      <div class="kpi-card" data-kpi="overview-cpc">
+      <div class="kpi-card" data-kpi="overview-followerGesamt">
         <div class="kpi-card-header">
-          <span class="kpi-card-label"><span class="kpi-icon">💰</span> Ø CPC</span>
+          <span class="kpi-card-label"><span class="kpi-icon">👥</span> FOLLOWER GESAMT</span>
           <span class="kpi-trend"></span>
         </div>
         <div class="kpi-value">—</div>
         <div class="kpi-detail">—</div>
       </div>
-      <div class="kpi-card" data-kpi="overview-ctr">
+      <div class="kpi-card" data-kpi="overview-emailAbonnenten">
         <div class="kpi-card-header">
-          <span class="kpi-card-label"><span class="kpi-icon">📊</span> CTR</span>
+          <span class="kpi-card-label"><span class="kpi-icon">📧</span> E-MAIL-ABONNENTEN</span>
+          <span class="kpi-trend"></span>
         </div>
         <div class="kpi-value">—</div>
         <div class="kpi-detail">—</div>
       </div>
     </div>
 
-    <div class="charts-grid wide-left">
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <span class="chart-card-title" id="daily-spend-title">Tagesverlauf Spend</span>
-          <div class="chart-toggle"><button class="active">Google</button><button>Meta</button></div>
-        </div>
-        <div class="chart-wrapper" style="height:220px"><canvas id="daily-spend-chart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-card-header"><span class="chart-card-title">Budget-Split</span></div>
-        <div class="chart-wrapper" style="height:180px"><canvas id="budget-split-chart"></canvas></div>
-        <div class="chart-legend" id="budget-split-legend">
-          <div class="legend-item"><span class="legend-dot" style="background:#4285f4"></span> Google Ads</div>
-          <div class="legend-item"><span class="legend-dot" style="background:#0668e1"></span> Meta Ads</div>
-        </div>
-      </div>
-    </div>
-
-    <h3 class="section-title mb-md" id="budget-plan-title"><span class="title-icon">🟥</span> Budgetplan vs. Ist</h3>
-    <div class="budget-grid">
-      <div class="budget-card" data-budget="gesamt">
-        <div class="budget-card-header"><span class="budget-card-title">Gesamt</span><span class="budget-badge"></span></div>
-        <div class="budget-values"><div class="budget-plan">Plan<span>—</span></div><div class="budget-actual">Ist<span>—</span></div></div>
-        <div class="budget-bar"><div class="budget-bar-fill" style="width:0%"></div></div>
-        <div class="budget-footer"><span></span><span class="budget-diff"></span></div>
-      </div>
-      <div class="budget-card" data-budget="google">
-        <div class="budget-card-header"><span class="budget-card-title">Google Ads</span><span class="budget-badge"></span></div>
-        <div class="budget-values"><div class="budget-plan">Plan<span>—</span></div><div class="budget-actual">Ist<span>—</span></div></div>
-        <div class="budget-bar"><div class="budget-bar-fill" style="width:0%"></div></div>
-        <div class="budget-footer"><span></span><span class="budget-diff"></span></div>
-      </div>
-      <div class="budget-card" data-budget="meta">
-        <div class="budget-card-header"><span class="budget-card-title">Meta Ads</span><span class="budget-badge"></span></div>
-        <div class="budget-values"><div class="budget-plan">Plan<span>—</span></div><div class="budget-actual">Ist<span>—</span></div></div>
-        <div class="budget-bar"><div class="budget-bar-fill" style="width:0%"></div></div>
-        <div class="budget-footer"><span></span><span class="budget-diff"></span></div>
-      </div>
-    </div>
-
-    <h3 class="section-title mb-md" id="ytd-trends-title"><span class="title-icon">📈</span> Year-to-Date Trends</h3>
-    <p class="section-subtitle">Monatlicher Vergleich</p>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Monatliche Ausgaben — Plan vs. Ist</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-ausgaben-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Conversions / Leads</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-conversions-chart"></canvas></div></div>
-    </div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">CPC-Entwicklung</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-cpc-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Impressionen pro Monat</span></div><div class="chart-wrapper" style="height:250px"><canvas id="ytd-impressionen-chart"></canvas></div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-header"><span class="chart-card-title">Monatsvergleich — KPIs</span></div>
-      <div class="data-table-wrapper"><table class="data-table" id="ytd-comparison-table"><thead><tr><th>Monat</th><th>Plan</th><th>Ist</th><th>Δ Budget</th><th>Klicks</th><th>Conv./Leads</th><th>Ø CPC</th></tr></thead><tbody></tbody></table></div>
-    </div>
   </section>
 
   <section id="tab-google" class="tab-content">

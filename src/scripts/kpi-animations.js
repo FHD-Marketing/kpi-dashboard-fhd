@@ -87,7 +87,7 @@ function animateVisibleCards() {
   const activeTab = document.querySelector('.tab-content.active');
   if (!activeTab) return;
 
-  const cards = Array.from(activeTab.querySelectorAll('.kpi-card, .chart-card, .budget-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card'));
+  const cards = Array.from(activeTab.querySelectorAll('.kpi-card, .chart-card, .campaign-section, .google-campaign-card, .infomaterial-faculty-card, .infomaterial-chart-card'));
   if (cards.length === 0) return;
 
   const totalWindow = 500;
