@@ -23,19 +23,14 @@ export function refreshMonthButtons() {
 
     btn.classList.remove('month-pop-in');
 
-    if (index <= currentMonthIndex) {
+    if (index <= currentMonthIndex && available.includes(month)) {
       btn.classList.remove('disabled');
+      btn.classList.add('has-data');
 
       const data = getMonthData(month);
       const spendEl = btn.querySelector('.month-spend');
       if (spendEl) {
         spendEl.textContent = (data && data.totalSpend) ? data.totalSpend : '';
-      }
-
-      if (available.includes(month)) {
-        btn.classList.add('has-data');
-      } else {
-        btn.classList.remove('has-data');
       }
 
       btn.style.setProperty('--pop-delay', (popIndex * 80) + 'ms');
@@ -45,15 +40,27 @@ export function refreshMonthButtons() {
     } else {
       btn.classList.add('disabled');
       btn.classList.remove('has-data');
+      const spendEl = btn.querySelector('.month-spend');
+      if (spendEl) spendEl.textContent = '';
     }
   });
 }
 
 export function activateLatestMonth() {
   const monthOrder = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-  const currentMonthIdx = new Date().getMonth();
-  const currentMonthKey = monthOrder[currentMonthIdx];
-  selectMonth(currentMonthKey);
+  const available = getAvailableMonths();
+
+  if (available.length === 0) return;
+
+  // Find the latest available month
+  let latestKey = available[0];
+  for (const m of available) {
+    if (monthOrder.indexOf(m) > monthOrder.indexOf(latestKey)) {
+      latestKey = m;
+    }
+  }
+
+  selectMonth(latestKey);
 }
 
 function resetTabContents() {
