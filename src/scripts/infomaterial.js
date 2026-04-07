@@ -66,49 +66,12 @@ function toggleInfomaterialSections(visible) {
 }
 
 function setupUploadHandlers() {
-  const uploadArea = document.getElementById('infomaterial-upload-area');
   const fileInput = document.getElementById('infomaterial-file-input');
-  const uploadBtn = document.getElementById('infomaterial-upload-btn');
 
-  if (!uploadArea || !fileInput) return;
-
-  let pickerOpen = false;
-  const openFilePicker = () => {
-    if (pickerOpen) return;
-    pickerOpen = true;
-    fileInput.value = '';
-    fileInput.click();
-    setTimeout(() => { pickerOpen = false; }, 500);
-  };
-
-  if (uploadBtn) {
-    uploadBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      openFilePicker();
-    });
-  }
-  uploadArea.addEventListener('click', (e) => {
-    if (e.target === fileInput || e.target.closest('.upload-btn')) return;
-    openFilePicker();
-  });
+  if (!fileInput) return;
 
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
-    if (file) processExcelFile(file);
-  });
-
-  uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
-  });
-  uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('dragover');
-  });
-  uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
     if (file) processExcelFile(file);
   });
 }
@@ -672,9 +635,15 @@ function showTimestampBadge(titleId, timestamp) {
   if (!badge) {
     badge = document.createElement('span');
     badge.className = 'last-updated-badge';
-    titleEl.appendChild(badge);
+    const inlineUpload = titleEl.querySelector('.inline-upload');
+    if (inlineUpload) {
+      titleEl.insertBefore(badge, inlineUpload);
+    } else {
+      titleEl.appendChild(badge);
+    }
   }
   badge.textContent = `Zuletzt aktualisiert: ${timestamp}`;
+  badge.style.display = '';
 }
 
 function showUploadFeedback(type, message) {

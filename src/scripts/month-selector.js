@@ -2,6 +2,7 @@ import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, f
 import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab, destroyInfomaterialCharts } from './infomaterial.js';
 import { renderContractOverviewTab } from './contract-overview.js';
+import { renderStudycheckTab, destroyStudycheckCharts } from './studycheck.js';
 import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
@@ -65,6 +66,7 @@ export function activateLatestMonth() {
 function resetTabContents() {
   destroyAllCharts();
   destroyInfomaterialCharts();
+  destroyStudycheckCharts();
 
   document.querySelectorAll('.kpi-value').forEach(el => {
     el.textContent = '—';
@@ -80,7 +82,7 @@ function resetTabContents() {
     el.textContent = '';
   });
 
-  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections', 'infomaterial-faculty-cards', 'infomaterial-charts-container'].forEach(id => {
+  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections', 'infomaterial-faculty-cards', 'infomaterial-charts-container', 'studycheck-charts-container'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '';
   });
@@ -147,6 +149,13 @@ async function selectMonth(month) {
   if (!isChannelCached('infomaterial', month) && channels.includes('infomaterial')) {
     try {
       await fetchChannel('infomaterial', month);
+    } catch (_) {
+    }
+  }
+
+  if (!isChannelCached('studycheck', month) && channels.includes('studycheck')) {
+    try {
+      await fetchChannel('studycheck', month);
     } catch (_) {
     }
   }
@@ -300,11 +309,12 @@ export function updateDashboardData(month) {
       if (!textEl) {
         const icon = el.querySelector('.title-icon');
         const badge = el.querySelector('.last-updated-badge');
+        const inlineUpload = el.querySelector('.inline-upload');
         const iconHtml = icon ? icon.outerHTML : '';
-        const base = el.textContent.replace(/—.*$/, '').trim();
         el.innerHTML = iconHtml + '<span class="title-text"></span>';
         textEl = el.querySelector('.title-text');
         if (badge) el.appendChild(badge);
+        if (inlineUpload) el.appendChild(inlineUpload);
       }
       const base = textEl.textContent.split('—')[0].trim();
       textEl.textContent = base + titleSuffix;
@@ -312,6 +322,7 @@ export function updateDashboardData(month) {
   });
 
   const manualTabs = {
+    'studycheck-title': { source: 'studycheck', tab: 'studycheck' },
     'infomaterial-title': { source: 'infomaterial', tab: 'infomaterial' },
     'vertrag-title': { source: 'vertrag', tab: 'vertrag' },
   };
@@ -328,7 +339,12 @@ export function updateDashboardData(month) {
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'last-updated-badge';
-        el.appendChild(badge);
+        const inlineUpload = el.querySelector('.inline-upload');
+        if (inlineUpload) {
+          el.insertBefore(badge, inlineUpload);
+        } else {
+          el.appendChild(badge);
+        }
       }
       badge.textContent = `Zuletzt aktualisiert: ${formatted}`;
       badge.style.display = '';
@@ -354,6 +370,7 @@ export function updateDashboardData(month) {
   renderMetaCampaigns(data.metaAds);
   renderMailchimpTable(data.mailchimp);
   renderStudycheckTable(data.studycheck);
+  renderStudycheckTab(month);
   renderInfomaterialTab(month);
   renderContractOverviewTab(month);
 }
@@ -635,15 +652,7 @@ function renderMailchimpTable(mailchimp) {
 }
 
 function renderStudycheckTable(studycheck) {
-  const table = document.getElementById('studycheck-table');
-  if (!table) return;
-  const tbody = table.querySelector('tbody');
-  tbody.innerHTML = '';
-
-  if (!studycheck || !studycheck.studiengaenge) return;
-
-  studycheck.studiengaenge.forEach(s => {
-    tbody.innerHTML += `<tr><td>${s.name}</td><td>${s.score}</td><td>${s.reviews}</td><td>${typeof s.views === 'number' ? s.views.toLocaleString('de-DE') : s.views}</td></tr>`;
-  });
+  // Legacy fallback – actual rendering is handled by renderStudycheckTab in studycheck.js
+  // which is called from updateDashboardData
 }
 

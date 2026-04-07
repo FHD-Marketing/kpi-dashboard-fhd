@@ -18,7 +18,7 @@ import '../styles/global.css';
     <div class="header-left">
       <div class="header-label">Performance Dashboard 2026</div>
       <h1>Fachhochschule Dresden</h1>
-      <div class="header-subtitle">Alle Kanäle · Jahresübersicht</div>
+      <div class="header-subtitle">Alle Kanäle · Monatsübersicht</div>
     </div>
   </header>
 
@@ -283,39 +283,67 @@ import '../styles/global.css';
   </section>
 
   <section id="tab-studycheck" class="tab-content">
-    <h2 class="section-title" id="studycheck-title"><span class="title-icon">⭐</span><span class="title-text">StudyCheck</span></h2>
-    <p class="section-subtitle">Bewertungsportal Performance</p>
+    <h2 class="section-title" id="studycheck-title">
+      <span class="title-icon">⭐</span><span class="title-text">StudyCheck</span>
+      <span class="last-updated-badge" style="display:none"></span>
+      <label class="inline-upload" id="studycheck-upload-area">
+        <input type="file" id="studycheck-file-input" accept=".csv" hidden />
+        <span class="inline-upload-label">CSV hochladen</span>
+        <span class="inline-upload-icon">📂</span>
+      </label>
+    </h2>
+    <p class="section-subtitle">Bewertungsportal Performance – CSV-Upload aus StudyCheck Profilstatistiken</p>
+    <div class="upload-feedback" id="studycheck-upload-feedback" style="display:none"></div>
+
     <div class="kpi-grid cols-4 channel-studycheck">
-      <div class="kpi-card" data-kpi="studycheck-bewertungen"><div class="kpi-card-header"><span class="kpi-card-label">BEWERTUNGEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="studycheck-avgScore"><div class="kpi-card-header"><span class="kpi-card-label">Ø SCORE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="studycheck-profilaufrufe"><div class="kpi-card-header"><span class="kpi-card-label">PROFILAUFRUFE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="studycheck-weiterempfehlung"><div class="kpi-card-header"><span class="kpi-card-label">WEITEREMPFEHLUNG</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="studycheck-seitenaufrufe"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👁️</span> SEITENAUFRUFE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="studycheck-klicks"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👆</span> EXT. KLICKS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="studycheck-besucher"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👥</span> BESUCHER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="studycheck-leads"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎯</span> LEADS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
     </div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Score-Verlauf</span></div><div class="chart-wrapper" style="height:220px"><canvas id="studycheck-score-chart"></canvas></div></div>
-      <div class="chart-card">
-        <div class="chart-card-header"><span class="chart-card-title">Studiengänge</span></div>
-        <div class="data-table-wrapper"><table class="data-table" id="studycheck-table"><thead><tr><th>Studiengang</th><th>Score</th><th>Reviews</th><th>Aufrufe</th></tr></thead><tbody></tbody></table></div>
+
+    <div id="studycheck-section-table" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📊</span> Profilübersicht</h3>
+      <div class="data-table-wrapper">
+        <table class="data-table" id="studycheck-table">
+          <thead>
+            <tr>
+              <th>Profil</th>
+              <th>Seitenaufrufe</th>
+              <th>Ext. Klicks</th>
+              <th>Klickrate</th>
+              <th>Besucher</th>
+              <th>Einblendungen</th>
+              <th>Leads</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="studycheck-section-charts" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📊</span> Seitenaufrufe pro Profil</h3>
+      <div class="infomaterial-charts-grid" id="studycheck-charts-container">
+        <div class="infomaterial-empty-state">
+          <p>Lade eine CSV-Datei hoch, um die Profil-Graphen zu sehen.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <section id="tab-infomaterial" class="tab-content">
-    <h2 class="section-title" id="infomaterial-title"><span class="title-icon">📥</span><span class="title-text">Infomaterialanfragen</span></h2>
+    <h2 class="section-title" id="infomaterial-title">
+      <span class="title-icon">📥</span><span class="title-text">Infomaterialanfragen</span>
+      <span class="last-updated-badge" style="display:none"></span>
+      <label class="inline-upload" id="infomaterial-upload-area">
+        <input type="file" id="infomaterial-file-input" accept=".xlsx,.xls" hidden />
+        <span class="inline-upload-label">Excel hochladen</span>
+        <span class="inline-upload-icon">📂</span>
+      </label>
+    </h2>
     <p class="section-subtitle">Übersicht der angeforderten Materialien nach Studiengang</p>
-
-    <div class="infomaterial-upload-area" id="infomaterial-upload-area">
-      <input type="file" id="infomaterial-file-input" accept=".xlsx,.xls" hidden />
-      <div class="upload-content">
-        <div class="upload-icon">📄</div>
-        <div class="upload-text">
-          <strong>Excel-Datei hochladen</strong>
-          <span>Ziehe eine .xlsx-Datei hierher oder klicke zum Auswählen</span>
-        </div>
-        <button class="upload-btn" id="infomaterial-upload-btn">Datei auswählen</button>
-      </div>
-      <div class="upload-feedback" id="infomaterial-upload-feedback" style="display:none"></div>
-    </div>
+    <div class="upload-feedback" id="infomaterial-upload-feedback" style="display:none"></div>
 
     <div class="kpi-grid cols-4 channel-infomaterial">
       <div class="kpi-card" data-kpi="infomaterial-gesamt"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📊</span> ANFRAGEN GESAMT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -354,21 +382,17 @@ import '../styles/global.css';
 
   <!-- ═══ TAB: VERTRAGSÜBERSICHT ═══ -->
   <section id="tab-vertrag" class="tab-content">
-    <h2 class="section-title" id="vertrag-title"><span class="title-icon">📋</span><span class="title-text">Vertragsübersicht</span></h2>
+    <h2 class="section-title" id="vertrag-title">
+      <span class="title-icon">📋</span><span class="title-text">Vertragsübersicht</span>
+      <span class="last-updated-badge" style="display:none"></span>
+      <label class="inline-upload" id="vertrag-upload-area">
+        <input type="file" id="vertrag-file-input" accept=".xlsx,.xls" hidden />
+        <span class="inline-upload-label">Excel hochladen</span>
+        <span class="inline-upload-icon">📂</span>
+      </label>
+    </h2>
     <p class="section-subtitle">Bewerbungen, Studienverträge und Zusagen nach Studiengang</p>
-
-    <div class="infomaterial-upload-area" id="vertrag-upload-area">
-      <input type="file" id="vertrag-file-input" accept=".xlsx,.xls" hidden />
-      <div class="upload-content">
-        <div class="upload-icon">📋</div>
-        <div class="upload-text">
-          <strong>Vertragsübersicht hochladen</strong>
-          <span>Ziehe eine .xlsx-Datei hierher oder klicke zum Auswählen</span>
-        </div>
-        <button class="upload-btn" id="vertrag-upload-btn">Datei auswählen</button>
-      </div>
-      <div class="upload-feedback" id="vertrag-upload-feedback" style="display:none"></div>
-    </div>
+    <div class="upload-feedback" id="vertrag-upload-feedback" style="display:none"></div>
 
     <div class="kpi-grid cols-4 channel-vertrag">
       <div class="kpi-card" data-kpi="vertrag-bewerbungen"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📝</span> BEWERBUNGEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -409,6 +433,7 @@ import '../styles/global.css';
   import { fetchMonths, fetchLastUpdated } from '../scripts/data.js';
   import { initInfomaterial } from '../scripts/infomaterial.js';
   import { initContractOverview } from '../scripts/contract-overview.js';
+  import { initStudycheck } from '../scripts/studycheck.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
     initTabNavigation();
@@ -417,6 +442,7 @@ import '../styles/global.css';
     initKpiAnimations();
     initInfomaterial();
     initContractOverview();
+    initStudycheck();
 
     const loadingEl = document.getElementById('loading-state');
 

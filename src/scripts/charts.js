@@ -71,9 +71,7 @@ function renderAllCharts(month) {
     renderMailchimpTrendChart(data.mailchimp.trend);
   }
 
-  if (data.studycheck) {
-    renderLineChart('studycheck-score-chart', data.studycheck.scoreHistory, 'Ø Score', '#00b67a');
-  }
+  // studycheck charts are handled by studycheck.js
 
   if (data.ytdTrends) {
     renderYtdSpendChart(data.ytdTrends);

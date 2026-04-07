@@ -493,6 +493,40 @@ body {
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
+/* When badge is visible, both have margin-left:auto but flexbox only applies the first one */
+.section-title .inline-upload {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    background: rgba(59,130,246,0.08);
+    padding: 0.25rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid rgba(59,130,246,0.18);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.section-title .inline-upload:hover {
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.35);
+    transform: translateY(-1px);
+}
+.section-title .inline-upload .inline-upload-icon {
+    font-size: 0.85rem;
+}
+.section-title .inline-upload .inline-upload-label {
+    pointer-events: none;
+}
+.section-title .inline-upload.upload-success {
+    color: var(--accent-green);
+    background: rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.18);
+}
 .section-subtitle {
     font-size: 0.82rem;
     color: var(--text-muted);
@@ -1158,6 +1192,16 @@ body {
 .channel-linkedin  .kpi-card { border-top: 2px solid var(--color-linkedin); }
 .channel-mailchimp .kpi-card { border-top: 2px solid var(--color-mailchimp); }
 .channel-studycheck .kpi-card { border-top: 2px solid var(--color-studycheck); }
+
+.studycheck-profile-link {
+  color: var(--color-studycheck);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.studycheck-profile-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
 
 
 @media (max-width: 1200px) {
