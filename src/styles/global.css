@@ -493,7 +493,7 @@ body {
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
-/* When badge is visible, both have margin-left:auto but flexbox only applies the first one */
+/* When badge is hidden, the upload itself needs to push right */
 .section-title .inline-upload {
     margin-left: auto;
     display: inline-flex;
@@ -510,6 +510,10 @@ body {
     transition: all var(--transition-fast);
     white-space: nowrap;
     flex-shrink: 0;
+}
+/* When badge is visible right before upload, remove upload's auto-margin so they sit together */
+.section-title .last-updated-badge:not([style*="display:none"]):not([style*="display: none"]) ~ .inline-upload {
+    margin-left: 0;
 }
 .section-title .inline-upload:hover {
     background: rgba(59,130,246,0.15);

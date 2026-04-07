@@ -295,11 +295,10 @@ import '../styles/global.css';
     <p class="section-subtitle">Bewertungsportal Performance – CSV-Upload aus StudyCheck Profilstatistiken</p>
     <div class="upload-feedback" id="studycheck-upload-feedback" style="display:none"></div>
 
-    <div class="kpi-grid cols-4 channel-studycheck">
+    <div class="kpi-grid cols-3 channel-studycheck">
       <div class="kpi-card" data-kpi="studycheck-seitenaufrufe"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👁️</span> SEITENAUFRUFE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="studycheck-klicks"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👆</span> EXT. KLICKS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="studycheck-besucher"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👥</span> BESUCHER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="studycheck-leads"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">🎯</span> LEADS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
     </div>
 
     <div id="studycheck-section-table" style="display:none">
@@ -314,7 +313,6 @@ import '../styles/global.css';
               <th>Klickrate</th>
               <th>Besucher</th>
               <th>Einblendungen</th>
-              <th>Leads</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -431,9 +429,9 @@ import '../styles/global.css';
   import { initCampaignToggle } from '../scripts/campaign-toggle.js';
   import { initKpiAnimations } from '../scripts/kpi-animations.js';
   import { fetchMonths, fetchLastUpdated } from '../scripts/data.js';
-  import { initInfomaterial } from '../scripts/infomaterial.js';
-  import { initContractOverview } from '../scripts/contract-overview.js';
-  import { initStudycheck } from '../scripts/studycheck.js';
+  import { initInfomaterial } from '../scripts/fetching/manual/infomaterial.js';
+  import { initContractOverview } from '../scripts/fetching/manual/contract-overview.js';
+  import { initStudycheck } from '../scripts/fetching/manual/studycheck.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
     initTabNavigation();

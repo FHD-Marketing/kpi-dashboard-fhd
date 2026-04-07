@@ -1,5 +1,5 @@
-import { uploadVertragTable, reportLastUpdated, getMonthData } from './data.js';
-import { getCurrentMonth } from './month-selector.js';
+import { uploadVertragTable, reportLastUpdated, getMonthData } from '../../data.js';
+import { getCurrentMonth } from '../../month-selector.js';
 
 const COLUMNS = [
   { key: 'bewerbungen', label: 'Bewerbungen' },

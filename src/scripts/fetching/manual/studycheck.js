@@ -1,5 +1,5 @@
-import { getMonthData, setMonthData, uploadStudycheckTable, reportLastUpdated } from './data.js';
-import { getCurrentMonth } from './month-selector.js';
+import { getMonthData, setMonthData, uploadStudycheckTable, reportLastUpdated } from '../../data.js';
+import { getCurrentMonth } from '../../month-selector.js';
 
 const chartInstances = {};
 
@@ -11,8 +11,6 @@ const COLOR_PREV = '#334155';
 const COLOR_CURRENT_BG = 'rgba(0,182,122,0.85)';
 const COLOR_PREV_BG = 'rgba(51,65,85,0.6)';
 
-// ─── Init & Destroy ──────────────────────────────────────────
-
 export function initStudycheck() {
   setupUploadHandlers();
 }
@@ -23,8 +21,6 @@ export function destroyStudycheckCharts() {
     delete chartInstances[key];
   });
 }
-
-// ─── Render Tab ──────────────────────────────────────────────
 
 export function renderStudycheckTab(monthKey) {
   const data = getMonthData(monthKey);
@@ -53,8 +49,6 @@ function toggleSections(visible) {
   });
 }
 
-// ─── Upload Handlers ─────────────────────────────────────────
-
 function setupUploadHandlers() {
   const uploadArea = document.getElementById('studycheck-upload-area');
   const fileInput = document.getElementById('studycheck-file-input');
@@ -66,8 +60,6 @@ function setupUploadHandlers() {
     if (file) processCSVFile(file);
   });
 }
-
-// ─── CSV Processing ──────────────────────────────────────────
 
 async function processCSVFile(file) {
   const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
@@ -92,7 +84,6 @@ async function processCSVFile(file) {
       return;
     }
 
-    // Build API payload and upload
     const payload = buildTablePayload(parsed);
 
     showFeedback('loading', 'Daten werden an API gesendet…');
@@ -104,7 +95,6 @@ async function processCSVFile(file) {
       console.warn('API upload failed (data still applied locally):', apiErr.message);
     }
 
-    // Inject into local dashboard data
     injectParsedData(parsed);
 
     const currentMonth = getCurrentMonth();
@@ -133,30 +123,15 @@ function readFileAsText(file) {
   });
 }
 
-/**
- * Parse StudyCheck CSV export.
- *
- * The CSV format from StudyCheck looks like:
- *   sep=,
- *   URL...
- *   (blank)
- *   "Auswertungszeitraum: März 2026 - März 2026"
- *   (blank)
- *   Header row: Profilbezeichnung, Profil-Link, Profiltyp, ...
- *   Subheader row: (blank), (blank), (blank), ..., Anzahl Klicks, Klickrate, ...
- *   Data rows...
- */
 function parseStudycheckCSV(text) {
   const lines = text.split(/\r?\n/);
   if (lines.length < 5) return null;
 
-  // Detect separator
   let sep = ',';
   if (lines[0].trim().startsWith('sep=')) {
     sep = lines[0].trim().replace('sep=', '').trim() || ',';
   }
 
-  // Find date range
   let months = [];
   let dateRangeStr = '';
   for (let i = 0; i < Math.min(10, lines.length); i++) {
@@ -169,13 +144,11 @@ function parseStudycheckCSV(text) {
   }
 
   if (months.length === 0) {
-    // Try to infer month from current date
     const now = new Date();
     const mk = MONTH_KEYS[now.getMonth() > 0 ? now.getMonth() - 1 : 11];
     months = [mk];
   }
 
-  // Find header row (contains "Profilbezeichnung")
   let headerIdx = -1;
   for (let i = 0; i < Math.min(15, lines.length); i++) {
     if (lines[i].includes('Profilbezeichnung')) {
@@ -187,7 +160,6 @@ function parseStudycheckCSV(text) {
 
   const headerCells = parseCSVRow(lines[headerIdx], sep);
 
-  // Check for sub-header row (contains "Anzahl Klicks", "Klickrate", etc.)
   let subHeaderCells = null;
   if (headerIdx + 1 < lines.length) {
     const nextLine = lines[headerIdx + 1];
@@ -196,11 +168,9 @@ function parseStudycheckCSV(text) {
     }
   }
 
-  // Build column mapping
   const colMap = buildColumnMapping(headerCells, subHeaderCells);
   if (colMap.profilbezeichnung === -1) return null;
 
-  // Parse data rows
   const dataStartIdx = subHeaderCells ? headerIdx + 2 : headerIdx + 1;
   const profiles = [];
 
@@ -237,8 +207,6 @@ function parseStudycheckCSV(text) {
 }
 
 function extractMonthsFromRange(str) {
-  // "Auswertungszeitraum: März 2026 - März 2026"
-  // "Auswertungszeitraum: Januar 2026 - März 2026"
   const match = str.match(/:\s*(.+?)\s*-\s*(.+)/);
   if (!match) return [];
 
@@ -273,20 +241,6 @@ function buildColumnMapping(headerCells, subHeaderCells) {
     leads: -1,
   };
 
-  // Build effective labels: use main header, and refine with sub-header
-  // CSV layout (typical):
-  //  0: Profilbezeichnung  1: Profil-Link  2: Profiltyp  3: Start  4: End
-  //  5: Seitenaufrufe des Profils
-  //  6: Klicks auf externe Verlinkungen  7: (empty)
-  //  8: Besucher auf dem Profil          9: (empty)
-  // 10: Prominente Verlinkungen         11: (empty)
-  // 12: Leads
-  //
-  // Sub-headers:
-  //  6: Anzahl Klicks  7: Klickrate
-  //  8: Einmalige Besucher  9: Wiederkehrende Besucher
-  // 10: Anzahl Einblendungen  11: Anzahl Klicks
-
   for (let i = 0; i < headerCells.length; i++) {
     const h = (headerCells[i] || '').trim().toLowerCase();
     const s = subHeaderCells ? (subHeaderCells[i] || '').trim().toLowerCase() : '';
@@ -297,10 +251,8 @@ function buildColumnMapping(headerCells, subHeaderCells) {
     if (h.includes('seitenaufrufe')) { map.seitenaufrufe = i; continue; }
     if (h === 'leads' || h.includes('leads')) { map.leads = i; continue; }
 
-    // "Klicks auf externe Verlinkungen" spans 2 cols (col i = Anzahl, col i+1 = Klickrate)
     if (h.includes('klicks auf externe')) {
       map.klicksExtern = i;
-      // Next col is klickrate (empty header, sub = "Klickrate")
       if (i + 1 < headerCells.length) {
         const nextH = (headerCells[i + 1] || '').trim();
         if (!nextH) map.klickrate = i + 1;
@@ -308,7 +260,6 @@ function buildColumnMapping(headerCells, subHeaderCells) {
       continue;
     }
 
-    // "Besucher auf dem Profil" spans 2 cols
     if (h.includes('besucher auf dem profil') || h.includes('besucher')) {
       map.besucherEinmalig = i;
       if (i + 1 < headerCells.length) {
@@ -318,7 +269,6 @@ function buildColumnMapping(headerCells, subHeaderCells) {
       continue;
     }
 
-    // "Prominente Verlinkungen zum Premiumprofil" spans 2 cols
     if (h.includes('prominente verlinkungen') || h.includes('prominente')) {
       map.einblendungen = i;
       if (i + 1 < headerCells.length) {
@@ -328,7 +278,6 @@ function buildColumnMapping(headerCells, subHeaderCells) {
       continue;
     }
 
-    // Handle sub-header-only columns (empty main header)
     if (!h && s) {
       if (s.includes('klickrate') && map.klickrate === -1) map.klickrate = i;
       else if (s.includes('einmalige besucher')) map.besucherEinmalig = i;
@@ -338,7 +287,6 @@ function buildColumnMapping(headerCells, subHeaderCells) {
     }
   }
 
-  // Fallback
   if (map.profilbezeichnung === -1 && headerCells.length > 0) map.profilbezeichnung = 0;
 
   return map;
@@ -388,35 +336,27 @@ function parseRate(val) {
   if (val === undefined || val === null || val === '') return '0%';
   const s = String(val).replace(/"/g, '').trim();
   if (s.includes('%')) return s;
-  // German format "2,15%"
   return s.replace(',', '.') + '%';
 }
-
-// ─── Data Injection ──────────────────────────────────────────
 
 function injectParsedData(parsed) {
   const { profiles, months } = parsed;
 
-  // Separate Hochschulprofil from program profiles
   const hochschulprofil = profiles.find(p => p.name === 'Hochschulprofil');
   const programProfiles = profiles.filter(p => p.name !== 'Hochschulprofil');
 
-  // Aggregate totals
   let totalSeitenaufrufe = 0;
   let totalKlicks = 0;
   let totalBesucher = 0;
-  let totalLeads = 0;
   let totalEinblendungen = 0;
 
   profiles.forEach(p => {
     totalSeitenaufrufe += p.seitenaufrufe;
     totalKlicks += p.klicksExtern;
     totalBesucher += p.besucherGesamt;
-    totalLeads += p.leads;
     totalEinblendungen += p.einblendungen;
   });
 
-  // For each month in range, inject data
   months.forEach((mk) => {
     const idx = MONTH_KEYS.indexOf(mk);
     if (idx === -1) return;
@@ -426,7 +366,6 @@ function injectParsedData(parsed) {
       existing = { label: `${MONTH_NAMES_DE[idx]} 2026` };
     }
 
-    // Find previous month that has studycheck data
     let prevMk = null;
     for (let i = idx - 1; i >= 0; i--) {
       const prevData = getMonthData(MONTH_KEYS[i]);
@@ -453,11 +392,6 @@ function injectParsedData(parsed) {
         value: fmt(totalBesucher),
         trend: prevSc ? pctTrend(totalBesucher, parseNum(prevSc.besucher.value)) : null,
         trendDir: prevSc ? trendDir(totalBesucher, parseNum(prevSc.besucher.value)) : null,
-      },
-      leads: {
-        value: fmt(totalLeads),
-        trend: prevSc ? pctTrend(totalLeads, parseNum(prevSc.leads.value)) : null,
-        trendDir: prevSc ? trendDir(totalLeads, parseNum(prevSc.leads.value)) : null,
       },
       profile: profiles,
       programProfiles,
@@ -486,14 +420,11 @@ function trendDir(cur, prev) {
   return cur >= prev ? 'up-good' : 'down-bad';
 }
 
-// ─── KPI Update ──────────────────────────────────────────────
-
 function updateKpis(sc) {
   const kpis = {
     'studycheck-seitenaufrufe': sc.seitenaufrufe,
     'studycheck-klicks': sc.klicks,
     'studycheck-besucher': sc.besucher,
-    'studycheck-leads': sc.leads,
   };
 
   Object.entries(kpis).forEach(([id, val]) => {
@@ -521,8 +452,6 @@ function updateKpis(sc) {
   });
 }
 
-// ─── Profile Table ───────────────────────────────────────────
-
 function renderProfileTable(sc) {
   const table = document.getElementById('studycheck-table');
   if (!table) return;
@@ -544,18 +473,14 @@ function renderProfileTable(sc) {
         <td>${p.klickrate}</td>
         <td>${fmt(p.besucherGesamt)}</td>
         <td>${fmt(p.einblendungen)}</td>
-        <td>${fmt(p.leads)}</td>
       </tr>`;
   });
 }
-
-// ─── Profile Charts ──────────────────────────────────────────
 
 function renderProfileCharts(sc, monthKey) {
   const container = document.getElementById('studycheck-charts-container');
   if (!container) return;
 
-  // Destroy old charts
   Object.keys(chartInstances).forEach(key => {
     if (key.startsWith('studycheck-pg-')) {
       chartInstances[key].destroy();
@@ -571,7 +496,6 @@ function renderProfileCharts(sc, monthKey) {
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
   const currentMonthName = monthNames[monthKey] || monthKey;
 
-  // Get previous month data if available
   const prevMk = sc._prevMonthKey || null;
   const prevMonthName = prevMk ? monthNames[prevMk] : null;
   const prevSc = prevMk ? ((getMonthData(prevMk) || {}).studycheck || null) : null;
@@ -665,8 +589,6 @@ function createProfileChart(canvasId, profile, prevProfile, currentLabel, prevLa
   });
 }
 
-// ─── API Payload ─────────────────────────────────────────────
-
 function buildTablePayload(parsed) {
   const rows = parsed.profiles.map(p => ({
     name: p.name,
@@ -688,8 +610,6 @@ function buildTablePayload(parsed) {
     rows,
   };
 }
-
-// ─── Helpers ─────────────────────────────────────────────────
 
 function updateLastUpdated() {
   const now = new Date();
@@ -734,4 +654,3 @@ function showFeedback(type, message) {
     setTimeout(() => { feedbackEl.style.display = 'none'; }, 6000);
   }
 }
-

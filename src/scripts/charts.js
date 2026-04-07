@@ -71,7 +71,6 @@ function renderAllCharts(month) {
     renderMailchimpTrendChart(data.mailchimp.trend);
   }
 
-  // studycheck charts are handled by studycheck.js
 
   if (data.ytdTrends) {
     renderYtdSpendChart(data.ytdTrends);

@@ -1,8 +1,8 @@
 import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached, getLastUpdatedTimestamps } from './data.js';
 import { showOverview } from './tab-navigation.js';
-import { renderInfomaterialTab, destroyInfomaterialCharts } from './infomaterial.js';
-import { renderContractOverviewTab } from './contract-overview.js';
-import { renderStudycheckTab, destroyStudycheckCharts } from './studycheck.js';
+import { renderInfomaterialTab, destroyInfomaterialCharts } from './fetching/manual/infomaterial.js';
+import { renderContractOverviewTab } from './fetching/manual/contract-overview.js';
+import { renderStudycheckTab, destroyStudycheckCharts } from './fetching/manual/studycheck.js';
 import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
@@ -330,10 +330,9 @@ export function updateDashboardData(month) {
   Object.entries(manualTabs).forEach(([titleId, { source, tab }]) => {
     const el = document.getElementById(titleId);
     if (!el) return;
-    const hasData = hasDataForTab(month, tab);
     const ts = timestamps[source];
     let badge = el.querySelector('.last-updated-badge');
-    if (hasData && ts) {
+    if (ts) {
       const d = new Date(ts);
       const formatted = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
       if (!badge) {
@@ -404,13 +403,15 @@ function enrichOverviewWithAllChannels(data) {
   const tt = data.tiktok;
   const li = data.linkedin;
   const mc = data.mailchimp;
+  const sc = data.studycheck;
 
   const impGoogle = getKpiVal(g, 'impressionen');
   const impMeta = getKpiVal(m, 'impressionen');
   const impInsta = getKpiVal(ig, 'impressionen');
   const impYouTube = getKpiVal(yt, 'views');
   const impLinkedIn = getKpiVal(li, 'impressionen');
-  const impTotal = impGoogle + impMeta + impInsta + impYouTube + impLinkedIn;
+  const impStudycheck = getKpiVal(sc, 'seitenaufrufe');
+  const impTotal = impGoogle + impMeta + impInsta + impYouTube + impLinkedIn + impStudycheck;
 
   const impSources = [];
   if (impGoogle) impSources.push(`Google: ${fmtNum(impGoogle)}`);
@@ -418,6 +419,7 @@ function enrichOverviewWithAllChannels(data) {
   if (impInsta) impSources.push(`Insta: ${fmtNum(impInsta)}`);
   if (impYouTube) impSources.push(`YT: ${fmtNum(impYouTube)}`);
   if (impLinkedIn) impSources.push(`LI: ${fmtNum(impLinkedIn)}`);
+  if (impStudycheck) impSources.push(`SC: ${fmtNum(impStudycheck)}`);
 
   data.overview.impressionen = {
     value: fmtNum(impTotal),
@@ -426,11 +428,13 @@ function enrichOverviewWithAllChannels(data) {
 
   const rwMeta = getKpiVal(m, 'reichweite');
   const rwInsta = getKpiVal(ig, 'reichweite');
-  const rwTotal = rwMeta + rwInsta;
+  const rwStudycheck = getKpiVal(sc, 'besucher');
+  const rwTotal = rwMeta + rwInsta + rwStudycheck;
 
   const rwSources = [];
   if (rwMeta) rwSources.push(`Meta: ${fmtNum(rwMeta)}`);
   if (rwInsta) rwSources.push(`Insta: ${fmtNum(rwInsta)}`);
+  if (rwStudycheck) rwSources.push(`SC: ${fmtNum(rwStudycheck)}`);
 
   data.overview.reichweite = {
     value: fmtNum(rwTotal),
@@ -440,12 +444,14 @@ function enrichOverviewWithAllChannels(data) {
   const klGoogle = getKpiVal(g, 'klicks');
   const klMeta = getKpiVal(m, 'linkKlicks');
   const klLinkedIn = getKpiVal(li, 'klicks');
-  const klTotal = klGoogle + klMeta + klLinkedIn;
+  const klStudycheck = getKpiVal(sc, 'klicks');
+  const klTotal = klGoogle + klMeta + klLinkedIn + klStudycheck;
 
   const klSources = [];
   if (klGoogle) klSources.push(`Google: ${fmtNum(klGoogle)}`);
   if (klMeta) klSources.push(`Meta: ${fmtNum(klMeta)}`);
   if (klLinkedIn) klSources.push(`LI: ${fmtNum(klLinkedIn)}`);
+  if (klStudycheck) klSources.push(`SC: ${fmtNum(klStudycheck)}`);
 
   data.overview.klicks = {
     value: fmtNum(klTotal),
@@ -490,6 +496,9 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
         const valueEl = el.querySelector('.kpi-value');
 
         let displayValue = val.value;
+        if (typeof displayValue === 'string' && displayValue.includes('%') && displayValue.includes('.')) {
+          displayValue = displayValue.replace('.', ',');
+        }
         if (typeof displayValue === 'number' && Number.isFinite(displayValue)) {
           displayValue = displayValue.toLocaleString('de-DE');
         } else if (typeof displayValue === 'string') {
@@ -647,12 +656,12 @@ function renderMailchimpTable(mailchimp) {
   if (!mailchimp || !mailchimp.campaignList) return;
 
   mailchimp.campaignList.forEach(c => {
-    tbody.innerHTML += `<tr><td>${c.name}</td><td>${typeof c.sent === 'number' ? c.sent.toLocaleString('de-DE') : c.sent}</td><td>${c.openRate}</td><td>${c.clickRate}</td><td>${c.date}</td></tr>`;
+    const or = c.openRate ? c.openRate.replace('.', ',') : c.openRate;
+    const cr = c.clickRate ? c.clickRate.replace('.', ',') : c.clickRate;
+    tbody.innerHTML += `<tr><td>${c.name}</td><td>${typeof c.sent === 'number' ? c.sent.toLocaleString('de-DE') : c.sent}</td><td>${or}</td><td>${cr}</td><td>${c.date}</td></tr>`;
   });
 }
 
 function renderStudycheckTable(studycheck) {
-  // Legacy fallback – actual rendering is handled by renderStudycheckTab in studycheck.js
-  // which is called from updateDashboardData
 }
 

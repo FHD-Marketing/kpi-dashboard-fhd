@@ -1,5 +1,5 @@
-import { getMonthData, setMonthData, getMonthOrder, uploadInfomaterialTable, reportLastUpdated } from './data.js';
-import { getCurrentMonth } from './month-selector.js';
+import { getMonthData, setMonthData, getMonthOrder, uploadInfomaterialTable, reportLastUpdated } from '../../data.js';
+import { getCurrentMonth } from '../../month-selector.js';
 
 const chartInstances = {};
 
