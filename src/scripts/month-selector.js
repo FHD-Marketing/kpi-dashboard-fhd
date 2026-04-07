@@ -52,7 +52,6 @@ export function activateLatestMonth() {
 
   if (available.length === 0) return;
 
-  // Find the latest available month
   let latestKey = available[0];
   for (const m of available) {
     if (monthOrder.indexOf(m) > monthOrder.indexOf(latestKey)) {
@@ -219,7 +218,6 @@ function activateFirstAvailableTab() {
   tabBtns.forEach(b => b.classList.remove('active'));
   tabContents.forEach(c => c.classList.remove('active'));
 
-  // Overview is always the default tab
   const overviewBtn = document.querySelector('.tab-btn[data-tab="uebersicht"]');
   const overview = document.getElementById('tab-uebersicht');
   if (overviewBtn && !overviewBtn.classList.contains('disabled')) {
@@ -390,7 +388,6 @@ function enrichOverviewWithAllChannels(data) {
   const li = data.linkedin;
   const mc = data.mailchimp;
 
-  // --- Impressionen Gesamt: Google + Meta + Instagram + YouTube + LinkedIn ---
   const impGoogle = getKpiVal(g, 'impressionen');
   const impMeta = getKpiVal(m, 'impressionen');
   const impInsta = getKpiVal(ig, 'impressionen');
@@ -410,7 +407,6 @@ function enrichOverviewWithAllChannels(data) {
     detail: impSources.join(' · ') || 'Keine Daten',
   };
 
-  // --- Reichweite Gesamt: Meta + Instagram + LinkedIn ---
   const rwMeta = getKpiVal(m, 'reichweite');
   const rwInsta = getKpiVal(ig, 'reichweite');
   const rwTotal = rwMeta + rwInsta;
@@ -424,7 +420,6 @@ function enrichOverviewWithAllChannels(data) {
     detail: rwSources.join(' · ') || 'Keine Daten',
   };
 
-  // --- Klicks Gesamt: Google + Meta + LinkedIn ---
   const klGoogle = getKpiVal(g, 'klicks');
   const klMeta = getKpiVal(m, 'linkKlicks');
   const klLinkedIn = getKpiVal(li, 'klicks');
@@ -440,7 +435,6 @@ function enrichOverviewWithAllChannels(data) {
     detail: klSources.join(' · ') || 'Keine Daten',
   };
 
-  // --- Follower Gesamt: Instagram + YouTube + LinkedIn + TikTok ---
   const fInsta = getKpiVal(ig, 'follower');
   const fYouTube = getKpiVal(yt, 'subscribers');
   const fLinkedIn = getKpiVal(li, 'follower');
@@ -458,7 +452,6 @@ function enrichOverviewWithAllChannels(data) {
     detail: fSources.join(' · ') || 'Keine Daten',
   };
 
-  // --- E-Mail-Abonnenten: Mailchimp ---
   const emailSubs = getKpiVal(mc, 'subscribers');
 
   data.overview.emailAbonnenten = {
@@ -466,7 +459,6 @@ function enrichOverviewWithAllChannels(data) {
     detail: emailSubs ? 'Mailchimp Newsletter' : 'Keine Daten',
   };
 
-  // --- Remove old CPC/CTR from overview ---
   delete data.overview.cpc;
   delete data.overview.ctr;
 }
@@ -483,8 +475,20 @@ function updateKpiSection(sectionId, sectionData, hasPrevMonth) {
         let displayValue = val.value;
         if (typeof displayValue === 'number' && Number.isFinite(displayValue)) {
           displayValue = displayValue.toLocaleString('de-DE');
-        } else if (typeof displayValue === 'string' && /^\d{4,}$/.test(displayValue.trim())) {
-          displayValue = Number(displayValue).toLocaleString('de-DE');
+        } else if (typeof displayValue === 'string') {
+          const trimmed = displayValue.trim();
+          if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(trimmed)) {
+          } else if (/^\d{4,}$/.test(trimmed)) {
+            displayValue = Number(trimmed).toLocaleString('de-DE');
+          } else {
+            const numInStr = trimmed.match(/^([€$£+\-]?\s*)(\d{4,})([\s,.].*)?$/);
+            if (numInStr) {
+              const p = numInStr[1] || '';
+              const n = Number(numInStr[2]).toLocaleString('de-DE');
+              const s = numInStr[3] || '';
+              displayValue = p + n + s;
+            }
+          }
         }
 
         if (val.deltaMode) {

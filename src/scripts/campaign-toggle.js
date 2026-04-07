@@ -19,7 +19,6 @@ export function initCampaignToggle() {
       const details = btn.closest('.campaign-section').querySelector('.campaign-details');
       if (details) {
         details.classList.toggle('open');
-        // Frontend text stays in German
         btn.textContent = details.classList.contains('open')
           ? '▲ Details ausblenden'
           : '▶ Klicken für Anzeigengruppen-Details';

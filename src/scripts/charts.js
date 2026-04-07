@@ -206,7 +206,6 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
 
   destroyChart(canvasId);
 
-  // Remove any stale tooltip for this chart
   const oldTooltip = document.getElementById('tooltip-' + canvasId);
   if (oldTooltip) oldTooltip.remove();
 
@@ -260,7 +259,6 @@ function renderBarChartFromPosts(canvasId, posts, valueKey, label, color) {
             const val = tooltip.dataPoints && tooltip.dataPoints[0] ? tooltip.dataPoints[0].formattedValue : '';
             el.innerHTML = '<div style="font-weight:700;margin-bottom:3px;word-break:break-word">' + name + '</div><div style="color:#94a3b8"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + color + ';margin-right:6px"></span>' + label + ': ' + val + '</div>';
 
-            // Position tooltip: first make visible to measure
             el.style.visibility = 'hidden';
             el.style.opacity = '1';
 

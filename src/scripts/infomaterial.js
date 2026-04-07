@@ -332,7 +332,6 @@ function parseInfomaterialSheet(rows) {
         if (ci !== undefined) {
           const raw = row[ci];
           if (typeof raw === 'number') {
-            // Excel stores percentages as decimals: 0.0748 = 7.48%, -0.1587 = -15.87%
             changeRow[mk] = raw * 100;
           } else {
             const s = String(raw).replace('%', '').replace(',', '.').trim();
@@ -363,7 +362,6 @@ function injectParsedData(parsed) {
   const total2026 = parsed.totalRows['2026'] || {};
   const total2025 = parsed.totalRows['2025'] || {};
 
-  // Pre-calculate totals per month to find "last month with data"
   const monthTotals = {};
   monthOrder.forEach(mk => {
     let t = total2026[mk] || 0;
@@ -387,7 +385,6 @@ function injectParsedData(parsed) {
     const changePct = changeRow[mk] || null;
     const prevYearTotal = total2025[mk] || 0;
 
-    // Find the last previous month that actually has data (total > 0)
     let prevMk = null;
     for (let i = idx - 1; i >= 0; i--) {
       if (monthTotals[monthOrder[i]] > 0) {
@@ -551,7 +548,6 @@ function renderProgramCharts(info, monthKey) {
   const container = document.getElementById('infomaterial-charts-container');
   if (!container) return;
 
-  // Destroy existing program charts
   Object.keys(chartInstances).forEach(key => {
     if (key.startsWith('infomaterial-pg-')) {
       chartInstances[key].destroy();

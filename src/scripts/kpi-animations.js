@@ -4,18 +4,15 @@ function countUp(el, duration = 800) {
   const target = el.dataset.target || el.textContent.trim();
   if (!target || target === '—' || target === '-') return;
 
-  // Extract prefix (currency symbols, +/-)
   const prefixMatch = target.match(/^([€$£+\-]?\s*)/);
   const prefix = prefixMatch ? prefixMatch[1] : '';
 
-  // Extract suffix (%, unit words, trailing dots in abbreviations)
   const suffixMatch = target.match(/((?:%|\s*[A-Za-zÄÖÜäöüß]+\.?)\s*)$/);
   const suffix = suffixMatch ? suffixMatch[1] : '';
 
   const numPart = target.slice(prefix.length, target.length - (suffix.length || 0)).trim();
   if (!numPart) { el.textContent = target; return; }
 
-  // Parse German number format: dots are thousands separators, comma is decimal
   const numStr = numPart.replace(/\./g, '').replace(',', '.');
   const num = parseFloat(numStr);
   if (isNaN(num) || num === 0) {
@@ -23,10 +20,8 @@ function countUp(el, duration = 800) {
     return;
   }
 
-  // Detect decimal places from template
   const hasComma = numPart.includes(',');
   const decimals = hasComma ? (numPart.split(',')[1]?.replace(/[^\d]/g, '').length || 0) : 0;
-  // Detect if target number uses thousands separators
   const hasThousandsSep = numPart.includes('.');
 
   const myId = ++animationId;
@@ -45,7 +40,7 @@ function countUp(el, duration = 800) {
       el.textContent = prefix + formatNumber(currentVal, decimals, hasThousandsSep || num >= 1000) + suffix;
       requestAnimationFrame(update);
     } else {
-      el.textContent = target;
+      el.textContent = prefix + formatNumber(num, decimals, hasThousandsSep || num >= 1000) + suffix;
     }
   }
 
