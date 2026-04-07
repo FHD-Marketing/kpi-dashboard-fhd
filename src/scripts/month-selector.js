@@ -1,6 +1,6 @@
 import { getMonthData, getPreviousMonthKey, getAvailableMonths, hasDataForTab, fetchOverview, fetchChannel, clearMonthChannels, getAvailableChannelsForMonth, isChannelCached, getLastUpdatedTimestamps } from './data.js';
 import { showOverview } from './tab-navigation.js';
-import { renderInfomaterialTab } from './infomaterial.js';
+import { renderInfomaterialTab, destroyInfomaterialCharts } from './infomaterial.js';
 import { renderContractOverviewTab } from './contract-overview.js';
 import { destroyAllCharts } from './charts.js';
 
@@ -58,6 +58,7 @@ export function activateLatestMonth() {
 
 function resetTabContents() {
   destroyAllCharts();
+  destroyInfomaterialCharts();
 
   document.querySelectorAll('.kpi-value').forEach(el => {
     el.textContent = '—';
@@ -73,7 +74,7 @@ function resetTabContents() {
     el.textContent = '';
   });
 
-  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections'].forEach(id => {
+  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections', 'infomaterial-faculty-cards', 'infomaterial-charts-container'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '';
   });

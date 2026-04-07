@@ -27,9 +27,19 @@ export function initInfomaterial() {
   setupUploadHandlers();
 }
 
+export function destroyInfomaterialCharts() {
+  Object.keys(chartInstances).forEach(key => {
+    try { chartInstances[key].destroy(); } catch (_) {}
+    delete chartInstances[key];
+  });
+}
+
 export function renderInfomaterialTab(monthKey) {
   const data = getMonthData(monthKey);
-  if (!data || !data.infomaterial) return;
+  if (!data || !data.infomaterial) {
+    toggleInfomaterialSections(false);
+    return;
+  }
 
   const info = data.infomaterial;
 
@@ -37,11 +47,22 @@ export function renderInfomaterialTab(monthKey) {
   const gesamtNum = typeof rawGesamt === 'number'
     ? rawGesamt
     : parseInt(String(rawGesamt || '0').replace(/\./g, '').replace(',', '.'), 10);
-  if (!gesamtNum || gesamtNum <= 0) return;
+  if (!gesamtNum || gesamtNum <= 0) {
+    toggleInfomaterialSections(false);
+    return;
+  }
 
+  toggleInfomaterialSections(true);
   updateInfoKpis(info, monthKey);
   renderFacultySummary(info, monthKey);
   renderProgramCharts(info, monthKey);
+}
+
+function toggleInfomaterialSections(visible) {
+  ['infomaterial-section-faculty', 'infomaterial-section-charts'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? '' : 'none';
+  });
 }
 
 function setupUploadHandlers() {
@@ -342,11 +363,18 @@ function injectParsedData(parsed) {
   const total2026 = parsed.totalRows['2026'] || {};
   const total2025 = parsed.totalRows['2025'] || {};
 
-  monthOrder.forEach((mk, idx) => {
-    let total = total2026[mk] || 0;
-    if (total === 0) {
-      parsed.programs.forEach(pg => { total += (pg[mk] || 0); });
+  // Pre-calculate totals per month to find "last month with data"
+  const monthTotals = {};
+  monthOrder.forEach(mk => {
+    let t = total2026[mk] || 0;
+    if (t === 0) {
+      parsed.programs.forEach(pg => { t += (pg[mk] || 0); });
     }
+    monthTotals[mk] = t;
+  });
+
+  monthOrder.forEach((mk, idx) => {
+    const total = monthTotals[mk];
 
     let bachelorTotal = 0;
     let masterTotal = 0;
@@ -359,7 +387,14 @@ function injectParsedData(parsed) {
     const changePct = changeRow[mk] || null;
     const prevYearTotal = total2025[mk] || 0;
 
-    const prevMk = idx > 0 ? monthOrder[idx - 1] : null;
+    // Find the last previous month that actually has data (total > 0)
+    let prevMk = null;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (monthTotals[monthOrder[i]] > 0) {
+        prevMk = monthOrder[i];
+        break;
+      }
+    }
 
     const faculties = {};
     if (parsed.faculties && parsed.faculties.length > 0) {
@@ -440,6 +475,7 @@ function injectParsedData(parsed) {
       fakultaeten: faculties,
       fakultaetenPrev: facultiesPrev,
       studiengaenge: programsData,
+      _prevMonthKey: prevMk,
       _raw: parsed
     };
 
@@ -476,6 +512,8 @@ function renderFacultySummary(info, monthKey) {
 
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
   const monthName = monthNames[monthKey] || monthKey;
+  const prevMk = info._prevMonthKey || null;
+  const prevMonthLabel = prevMk ? monthNames[prevMk] : 'Vormonat';
 
   container.innerHTML = '';
 
@@ -503,7 +541,7 @@ function renderFacultySummary(info, monthKey) {
           <span class="faculty-month">${monthName}</span>
           ${changeHtml}
         </div>
-        ${prevValue > 0 ? `<div class="faculty-prev">Vormonat: ${prevValue.toLocaleString('de-DE')}</div>` : ''}
+        ${prevValue > 0 ? `<div class="faculty-prev">${prevMonthLabel}: ${prevValue.toLocaleString('de-DE')}</div>` : ''}
       </div>
     `;
   });
@@ -527,8 +565,8 @@ function renderProgramCharts(info, monthKey) {
 
   const monthNames = { jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', mai: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember' };
   const currentMonthName = monthNames[monthKey] || monthKey;
-  const mkIdx = MONTH_KEYS.indexOf(monthKey);
-  const prevMonthName = mkIdx > 0 ? monthNames[MONTH_KEYS[mkIdx - 1]] : null;
+  const prevMk = info._prevMonthKey || null;
+  const prevMonthName = prevMk ? monthNames[prevMk] : null;
 
   const activePrograms = info.studiengaenge.filter(pg => pg.current > 0 || pg.previous > 0);
 
