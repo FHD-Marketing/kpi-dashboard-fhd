@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE || '';
 ---
 <html lang="de">
 <head>
@@ -12,7 +14,24 @@ import '../styles/global.css';
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" is:inline></script>
 </head>
 <body>
-<div class="dashboard">
+
+<div id="auth-gate" class="auth-gate">
+  <div class="auth-card">
+    <div class="auth-icon">🔒</div>
+    <h2>Dashboard Login</h2>
+    <p>Bitte Passwort eingeben, um fortzufahren.</p>
+    <form id="auth-form" autocomplete="off">
+      <input type="password" id="auth-password" class="auth-input" placeholder="Passwort" autofocus />
+      <div class="auth-remember">
+        <label><input type="checkbox" id="auth-remember" /> Angemeldet bleiben</label>
+      </div>
+      <button type="submit" class="auth-submit">Entsperren</button>
+      <p id="auth-error" class="auth-error" hidden>Falsches Passwort.</p>
+    </form>
+  </div>
+</div>
+
+<div id="dashboard-root" class="dashboard" style="display:none;">
 
   <header class="dashboard-header">
     <div class="header-left">
@@ -149,7 +168,7 @@ import '../styles/global.css';
 
   <section id="tab-google" class="tab-content">
     <h2 class="section-title" id="google-title"><span class="title-icon">🔵</span><span class="title-text">Google Ads Kampagnen</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
 
     <div class="kpi-grid cols-4 channel-google">
       <div class="kpi-card" data-kpi="google-spend">
@@ -180,7 +199,7 @@ import '../styles/global.css';
 
   <section id="tab-meta" class="tab-content">
     <h2 class="section-title" id="meta-title"><span class="title-icon">🟦</span><span class="title-text">Meta Kampagnen</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
 
     <div class="kpi-grid cols-4 channel-meta">
       <div class="kpi-card" data-kpi="meta-spend">
@@ -206,7 +225,7 @@ import '../styles/global.css';
 
   <section id="tab-instagram" class="tab-content">
     <h2 class="section-title" id="instagram-title"><span class="title-icon">📸</span><span class="title-text">Instagram</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
     <div class="kpi-grid cols-4 channel-instagram">
       <div class="kpi-card" data-kpi="instagram-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div><div class="kpi-detail"></div></div>
       <div class="kpi-card" data-kpi="instagram-engagementRate"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT RATE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div><div class="kpi-detail"></div></div>
@@ -221,7 +240,7 @@ import '../styles/global.css';
 
   <section id="tab-youtube" class="tab-content">
     <h2 class="section-title" id="youtube-title"><span class="title-icon">▶️</span><span class="title-text">YouTube</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
     <div class="kpi-grid cols-4 channel-youtube">
       <div class="kpi-card" data-kpi="youtube-views"><div class="kpi-card-header"><span class="kpi-card-label">VIEWS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div><div class="kpi-detail"></div></div>
       <div class="kpi-card" data-kpi="youtube-subscribers"><div class="kpi-card-header"><span class="kpi-card-label">ABONNENTEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div><div class="kpi-detail"></div></div>
@@ -236,7 +255,7 @@ import '../styles/global.css';
 
   <section id="tab-tiktok" class="tab-content">
     <h2 class="section-title" id="tiktok-title"><span class="title-icon">🎵</span><span class="title-text">TikTok</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
     <div class="kpi-grid cols-4 channel-tiktok">
       <div class="kpi-card" data-kpi="tiktok-views"><div class="kpi-card-header"><span class="kpi-card-label">VIEWS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="tiktok-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -251,7 +270,7 @@ import '../styles/global.css';
 
   <section id="tab-linkedin" class="tab-content">
     <h2 class="section-title" id="linkedin-title"><span class="title-icon">💼</span><span class="title-text">LinkedIn</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
     <div class="kpi-grid cols-4 channel-linkedin">
       <div class="kpi-card" data-kpi="linkedin-impressionen"><div class="kpi-card-header"><span class="kpi-card-label">IMPRESSIONEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="linkedin-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -266,7 +285,7 @@ import '../styles/global.css';
 
   <section id="tab-mailchimp" class="tab-content">
     <h2 class="section-title" id="mailchimp-title"><span class="title-icon">📧</span><span class="title-text">Mailchimp</span></h2>
-    <p class="section-subtitle">Automatisch gefetched, aller 4 Stunden.</p>
+    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
     <div class="kpi-grid cols-4 channel-mailchimp">
       <div class="kpi-card" data-kpi="mailchimp-openRate"><div class="kpi-card-header"><span class="kpi-card-label">OPEN RATE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="mailchimp-clickRate"><div class="kpi-card-header"><span class="kpi-card-label">CLICK RATE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
@@ -378,7 +397,6 @@ import '../styles/global.css';
     </div>
   </section>
 
-  <!-- ═══ TAB: VERTRAGSÜBERSICHT ═══ -->
   <section id="tab-vertrag" class="tab-content">
     <h2 class="section-title" id="vertrag-title">
       <span class="title-icon">📋</span><span class="title-text">Vertragsübersicht</span>
@@ -422,6 +440,54 @@ import '../styles/global.css';
   </footer>
 </div>
 
+<script is:inline define:vars={{ apiBase }}>
+  (function() {
+    var API_BASE = apiBase;
+    var STORAGE_KEY = 'fhd_dash_auth';
+
+    function unlock() {
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('dashboard-root').style.display = '';
+      window.dispatchEvent(new CustomEvent('dashboard-unlocked'));
+    }
+
+    var stored = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+    if (stored === 'authed') {
+      unlock();
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var pw = document.getElementById('auth-password').value;
+      var errorEl = document.getElementById('auth-error');
+      errorEl.hidden = true;
+      try {
+        var res = await fetch(API_BASE + '/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          if (document.getElementById('auth-remember').checked) {
+            localStorage.setItem(STORAGE_KEY, 'authed');
+          }
+          sessionStorage.setItem(STORAGE_KEY, 'authed');
+          unlock();
+        } else {
+          errorEl.hidden = false;
+          document.getElementById('auth-password').value = '';
+          document.getElementById('auth-password').focus();
+        }
+      } catch (err) {
+        errorEl.hidden = false;
+        document.getElementById('auth-password').value = '';
+        document.getElementById('auth-password').focus();
+      }
+    });
+  })();
+</script>
+
 <script>
   import { initTabNavigation } from '../scripts/tab-navigation.js';
   import { initMonthSelector, refreshMonthButtons, activateLatestMonth } from '../scripts/month-selector.js';
@@ -433,7 +499,12 @@ import '../styles/global.css';
   import { initContractOverview } from '../scripts/fetching/manual/contract-overview.js';
   import { initStudycheck } from '../scripts/fetching/manual/studycheck.js';
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  let dashboardInitialized = false;
+
+  async function initDashboard() {
+    if (dashboardInitialized) return;
+    dashboardInitialized = true;
+
     initTabNavigation();
     initMonthSelector();
     initCampaignToggle();
@@ -457,7 +528,16 @@ import '../styles/global.css';
       activateLatestMonth();
       setTimeout(() => { initCharts(); }, 200);
     }
-  });
+  }
+
+  const root = document.getElementById('dashboard-root');
+  const alreadyVisible = root && root.style.display !== 'none';
+
+  if (alreadyVisible) {
+    initDashboard();
+  } else {
+    window.addEventListener('dashboard-unlocked', () => initDashboard(), { once: true });
+  }
 </script>
 </body>
 </html>
