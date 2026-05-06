@@ -189,12 +189,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
       </div>
     </div>
 
-    <div class="chart-card mb-xl">
-      <div class="chart-card-header"><span class="chart-card-title">Spend nach Kampagne</span></div>
-      <div class="horiz-bar-chart" id="google-spend-bars"></div>
-    </div>
-
-    <div id="google-campaign-cards"></div>
+    <div id="google-campaign-sections"></div>
   </section>
 
   <section id="tab-meta" class="tab-content">
@@ -479,7 +474,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
         <span class="inline-upload-icon">📂</span>
       </label>
     </h2>
-    <p class="section-subtitle">Statistiken aus manuellem Excel-Upload.</p>
+    <p class="section-subtitle">Statistiken aus manuellem Excel-Upload. Bitte pro Monat eine Datei!</p>
     <div class="upload-feedback" id="vertrag-upload-feedback" style="display:none"></div>
 
     <div class="kpi-grid cols-4 channel-vertrag">

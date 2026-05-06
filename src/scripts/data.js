@@ -118,6 +118,17 @@ export function isChannelCached(channel, monthShort) {
   return !!(dashboardData[monthShort] && dashboardData[monthShort][channel]);
 }
 
+export function invalidateChannelCache(channel, monthShort) {
+  if (!channel || !monthShort) return;
+  const path = `/api/channel/${channel}/${monthShort}`;
+  Object.keys(cache).forEach(k => {
+    if (k === path || k.startsWith(path + '?')) delete cache[k];
+  });
+  if (dashboardData[monthShort]) {
+    delete dashboardData[monthShort][channel];
+  }
+}
+
 export function getChannelForTab(tabId) {
   const dataKey = tabToDataKey[tabId];
   return dataKeyToChannel[dataKey] || null;
