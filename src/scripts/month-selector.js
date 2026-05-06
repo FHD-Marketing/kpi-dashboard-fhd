@@ -3,6 +3,8 @@ import { showOverview } from './tab-navigation.js';
 import { renderInfomaterialTab, destroyInfomaterialCharts } from './fetching/manual/infomaterial.js';
 import { renderContractOverviewTab } from './fetching/manual/contract-overview.js';
 import { renderStudycheckTab, destroyStudycheckCharts } from './fetching/manual/studycheck.js';
+import { renderLinkedinTab, destroyLinkedinCharts, normalizeLinkedinData } from './fetching/manual/linkedin.js';
+import { renderTiktokTab, destroyTiktokCharts, normalizeTiktokData } from './fetching/manual/tiktok.js';
 import { destroyAllCharts } from './charts.js';
 
 let currentMonth = null;
@@ -67,6 +69,8 @@ function resetTabContents() {
   destroyAllCharts();
   destroyInfomaterialCharts();
   destroyStudycheckCharts();
+  destroyLinkedinCharts();
+  destroyTiktokCharts();
 
   document.querySelectorAll('.kpi-value').forEach(el => {
     el.textContent = '—';
@@ -82,7 +86,7 @@ function resetTabContents() {
     el.textContent = '';
   });
 
-  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections', 'infomaterial-faculty-cards', 'infomaterial-charts-container', 'studycheck-charts-container'].forEach(id => {
+  ['google-spend-bars', 'google-campaign-cards', 'meta-campaign-sections', 'infomaterial-faculty-cards', 'infomaterial-charts-container', 'studycheck-charts-container', 'tiktok-charts-container'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '';
   });
@@ -167,6 +171,20 @@ async function selectMonth(month) {
     }
   }
 
+  if (!isChannelCached('linkedin', month)) {
+    try {
+      await fetchChannel('linkedin', month);
+    } catch (_) {
+    }
+  }
+
+  if (!isChannelCached('tiktok', month)) {
+    try {
+      await fetchChannel('tiktok', month);
+    } catch (_) {
+    }
+  }
+
   if (myGen !== loadGeneration) return;
 
   updateTabAvailability(month);
@@ -194,7 +212,7 @@ function updateTabAvailability(month) {
     const tab = btn.dataset.tab;
     if (!tab) return;
 
-    if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck' || tab === 'vertrag') {
+    if (tab === 'uebersicht' || tab === 'infomaterial' || tab === 'studycheck' || tab === 'vertrag' || tab === 'linkedin' || tab === 'tiktok') {
       btn.classList.remove('disabled');
       return;
     }
@@ -325,6 +343,8 @@ export function updateDashboardData(month) {
     'studycheck-title': { source: 'studycheck', tab: 'studycheck' },
     'infomaterial-title': { source: 'infomaterial', tab: 'infomaterial' },
     'vertrag-title': { source: 'vertrag', tab: 'vertrag' },
+    'linkedin-title': { source: 'linkedin', tab: 'linkedin' },
+    'tiktok-title': { source: 'tiktok', tab: 'tiktok' },
   };
   const timestamps = getLastUpdatedTimestamps();
   Object.entries(manualTabs).forEach(([titleId, { source, tab }]) => {
@@ -352,6 +372,9 @@ export function updateDashboardData(month) {
     }
   });
 
+  normalizeTiktokData(month);
+  normalizeLinkedinData(month);
+
   enrichOverviewWithAllChannels(data);
 
   updateKpiSection('overview', data.overview, !!prevData);
@@ -372,6 +395,8 @@ export function updateDashboardData(month) {
   renderStudycheckTab(month);
   renderInfomaterialTab(month);
   renderContractOverviewTab(month);
+  renderLinkedinTab(month);
+  renderTiktokTab(month);
 }
 
 function parseKpiNumber(val) {

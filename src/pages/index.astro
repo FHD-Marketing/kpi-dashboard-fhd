@@ -72,12 +72,12 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
       <button class="tab-btn disabled" data-tab="meta"><span class="tab-icon">🟦</span> Meta Ads</button>
       <button class="tab-btn disabled" data-tab="instagram"><span class="tab-icon">📸</span> Instagram</button>
       <button class="tab-btn disabled" data-tab="youtube"><span class="tab-icon">▶️</span> YouTube</button>
-      <button class="tab-btn disabled" data-tab="tiktok"><span class="tab-icon">🎵</span> TikTok</button>
-      <button class="tab-btn disabled" data-tab="linkedin"><span class="tab-icon">💼</span> LinkedIn</button>
       <button class="tab-btn disabled" data-tab="mailchimp"><span class="tab-icon">📧</span> Mailchimp</button>
     </nav>
     <nav class="tab-navigation" data-row="manuell">
       <span class="tab-row-label">Manuell</span>
+      <button class="tab-btn disabled" data-tab="tiktok"><span class="tab-icon">🎵</span> TikTok</button>
+      <button class="tab-btn disabled" data-tab="linkedin"><span class="tab-icon">💼</span> LinkedIn</button>
       <button class="tab-btn disabled" data-tab="studycheck"><span class="tab-icon">⭐</span> StudyCheck</button>
       <button class="tab-btn disabled" data-tab="infomaterial"><span class="tab-icon">📥</span> Infomaterialanfragen</button>
       <button class="tab-btn disabled" data-tab="vertrag"><span class="tab-icon">📋</span> Vertragsübersicht</button>
@@ -254,32 +254,104 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
   </section>
 
   <section id="tab-tiktok" class="tab-content">
-    <h2 class="section-title" id="tiktok-title"><span class="title-icon">🎵</span><span class="title-text">TikTok</span></h2>
-    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
+    <h2 class="section-title" id="tiktok-title">
+      <span class="title-icon">🎵</span><span class="title-text">TikTok</span>
+      <span class="last-updated-badge" style="display:none"></span>
+      <label class="inline-upload" id="tiktok-upload-area">
+        <input type="file" id="tiktok-file-input" accept=".csv" multiple hidden />
+        <span class="inline-upload-label">CSVs hochladen</span>
+        <span class="inline-upload-icon">📂</span>
+      </label>
+    </h2>
+    <p class="section-subtitle">Statistiken aus manuellem TikTok-Export (Übersicht.csv, Publikum.csv, Video.csv – mehrere Dateien gleichzeitig auswählbar).</p>
+    <div class="upload-feedback" id="tiktok-upload-feedback" style="display:none"></div>
+
     <div class="kpi-grid cols-4 channel-tiktok">
       <div class="kpi-card" data-kpi="tiktok-views"><div class="kpi-card-header"><span class="kpi-card-label">VIEWS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="tiktok-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="tiktok-engagementRate"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT RATE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
       <div class="kpi-card" data-kpi="tiktok-likes"><div class="kpi-card-header"><span class="kpi-card-label">LIKES</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
     </div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Video-Performance (Views)</span></div><div class="chart-wrapper" style="height:220px"><canvas id="tiktok-performance-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Follower-Wachstum</span></div><div class="chart-wrapper" style="height:220px"><canvas id="tiktok-growth-chart"></canvas></div></div>
+
+    <div id="tiktok-section-table" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📋</span> Videoübersicht</h3>
+      <div class="data-table-wrapper">
+        <table class="data-table" id="tiktok-table">
+          <thead>
+            <tr>
+              <th>Video</th>
+              <th>Veröffentlicht</th>
+              <th>Aufrufe</th>
+              <th>Likes</th>
+              <th>Kommentare</th>
+              <th>Freigaben</th>
+              <th>Favoriten</th>
+              <th>Eng. Rate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tiktok-section-charts" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📊</span> Performance pro Video</h3>
+      <div class="infomaterial-charts-grid" id="tiktok-charts-container">
+        <div class="infomaterial-empty-state">
+          <p>Lade die TikTok-Export-CSVs hoch, um die Video-Graphen zu sehen.</p>
+        </div>
+      </div>
     </div>
   </section>
 
   <section id="tab-linkedin" class="tab-content">
-    <h2 class="section-title" id="linkedin-title"><span class="title-icon">💼</span><span class="title-text">LinkedIn</span></h2>
-    <p class="section-subtitle">Automatisch aktualisiert aller 4 Stunden.</p>
+    <h2 class="section-title" id="linkedin-title">
+      <span class="title-icon">💼</span><span class="title-text">LinkedIn</span>
+      <span class="last-updated-badge" style="display:none"></span>
+      <label class="inline-upload" id="linkedin-upload-area">
+        <input type="file" id="linkedin-file-input" accept=".xls,.xlsx" hidden />
+        <span class="inline-upload-label">Excel hochladen</span>
+        <span class="inline-upload-icon">📂</span>
+      </label>
+    </h2>
+    <p class="section-subtitle">Statistiken aus manuellem LinkedIn-Export (.xls/.xlsx).</p>
+    <div class="upload-feedback" id="linkedin-upload-feedback" style="display:none"></div>
+
     <div class="kpi-grid cols-4 channel-linkedin">
-      <div class="kpi-card" data-kpi="linkedin-impressionen"><div class="kpi-card-header"><span class="kpi-card-label">IMPRESSIONEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="linkedin-follower"><div class="kpi-card-header"><span class="kpi-card-label">FOLLOWER</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="linkedin-engagement"><div class="kpi-card-header"><span class="kpi-card-label">ENGAGEMENT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
-      <div class="kpi-card" data-kpi="linkedin-klicks"><div class="kpi-card-header"><span class="kpi-card-label">KLICKS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="linkedin-impressionen"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👁️</span> IMPRESSIONEN</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="linkedin-klicks"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">👆</span> KLICKS</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="linkedin-engagement"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">💬</span> ENGAGEMENT</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
+      <div class="kpi-card" data-kpi="linkedin-engagementRate"><div class="kpi-card-header"><span class="kpi-card-label"><span class="kpi-icon">📈</span> ENGAGEMENT RATE</span><span class="kpi-trend"></span></div><div class="kpi-value">—</div></div>
     </div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Top Posts (Impressionen)</span></div><div class="chart-wrapper" style="height:220px"><canvas id="linkedin-impressions-chart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-card-header"><span class="chart-card-title">Follower-Wachstum</span></div><div class="chart-wrapper" style="height:220px"><canvas id="linkedin-follower-chart"></canvas></div></div>
+
+    <div id="linkedin-section-table" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📋</span> Beitragsübersicht</h3>
+      <div class="data-table-wrapper">
+        <table class="data-table" id="linkedin-table">
+          <thead>
+            <tr>
+              <th>Beitrag</th>
+              <th>Datum</th>
+              <th>Impressionen</th>
+              <th>Klicks</th>
+              <th>CTR</th>
+              <th>Likes</th>
+              <th>Kommentare</th>
+              <th>Eng. Rate</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="linkedin-section-charts" style="display:none">
+      <h3 class="section-title mb-md"><span class="title-icon">📊</span> Performance pro Beitrag</h3>
+      <div class="infomaterial-charts-grid" id="linkedin-charts-container">
+        <div class="infomaterial-empty-state">
+          <p>Lade einen LinkedIn-Export hoch, um die Beitrags-Graphen zu sehen.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -498,6 +570,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
   import { initInfomaterial } from '../scripts/fetching/manual/infomaterial.js';
   import { initContractOverview } from '../scripts/fetching/manual/contract-overview.js';
   import { initStudycheck } from '../scripts/fetching/manual/studycheck.js';
+  import { initLinkedin } from '../scripts/fetching/manual/linkedin.js';
+  import { initTiktok } from '../scripts/fetching/manual/tiktok.js';
 
   let dashboardInitialized = false;
 
@@ -512,6 +586,8 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
     initInfomaterial();
     initContractOverview();
     initStudycheck();
+    initLinkedin();
+    initTiktok();
 
     const loadingEl = document.getElementById('loading-state');
 

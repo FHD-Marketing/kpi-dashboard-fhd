@@ -56,7 +56,7 @@ async function apiFetch(path) {
   }
 
   if (!res.ok) {
-    if (res.status === 404) return null;
+    if (res.status >= 400 && res.status < 500) return null;
     console.error(`[KPI] API ${path} → HTTP ${res.status}`);
     throw new Error(`API ${path} returned HTTP ${res.status}`);
   }
@@ -262,6 +262,56 @@ export async function uploadStudycheckTable(tableData) {
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`API /api/table2 → HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function uploadLinkedinTable(tableData) {
+  const url = `${API_BASE}/api/table3`;
+
+  if (!API_BASE) {
+    console.error('[KPI] PUBLIC_API_BASE is not set');
+    throw new Error('API base not configured');
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify(tableData),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API /api/table3 → HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function uploadTiktokTable(tableData) {
+  const url = `${API_BASE}/api/table4`;
+
+  if (!API_BASE) {
+    console.error('[KPI] PUBLIC_API_BASE is not set');
+    throw new Error('API base not configured');
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+    },
+    body: JSON.stringify(tableData),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API /api/table4 → HTTP ${res.status}: ${text}`);
   }
 
   return res.json();
