@@ -1,5 +1,4 @@
-const API_BASE = import.meta.env.PUBLIC_API_BASE;
-const API_KEY = import.meta.env.PUBLIC_API_KEY;
+const API_BASE = 'https://api-gateway-00224466.ludorfjonas.workers.dev/kpi';
 
 const cache = {};
 let monthsMeta = null;
@@ -40,16 +39,9 @@ async function apiFetch(path) {
 
   const url = `${API_BASE}${path}?_t=${Date.now()}`;
 
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    return null;
-  }
-
   let res;
   try {
-    res = await fetch(url, {
-      headers: { 'x-api-key': API_KEY },
-    });
+    res = await fetch(url);
   } catch (err) {
     console.error(`[KPI] Network error for ${url}:`, err.message);
     return null;
@@ -70,6 +62,21 @@ async function apiFetch(path) {
 
   cache[cacheKey] = data;
   return data;
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API ${path} → HTTP ${res.status}: ${text}`);
+  }
+
+  return res.json();
 }
 
 export async function fetchMonths() {
@@ -204,128 +211,23 @@ export function getMonthOrder() {
 }
 
 export async function uploadInfomaterialTable(tableData) {
-  const url = `${API_BASE}/api/table`;
-
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    throw new Error('API base not configured');
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify(tableData),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API /api/table → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  return apiPost('/api/table', tableData);
 }
 
 export async function uploadVertragTable(tableData) {
-  const url = `${API_BASE}/api/table1`;
-
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    throw new Error('API base not configured');
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify(tableData),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API /api/table1 → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  return apiPost('/api/table1', tableData);
 }
 
 export async function uploadStudycheckTable(tableData) {
-  const url = `${API_BASE}/api/table2`;
-
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    throw new Error('API base not configured');
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify(tableData),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API /api/table2 → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  return apiPost('/api/table2', tableData);
 }
 
 export async function uploadLinkedinTable(tableData) {
-  const url = `${API_BASE}/api/table3`;
-
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    throw new Error('API base not configured');
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify(tableData),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API /api/table3 → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  return apiPost('/api/table3', tableData);
 }
 
 export async function uploadTiktokTable(tableData) {
-  const url = `${API_BASE}/api/table4`;
-
-  if (!API_BASE) {
-    console.error('[KPI] PUBLIC_API_BASE is not set');
-    throw new Error('API base not configured');
-  }
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify(tableData),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API /api/table4 → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
+  return apiPost('/api/table4', tableData);
 }
 
 let lastUpdatedTimestamps = {};
@@ -341,21 +243,18 @@ export function getLastUpdatedTimestamps() {
 }
 
 export async function reportLastUpdated(source) {
-  const url = `${API_BASE}/api/last-updated`;
+  try {
+    const res = await fetch(`${API_BASE}/api/last-updated`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source }),
+    });
 
-  if (!API_BASE) return;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify({ source }),
-  });
-
-  if (!res.ok) {
-    console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
+    if (!res.ok) {
+      console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
+    }
+  } catch (err) {
+    console.warn(`[KPI] POST /api/last-updated error:`, err.message);
   }
 
   delete cache['/api/last-updated'];

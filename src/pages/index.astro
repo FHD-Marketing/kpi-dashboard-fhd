@@ -1,7 +1,5 @@
 ---
 import '../styles/global.css';
-
-const apiBase = import.meta.env.PUBLIC_API_BASE || '';
 ---
 <html lang="de">
 <head>
@@ -507,9 +505,9 @@ const apiBase = import.meta.env.PUBLIC_API_BASE || '';
   </footer>
 </div>
 
-<script is:inline define:vars={{ apiBase }}>
+<script is:inline>
   (function() {
-    var API_BASE = apiBase;
+    var API_BASE = 'https://api-gateway-00224466.ludorfjonas.workers.dev/kpi';
     var STORAGE_KEY = 'fhd_dash_auth';
 
     function unlock() {
