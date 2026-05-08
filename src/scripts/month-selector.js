@@ -55,14 +55,33 @@ export function activateLatestMonth() {
 
   if (available.length === 0) return;
 
-  let latestKey = available[0];
-  for (const m of available) {
-    if (monthOrder.indexOf(m) > monthOrder.indexOf(latestKey)) {
-      latestKey = m;
+  const currentIdx = new Date().getMonth(); // 0..11
+  const currentKey = monthOrder[currentIdx];
+
+  let chosenKey = null;
+
+  if (available.includes(currentKey)) {
+    chosenKey = currentKey;
+  } else {
+    for (const m of available) {
+      const idx = monthOrder.indexOf(m);
+      if (idx <= currentIdx) {
+        if (chosenKey === null || idx > monthOrder.indexOf(chosenKey)) {
+          chosenKey = m;
+        }
+      }
+    }
+    if (chosenKey === null) {
+      chosenKey = available[0];
+      for (const m of available) {
+        if (monthOrder.indexOf(m) > monthOrder.indexOf(chosenKey)) {
+          chosenKey = m;
+        }
+      }
     }
   }
 
-  selectMonth(latestKey);
+  selectMonth(chosenKey);
 }
 
 function resetTabContents() {
@@ -139,6 +158,7 @@ async function selectMonth(month) {
   if (myGen !== loadGeneration) return;
 
   const channels = getAvailableChannelsForMonth(month);
+  const hasAvailabilityList = Array.isArray(channels) && channels.length > 0;
   const toFetch = channels.filter(ch => !isChannelCached(ch, month));
 
   for (const channel of toFetch) {
@@ -150,37 +170,13 @@ async function selectMonth(month) {
     }
   }
 
-  if (!isChannelCached('infomaterial', month)) {
+  const manualChannels = ['infomaterial', 'studycheck', 'vertrag', 'linkedin', 'tiktok'];
+  for (const ch of manualChannels) {
+    if (myGen !== loadGeneration) return;
+    if (isChannelCached(ch, month)) continue;
+    if (hasAvailabilityList && !channels.includes(ch)) continue;
     try {
-      await fetchChannel('infomaterial', month);
-    } catch (_) {
-    }
-  }
-
-  if (!isChannelCached('studycheck', month)) {
-    try {
-      await fetchChannel('studycheck', month);
-    } catch (_) {
-    }
-  }
-
-  if (!isChannelCached('vertrag', month)) {
-    try {
-      await fetchChannel('vertrag', month);
-    } catch (_) {
-    }
-  }
-
-  if (!isChannelCached('linkedin', month)) {
-    try {
-      await fetchChannel('linkedin', month);
-    } catch (_) {
-    }
-  }
-
-  if (!isChannelCached('tiktok', month)) {
-    try {
-      await fetchChannel('tiktok', month);
+      await fetchChannel(ch, month);
     } catch (_) {
     }
   }
