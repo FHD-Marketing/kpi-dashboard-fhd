@@ -55,7 +55,7 @@ export function activateLatestMonth() {
 
   if (available.length === 0) return;
 
-  const currentIdx = new Date().getMonth(); // 0..11
+  const currentIdx = new Date().getMonth();
   const currentKey = monthOrder[currentIdx];
 
   let chosenKey = null;
@@ -238,8 +238,22 @@ function activateFirstAvailableTab() {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  const activeBtn = document.querySelector('.tab-btn.active');
+  const currentTab = activeBtn ? activeBtn.dataset.tab : null;
+
   tabBtns.forEach(b => b.classList.remove('active'));
   tabContents.forEach(c => c.classList.remove('active'));
+
+  if (currentTab) {
+    const sameBtn = document.querySelector(`.tab-btn[data-tab="${currentTab}"]`);
+    if (sameBtn && !sameBtn.classList.contains('disabled')) {
+      sameBtn.classList.add('active');
+      const target = document.getElementById(`tab-${currentTab}`);
+      if (target) target.classList.add('active');
+      document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tab: currentTab } }));
+      return;
+    }
+  }
 
   const overviewBtn = document.querySelector('.tab-btn[data-tab="uebersicht"]');
   const overview = document.getElementById('tab-uebersicht');

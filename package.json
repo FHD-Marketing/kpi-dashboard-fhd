@@ -18,11 +18,13 @@
     "fetch:google": "node src/scripts/fetching/fetch-data-google-ads.js"
   },
   "dependencies": {
+    "@astrojs/vercel": "^10.0.6",
     "@supabase/supabase-js": "^2.100.0",
     "astro": "^6.0.8",
     "dotenv": "^17.3.1",
     "google-ads-api": "^23.0.0",
     "googleapis": "^171.4.0",
+    "js-yaml": "^4.1.1",
     "mysql2": "^3.20.0"
   }
 }

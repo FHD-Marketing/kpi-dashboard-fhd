@@ -1,4 +1,5 @@
-const API_BASE = 'https://api-gateway-00224466.ludorfjonas.workers.dev/kpi';
+// Browser-side: calls same-origin /api/* routes only (no external base URL needed)
+const API_BASE = '';
 
 const cache = {};
 let monthsMeta = null;
@@ -37,7 +38,8 @@ async function apiFetch(path) {
   const cacheKey = path;
   if (cache[cacheKey]) return cache[cacheKey];
 
-  const url = `${API_BASE}${path}?_t=${Date.now()}`;
+  const sep = path.includes('?') ? '&' : '?';
+  const url = `${path}${sep}_t=${Date.now()}`;
 
   let res;
   try {
@@ -64,21 +66,6 @@ async function apiFetch(path) {
   return data;
 }
 
-async function apiPost(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API ${path} → HTTP ${res.status}: ${text}`);
-  }
-
-  return res.json();
-}
-
 export async function fetchMonths() {
   const data = await apiFetch('/api/months');
   monthsMeta = data || {};
@@ -94,7 +81,7 @@ export async function fetchMonths() {
 }
 
 export async function fetchOverview(monthShort) {
-  const data = await apiFetch(`/api/overview/${monthShort}`);
+  const data = await apiFetch(`/api/get-overview?month=${encodeURIComponent(monthShort)}`);
   if (!data) return null;
 
   if (!dashboardData[monthShort]) dashboardData[monthShort] = {};
@@ -106,7 +93,7 @@ export async function fetchOverview(monthShort) {
 }
 
 export async function fetchChannel(channel, monthShort) {
-  const data = await apiFetch(`/api/channel/${channel}/${monthShort}`);
+  const data = await apiFetch(`/api/get-channel?channel=${encodeURIComponent(channel)}&month=${encodeURIComponent(monthShort)}`);
   if (!data) return null;
 
   if (!dashboardData[monthShort]) dashboardData[monthShort] = {};
@@ -127,9 +114,9 @@ export function isChannelCached(channel, monthShort) {
 
 export function invalidateChannelCache(channel, monthShort) {
   if (!channel || !monthShort) return;
-  const path = `/api/channel/${channel}/${monthShort}`;
+  const path = `/api/get-channel?channel=${encodeURIComponent(channel)}&month=${encodeURIComponent(monthShort)}`;
   Object.keys(cache).forEach(k => {
-    if (k === path || k.startsWith(path + '?')) delete cache[k];
+    if (k === path || k.startsWith(path + '&')) delete cache[k];
   });
   if (dashboardData[monthShort]) {
     delete dashboardData[monthShort][channel];
@@ -211,23 +198,53 @@ export function getMonthOrder() {
 }
 
 export async function uploadInfomaterialTable(tableData) {
-  return apiPost('/api/table', tableData);
+  const res = await fetch('/api/table', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tableData),
+  });
+  if (!res.ok) throw new Error(`/api/table → HTTP ${res.status}`);
+  return res.json();
 }
 
 export async function uploadVertragTable(tableData) {
-  return apiPost('/api/table1', tableData);
+  const res = await fetch('/api/table1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tableData),
+  });
+  if (!res.ok) throw new Error(`/api/table1 → HTTP ${res.status}`);
+  return res.json();
 }
 
 export async function uploadStudycheckTable(tableData) {
-  return apiPost('/api/table2', tableData);
+  const res = await fetch('/api/table2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tableData),
+  });
+  if (!res.ok) throw new Error(`/api/table2 → HTTP ${res.status}`);
+  return res.json();
 }
 
 export async function uploadLinkedinTable(tableData) {
-  return apiPost('/api/table3', tableData);
+  const res = await fetch('/api/table3', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tableData),
+  });
+  if (!res.ok) throw new Error(`/api/table3 → HTTP ${res.status}`);
+  return res.json();
 }
 
 export async function uploadTiktokTable(tableData) {
-  return apiPost('/api/table4', tableData);
+  const res = await fetch('/api/table4', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(tableData),
+  });
+  if (!res.ok) throw new Error(`/api/table4 → HTTP ${res.status}`);
+  return res.json();
 }
 
 let lastUpdatedTimestamps = {};
@@ -243,20 +260,12 @@ export function getLastUpdatedTimestamps() {
 }
 
 export async function reportLastUpdated(source) {
-  try {
-    const res = await fetch(`${API_BASE}/api/last-updated`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source }),
-    });
-
-    if (!res.ok) {
-      console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
-    }
-  } catch (err) {
-    console.warn(`[KPI] POST /api/last-updated error:`, err.message);
-  }
-
+  const res = await fetch('/api/last-updated', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source }),
+  });
+  if (!res.ok) console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
   delete cache['/api/last-updated'];
 }
 
