@@ -14,7 +14,7 @@ export const POST = async ({ request }) => {
 
   const apiUrl = getApiUrl();
   try {
-    const r = await fetch(`${apiUrl}/api/auth`, {
+    const r = await fetch(`${apiUrl}/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
       body: JSON.stringify(body),

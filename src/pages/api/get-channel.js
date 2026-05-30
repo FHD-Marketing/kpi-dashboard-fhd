@@ -16,7 +16,7 @@ export const GET = async ({ url }) => {
 
   const apiUrl = getApiUrl();
   const r = await fetch(
-    `${apiUrl}/api/channel/${encodeURIComponent(channel)}/${encodeURIComponent(month)}`,
+    `${apiUrl}/channel/${encodeURIComponent(channel)}/${encodeURIComponent(month)}`,
     { headers: { 'x-api-key': apiKey } }
   );
   if (!r.ok) return j({ error: 'Upstream failed', status: r.status }, r.status);

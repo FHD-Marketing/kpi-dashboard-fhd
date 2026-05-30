@@ -8,7 +8,7 @@ export const GET = async () => {
   if (!apiKey) return j({ error: 'API key not configured' }, 500);
 
   const apiUrl = getApiUrl();
-  const r = await fetch(`${apiUrl}/api/last-updated`, { headers: { 'x-api-key': apiKey } });
+  const r = await fetch(`${apiUrl}/last-updated`, { headers: { 'x-api-key': apiKey } });
   if (!r.ok) return j({ error: 'Upstream failed', status: r.status }, r.status);
   return new Response(await r.text(), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };

@@ -11,7 +11,7 @@ export const GET = async ({ url }) => {
   if (!month || !/^[a-z0-9_-]+$/.test(month)) return j({ error: 'Invalid month' }, 400);
 
   const apiUrl = getApiUrl();
-  const r = await fetch(`${apiUrl}/api/overview/${encodeURIComponent(month)}`, {
+  const r = await fetch(`${apiUrl}/overview/${encodeURIComponent(month)}`, {
     headers: { 'x-api-key': apiKey },
   });
   if (!r.ok) return j({ error: 'Upstream failed', status: r.status }, r.status);

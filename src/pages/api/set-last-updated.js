@@ -11,7 +11,7 @@ export const POST = async ({ request }) => {
   try { body = await request.json(); } catch { return j({ error: 'Invalid JSON' }, 400); }
 
   const apiUrl = getApiUrl();
-  const r = await fetch(`${apiUrl}/api/last-updated`, {
+  const r = await fetch(`${apiUrl}/last-updated`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
     body: JSON.stringify(body),

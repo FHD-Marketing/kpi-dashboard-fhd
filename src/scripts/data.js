@@ -268,4 +268,3 @@ export async function reportLastUpdated(source) {
   if (!res.ok) console.warn(`[KPI] POST /api/last-updated failed: HTTP ${res.status}`);
   delete cache['/api/last-updated'];
 }
-
