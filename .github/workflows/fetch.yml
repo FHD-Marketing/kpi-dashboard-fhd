@@ -11,6 +11,11 @@ permissions:
 jobs:
   fetch-all:
     runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,13 +28,36 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Open SSH tunnel to MariaDB
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          PORT="${SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -f -N -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes \
+              -p "$PORT" \
+              -i ~/.ssh/id_ed25519 \
+              -L 3306:127.0.0.1:3306 \
+              "${SSH_USER}@${SSH_HOST}"
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if (echo > /dev/tcp/127.0.0.1/3306) 2>/dev/null; then
+              echo "Tunnel ready."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Tunnel did not become ready in time." >&2
+          exit 1
+
       - name: Fetch Mailchimp data
         env:
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/pages/api/_fetch-data-mailchimp.js
         continue-on-error: true
 
@@ -37,10 +65,6 @@ jobs:
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/pages/api/_fetch-data-insta.js
         continue-on-error: true
 
@@ -48,10 +72,6 @@ jobs:
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/pages/api/_fetch-data-meta.js
         continue-on-error: true
 
@@ -63,10 +83,6 @@ jobs:
           GADS_DEVELOPER_TOKEN: ${{ secrets.GADS_DEVELOPER_TOKEN }}
           GADS_CUSTOMER_ID: ${{ secrets.GADS_CUSTOMER_ID }}
           GADS_MCC_ID: ${{ secrets.GADS_MCC_ID }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/pages/api/_fetch-data-google-ads.js
         continue-on-error: true
 
@@ -75,9 +91,11 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: node src/pages/api/_fetch-data-youtube.js
         continue-on-error: true
+
+      - name: Close SSH tunnel
+        if: always()
+        run: |
+          pkill -f "ssh -f -N" || true
+
