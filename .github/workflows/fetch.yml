@@ -30,7 +30,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-mailchimp.js
+        run: node src/pages/api/_fetch-data-mailchimp.js
         continue-on-error: true
 
       - name: Fetch Instagram data
@@ -41,7 +41,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-insta.js
+        run: node src/pages/api/_fetch-data-insta.js
         continue-on-error: true
 
       - name: Fetch Meta Ads data
@@ -52,7 +52,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-meta.js
+        run: node src/pages/api/_fetch-data-meta.js
         continue-on-error: true
 
       - name: Fetch Google Ads data
@@ -67,7 +67,7 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-google-ads.js
+        run: node src/pages/api/_fetch-data-google-ads.js
         continue-on-error: true
 
       - name: Fetch YouTube data
@@ -79,5 +79,5 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: node src/scripts/fetching/fetch-data-youtube.js
+        run: node src/pages/api/_fetch-data-youtube.js
         continue-on-error: true
