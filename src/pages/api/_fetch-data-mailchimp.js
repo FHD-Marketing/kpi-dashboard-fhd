@@ -51,6 +51,13 @@ function monthTable(prefix, monthKey) {
   return `${prefix}_${monthKey.replace('-', '_')}`;
 }
 
+function formatMySQLDatetime(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 async function ensureMailchimpTablesExist(db, monthKey) {
   const summaryTable = monthTable('mailchimp_summary', monthKey);
   const campaignsTable = monthTable('mailchimp_campaigns', monthKey);
@@ -216,7 +223,7 @@ async function saveToMySQL(summary, campaignReports, monthKey, today) {
           bounce_rate=VALUES(bounce_rate)
       `;
       const values = campaignReports.map(r => [
-        r.campaignId, r.title, r.sendTime, r.emailsSent, r.openRate, r.clickRate,
+        r.campaignId, r.title, formatMySQLDatetime(r.sendTime), r.emailsSent, r.openRate, r.clickRate,
         r.opensTotal, r.uniqueOpens, r.clicksTotal, r.uniqueClicks, r.unsubscribes, r.bounceRate,
       ]);
       await db.query(query, [values]);
