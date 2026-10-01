@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   fetch-all:
@@ -99,3 +100,8 @@ jobs:
         run: |
           pkill -f "ssh -f -N" || true
 
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep scheduled workflow active
+        uses: gautamkrishnar/keepalive-workflow@v2
