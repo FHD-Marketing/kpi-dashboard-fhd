@@ -1,8 +1,6 @@
 name: Fetch Data
 
 on:
-  schedule:
-    - cron: '0 */4 * * *'
   workflow_dispatch:
     inputs:
       month:
@@ -12,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   fetch-all:
@@ -105,9 +102,3 @@ jobs:
         if: always()
         run: |
           pkill -f "ssh -f -N" || true
-
-  keepalive:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Keep scheduled workflow active
-        uses: gautamkrishnar/keepalive-workflow@v2
