@@ -46,6 +46,21 @@ function monthTable(prefix, monthKey) {
   return `${prefix}_${monthKey.replace('-', '_')}`;
 }
 
+function resolvePeriod() {
+  const today = new Date().toISOString().split('T')[0];
+  const monthKey = process.env.FETCH_MONTH || today.slice(0, 7);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthKey)) {
+    throw new Error(`Invalid FETCH_MONTH "${monthKey}", expected YYYY-MM.`);
+  }
+  const [year, month] = monthKey.split('-').map(Number);
+  const endOfMonth = new Date(Date.UTC(year, month, 0)).toISOString().split('T')[0];
+  return {
+    monthKey,
+    startOfMonth: `${monthKey}-01`,
+    today: endOfMonth < today ? endOfMonth : today,
+  };
+}
+
 async function ensureInstaTablesExist(db, monthKey) {
   const statsTable = monthTable('instagram_stats', monthKey);
   const totalsTable = monthTable('instagram_totals', monthKey);
@@ -400,12 +415,7 @@ async function run() {
     console.log('Starting Instagram fetch...');
     IG_BUSINESS_ID = await resolveInstagramBusinessId();
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const monthNum = now.getMonth();
-    const monthKey = `${year}-${String(monthNum + 1).padStart(2, '0')}`;
-    const startOfMonth = `${year}-${String(monthNum + 1).padStart(2, '0')}-01`;
-    const today = now.toISOString().split('T')[0];
+    const { monthKey, startOfMonth, today } = resolvePeriod();
 
     const accountInfo = await fetchAccountInfo();
     console.log(`Instagram @${accountInfo.username}: ${accountInfo.totalFollowers} followers, ${accountInfo.totalPosts} posts`);
